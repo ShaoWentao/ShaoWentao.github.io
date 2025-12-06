@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BACH Overseas Branding</title>
+
+<style>
+    body {
+        margin: 0;
+        background: #000;
+        font-family: "Helvetica Neue", Arial, sans-serif;
+        color: white;
+    }
+
+    /* ---------------- HERO ---------------- */
+    .hero {
+        position: relative;
+        width: 100%;
+        height: 90vh;
+        background: url("images/hero-bg.jpg") center/cover no-repeat;
+    }
+
+    .hero-logo {
+        position: absolute;
+        top: 28px;
+        right: 28px;
+        width: 140px;
+        filter: brightness(0) invert(1);
+        opacity: 0.9;
+        transition: 0.3s ease;
+    }
+
+    .hero-logo:hover {
+        opacity: 1;
+    }
+
+    .hero-title {
+        position: absolute;
+        bottom: 18%;
+        left: 50%;
+        transform: translateX(-50%);
+        text-align: center;
+        font-size: 3.4rem;
+        letter-spacing: 0.25em;
+        color: #d9b471;
+        text-transform: uppercase;
+        line-height: 1.6;
+    }
+
+    @media (max-width: 768px) {
+        .hero-title { font-size: 2rem; }
+        .hero-logo { width: 100px; }
+    }
+
+    /* ---------------- BRAND STORY ---------------- */
+    .story {
+        display: flex;
+        padding: 100px 60px;
+        gap: 60px;
+        align-items: center;
+    }
+
+    .story-img {
+        flex: 1;
+        height: 420px;
+        background: url("images/story-bg.jpg") center/cover no-repeat;
+        border-radius: 12px;
+    }
+
+    .story-text {
+        flex: 1;
+        font-size: 1rem;
+        line-height: 1.7;
+        color: #ddd;
+    }
+
+    .story-title {
+        font-size: 2rem;
+        color: #d9b471;
+        letter-spacing: 0.15em;
+        margin-bottom: 20px;
+    }
+
+    @media (max-width: 900px) {
+        .story {
+            flex-direction: column;
+            padding: 60px 20px;
+        }
+        .story-img { width: 100%; }
+    }
+
+    /* ---------------- PURE IMAGE ---------------- */
+    .pure-image {
+        width: 100%;
+        height: 80vh;
+        background: url("images/transition-bg.jpg") center/cover no-repeat;
+    }
+
+    /* ---------------- BRAND HOUSE ---------------- */
+    .brand-house {
+        padding: 80px 40px;
+        text-align: center;
+        background: #0e0e0e;
+    }
+
+    .brand-title {
+        font-size: 2.2rem;
+        margin-bottom: 40px;
+        letter-spacing: 0.2em;
+        color: #d9b471;
+    }
+
+    /* 4列布局（PC + Mobile） */
+    .brand-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 20px;
+        justify-items: center;
+    }
+
+    .brand-box {
+        width: 100%;
+        background: #141414;
+        padding: 30px 20px;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 0 40px rgba(255,255,255,0.05);
+        transition: 0.35s ease;
+        transform: translateY(0);
+    }
+
+    /* 浮动 + 光效 + 高级 hover */
+    .brand-box:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 10px 45px rgba(217,180,113,0.25);
+    }
+
+    .brand-box img {
+        width: 110px;
+        height: auto;
+        filter: brightness(0) invert(1);
+        margin-bottom: 16px;
+        transition: 0.25s ease;
+    }
+
+    /* LOGO hover 更亮 */
+    .brand-box:hover img {
+        filter: brightness(1) invert(0);
+    }
+
+    .brand-box h3 {
+        color: #d9b471;
+        margin-bottom: 10px;
+        font-size: 0.9rem;
+        letter-spacing: 0.12em;
+    }
+
+    .brand-box p {
+        font-size: 0.8rem;
+        color: #ccc;
+        line-height: 1.5;
+        opacity: 0.85;
+    }
+
+    /* 手机端自适应缩小但仍保持 4列 */
+    @media (max-width: 768px) {
+        .brand-box { padding: 18px 10px; }
+        .brand-box img { width: 70px; }
+        .brand-box h3 { font-size: 0.75rem; }
+        .brand-box p { font-size: 0.7rem; }
+    }
+
+    /* ---------------- HIGH-END FOOTER ---------------- */
+    .footer {
+        background: #0a0a0a;
+        padding: 60px 20px;
+        color: #ccc;
+        text-align: center;
+        border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .footer-divider {
+        width: 90%;
+        height: 1px;
+        background: #d9b471;
+        margin: 0 auto 40px auto;
+        opacity: 0.7;
+    }
+
+    .footer-grid {
+        display: flex;
+        justify-content: center;
+        gap: 80px;
+        flex-wrap: wrap;
+        margin-top: 20px;
+    }
+
+    .footer-item {
+        text-align: left;
+        min-width: 200px;
+    }
+
+    .footer-label {
+        color: #d9b471;
+        font-size: 0.9rem;
+        letter-spacing: 0.1em;
+        margin-bottom: 8px;
+    }
+
+    .footer-value {
+        font-size: 0.9rem;
+        line-height: 1.6;
+        opacity: 0.85;
+    }
+
+    .footer-value a {
+        color: #d9b471;
+        text-decoration: none;
+    }
+
+    @media (max-width: 768px) {
+        .footer-item { text-align: center; }
+    }
+
+</style>
+</head>
+
+<body>
+
+<!-- ============== HERO ============== -->
+<section class="hero">
+    <img src="images/logos/bach.png" class="hero-logo">
+    <div class="hero-title">LIGHT TUNES<br>ARCHITECTURE</div>
+</section>
+
+<!-- ============== BRAND STORY ============== -->
+<section class="story">
+    <div class="story-img"></div>
+
+    <div class="story-text">
+        <h2 class="story-title">Origin of BACH</h2>
+        In 2008, as China entered a new era of architectural dialogue with the world,
+        BACH was founded with a mission:
+        <br><br>
+        To explore how optics, rhythm and spatial perception merge into a new architectural language.
+        <br><br>
+        Inspired by Johann Sebastian Bach, we believe architecture is “frozen music,”
+        and light is the silent force shaping emotions, atmosphere, and human experience.
+    </div>
+</section>
+
+<!-- ============== PURE IMAGE SECTION ============== -->
+<section class="pure-image"></section>
+
+<!-- ============== BRAND HOUSE ============== -->
+<section class="brand-house">
+    <div class="brand-title">CDN LIGHT</div>
+
+    <div class="brand-grid">
+
+        <div class="brand-box">
+            <img src="images/logos/cdn.png">
+            <h3>ALL-CATEGORY LIGHTING</h3>
+            <p>Professional and Trustworthy</p>
+        </div>
+
+        <div class="brand-box">
+            <img src="images/logos/bach.png">
+            <h3>HIGH-END ARCHITECTURAL LIGHTING</h3>
+            <p>Technology & Aesthetics</p>
+        </div>
+
+        <div class="brand-box">
+            <img src="images/logos/mayalit.png">
+            <h3>MUSEUM LIGHTING</h3>
+            <p>Professional Quality</p>
+        </div>
+
+        <div class="brand-box">
+            <img src="images/logos/sj.png">
+            <h3>PREMIUM SMART HOME</h3>
+            <p>Inspiration & Intelligence</p>
+        </div>
+
+    </div>
+</section>
+
+<!-- ============== HIGH-END CONTACT / FOOTER ============== -->
+<section class="footer">
+
+    <div class="footer-divider"></div>
+
+    <div class="footer-grid">
+
+        <div class="footer-item">
+            <div class="footer-label">TELEPHONE</div>
+            <div class="footer-value">+86-752-533 3256</div>
+        </div>
+
+        <div class="footer-item">
+            <div class="footer-label">E-MAIL</div>
+            <div class="footer-value">
+                <a href="mailto:sales@cdnlighting.com.cn">sales@cdnlighting.com.cn</a>
+            </div>
+        </div>
+
+        <div class="footer-item">
+            <div class="footer-label">WEBSITE</div>
+            <div class="footer-value">
+                <a href="https://www.cdnlighting.cc/" target="_blank">
+                    https://www.cdnlighting.cc/
+                </a>
+            </div>
+        </div>
+
+        <div class="footer-item">
+            <div class="footer-label">ADDRESS</div>
+            <div class="footer-value">
+                No. A17, Xianghe West Rd., Dongjiang Ind. Zone,<br>
+                Shuikou, Huizhou, Guangdong, China
+            </div>
+        </div>
+
+    </div>
+</section>
+
+</body>
+</html>
