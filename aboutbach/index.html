@@ -5,243 +5,277 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>About BACH</title>
 
+<!-- Google Fonts: Roboto Light / Regular / Medium -->
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+
 <style>
-    body {
-        margin: 0;
-        background: #000;
-        font-family:
-            "Malgun Gothic",
-            "PingFang SC",
-            "Microsoft YaHei",
-            "Helvetica Neue",
-            Arial,
-            sans-serif;
-        color: white;
-    }
+/* =========================================================
+   GLOBAL FONT & BASIC RESET
+   ========================================================= */
+body {
+    margin: 0;
+    background: #000;
+    color: white;
+    font-family:
+        "Roboto",
+        "Malgun Gothic",
+        "Microsoft YaHei",
+        "PingFang SC",
+        "Noto Sans",
+        Arial,
+        sans-serif;
+    font-weight: 300; /* Use Roboto Light */
+}
 
-    /* ---------------- HERO ---------------- */
-    .hero {
-        position: relative;
-        width: 100%;
-        height: 90vh;
-        background: url("images/hero-bg.jpg") center/cover no-repeat;
-    }
+/* =========================================================
+   HERO SECTION
+   ========================================================= */
+.hero {
+    position: relative;
+    width: 100%;
+    height: 90vh;
+    background: url("images/hero-bg.jpg") center/cover no-repeat;
+}
 
-    .hero-logo {
-        position: absolute;
-        top: 28px;
-        right: 28px;
-        width: 140px;
-        filter: brightness(0) invert(1);
-        opacity: 0.9;
-        transition: 0.3s ease;
-    }
+.hero-logo {
+    position: absolute;
+    top: 28px;
+    right: 28px;
+    width: 140px;
+    filter: brightness(0) invert(1);
+    opacity: 0.9;
+    transition: 0.3s ease;
+}
 
-    .hero-logo:hover {
-        opacity: 1;
-    }
+.hero-logo:hover {
+    opacity: 1;
+}
 
-    .hero-title {
-        position: absolute;
-        bottom: 18%;
-        left: 50%;
-        transform: translateX(-50%);
-        text-align: center;
-        font-size: 3.4rem;
-        letter-spacing: 0.25em;
-        color: #d9b471; /* ← 恢复金色 */
-        text-transform: uppercase;
-        line-height: 1.6;
-    }
+.hero-title {
+    position: absolute;
+    bottom: 18%;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    font-size: 3.4rem;
+    letter-spacing: 0.25em;
+    color: #d9b471; /* GOLD */
+    text-transform: uppercase;
+    line-height: 1.6;
+    font-weight: 300; /* Light */
+}
 
-    @media (max-width: 768px) {
-        .hero-title { font-size: 2rem; }
-        .hero-logo { width: 100px; }
-    }
+@media (max-width: 768px) {
+    .hero-title { font-size: 2rem; }
+    .hero-logo { width: 100px; }
+}
 
-    /* ---------------- BRAND STORY ---------------- */
-    .story {
-        display: flex;
-        padding: 100px 60px;
-        gap: 60px;
-        align-items: center;
-    }
+/* =========================================================
+   BRAND STORY
+   ========================================================= */
+.story {
+    display: flex;
+    padding: 100px 60px;
+    gap: 60px;
+    align-items: center;
+}
 
-    .story-img {
-        flex: 1;
-        height: 420px;
-        background: url("images/story-bg.jpg") center/cover no-repeat;
-        border-radius: 12px;
-    }
+.story-img {
+    flex: 1;
+    height: 420px;
+    background: url("images/story-bg.jpg") center/cover no-repeat;
+    border-radius: 12px;
+}
 
-    .story-text {
-        flex: 1;
-        font-size: 1rem;
-        line-height: 1.7;
-        color: #ddd;
-    }
+.story-text {
+    flex: 1;
+    font-size: 1rem;
+    line-height: 1.7;
+    color: white;
+}
 
-    .story-title {
-        font-size: 2rem;
-        color: #ffffff; /* ← 统一为白色 */
-        letter-spacing: 0.15em;
-        margin-bottom: 20px;
-    }
+.story-title {
+    font-size: 2rem;
+    color: white;
+    font-weight: 300;
+    letter-spacing: 0.15em;
+    margin-bottom: 20px;
+}
 
-    @media (max-width: 900px) {
-        .story {
-            flex-direction: column;
-            padding: 60px 20px;
-        }
-        .story-img { width: 100%; }
-    }
+@media (max-width: 900px) {
+    .story { flex-direction: column; padding: 60px 20px; }
+    .story-img { width: 100%; }
+}
 
-    /* ---------------- PURE IMAGE ---------------- */
-    .pure-image {
-        width: 100%;
-        height: 80vh;
-        background: url("images/transition-bg.jpg") center/cover no-repeat;
-    }
+/* =========================================================
+   FULL IMAGE SECTION
+   ========================================================= */
+.pure-image {
+    width: 100%;
+    height: 80vh;
+    background: url("images/transition-bg.jpg") center/cover no-repeat;
+}
 
-    /* ---------------- BRAND HOUSE ---------------- */
-    .brand-house {
-        padding: 80px 40px;
-        text-align: center;
-        background: #0e0e0e;
-    }
+/* =========================================================
+   BRAND HOUSE SECTION (with gradient line)
+   ========================================================= */
+.brand-house {
+    position: relative;
+    padding: 100px 40px;
+    text-align: center;
+    background: linear-gradient(to bottom, #0e0e0e 0%, #0a0a0a 100%);
+}
 
-    .brand-title {
-        font-size: 2.2rem;
-        margin-bottom: 40px;
-        letter-spacing: 0.2em;
-        color: #ffffff; /* ← 统一为白色 */
-    }
+.brand-house::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(
+        to right,
+        transparent,
+        #d9b471,
+        transparent
+    );
+    opacity: 0.7;
+}
 
-    /* 4列布局（PC + Mobile） */
+.brand-title {
+    font-size: 2.2rem;
+    margin-bottom: 40px;
+    letter-spacing: 0.2em;
+    color: #d9b471; /* GOLD */
+    font-weight: 300;
+}
+
+/* Desktop: 4 columns */
+.brand-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 22px;
+    padding: 0 20px;
+}
+
+/* super small screen: 2×2 */
+@media (max-width: 480px) {
     .brand-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 20px;
-        justify-items: center;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
     }
+}
 
-    .brand-box {
-        width: 100%;
-        background: #141414;
-        padding: 30px 20px;
-        border-radius: 12px;
-        text-align: center;
-        box-shadow: 0 0 40px rgba(255,255,255,0.05);
-        transition: 0.35s ease;
-        transform: translateY(0);
-    }
+.brand-box {
+    background: #141414;
+    padding: 28px 14px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 0 40px rgba(255,255,255,0.05);
+    transition: 0.35s ease;
+}
 
-    /* 浮动 + 光效 */
-    .brand-box:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 10px 45px rgba(255,255,255,0.25);
-    }
+.brand-box:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 10px 45px rgba(217,180,113,0.3);
+}
 
-    .brand-box img {
-        width: 110px;
-        height: auto;
-        filter: brightness(0) invert(1);
-        margin-bottom: 16px;
-        transition: 0.25s ease;
-    }
+.brand-box img {
+    width: 110px;
+    filter: brightness(0) invert(1);
+    margin-bottom: 12px;
+    transition: 0.25s ease;
+}
 
-    .brand-box:hover img {
-        filter: brightness(1);
-    }
+.brand-box:hover img {
+    filter: brightness(1);
+}
 
-    .brand-box h3 {
-        color: #ffffff; /* ← 统一为白色 */
-        margin-bottom: 10px;
-        font-size: 0.9rem;
-        letter-spacing: 0.12em;
-    }
+.brand-box h3 {
+    color: white; /* requested: white */
+    font-size: 0.9rem;
+    letter-spacing: 0.12em;
+    font-weight: 300;
+    margin-bottom: 10px;
+}
 
-    .brand-box p {
-        font-size: 0.8rem;
-        color: #ccc;
-        line-height: 1.5;
-        opacity: 0.85;
-    }
+.brand-box p {
+    font-size: 0.8rem;
+    color: #ccc;
+    opacity: 0.85;
+}
 
-    @media (max-width: 768px) {
-        .brand-box { padding: 18px 10px; }
-        .brand-box img { width: 70px; }
-        .brand-box h3 { font-size: 0.75rem; }
-        .brand-box p { font-size: 0.7rem; }
-    }
+/* small screen */
+@media (max-width: 768px) {
+    .brand-box img { width: 70px; }
+    .brand-box h3 { font-size: 0.75rem; }
+    .brand-box p { font-size: 0.7rem; }
+}
 
-    /* ---------------- FOOTER ---------------- */
-    .footer {
-        background: #0a0a0a;
-        padding: 60px 20px;
-        color: #ccc;
-        text-align: center;
-        border-top: 1px solid rgba(255,255,255,0.08);
-    }
+/* =========================================================
+   FOOTER
+   ========================================================= */
+.footer {
+    background: #0a0a0a;
+    padding: 60px 20px;
+    color: white;
+    text-align: center;
+}
 
-    .footer-divider {
-        width: 90%;
-        height: 1px;
-        background: #ffffff; /* ← 改为白色 */
-        margin: 0 auto 40px auto;
-        opacity: 0.7;
-    }
+.footer-divider {
+    width: 90%;
+    height: 1px;
+    margin: 0 auto 40px auto;
+    background: #d9b471;
+    opacity: 0.7;
+}
 
-    .footer-grid {
-        display: flex;
-        justify-content: center;
-        gap: 80px;
-        flex-wrap: wrap;
-        margin-top: 20px;
-    }
+.footer-grid {
+    display: flex;
+    justify-content: center;
+    gap: 80px;
+    flex-wrap: wrap;
+}
 
-    .footer-item {
-        text-align: left;
-        min-width: 200px;
-    }
+.footer-item {
+    min-width: 200px;
+    text-align: left;
+}
 
-    .footer-label {
-        color: #ffffff; /* ← 统一白色 */
-        font-size: 0.9rem;
-        letter-spacing: 0.1em;
-        margin-bottom: 8px;
-    }
+.footer-label {
+    color: #d9b471;
+    font-size: 0.9rem;
+    letter-spacing: 0.1em;
+}
 
-    .footer-value {
-        font-size: 0.9rem;
-        line-height: 1.6;
-        opacity: 0.85;
-    }
+.footer-value {
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
 
-    .footer-value a {
-        color: #ffffff; /* ← 统一白色 */
-        text-decoration: none;
-    }
+.footer-value a {
+    color: #d9b471;
+    text-decoration: none;
+}
 
-    @media (max-width: 768px) {
-        .footer-item { text-align: center; }
-    }
+@media (max-width: 768px) {
+    .footer-item { text-align: center; }
+}
 
 </style>
 </head>
 
 <body>
 
-<!-- ============== HERO ============== -->
+<!-- HERO -->
 <section class="hero">
     <img src="images/logos/bach.png" class="hero-logo">
     <div class="hero-title">LIGHT TUNES<br>ARCHITECTURE</div>
 </section>
 
-<!-- ============== BRAND STORY ============== -->
+<!-- BRAND STORY -->
 <section class="story">
     <div class="story-img"></div>
-
     <div class="story-text">
         <h2 class="story-title">Origin of BACH</h2>
         In 2008, as China entered a new era of architectural dialogue with the world,
@@ -254,10 +288,10 @@
     </div>
 </section>
 
-<!-- ============== PURE IMAGE SECTION ============== -->
+<!-- PURE IMAGE -->
 <section class="pure-image"></section>
 
-<!-- ============== BRAND HOUSE ============== -->
+<!-- BRAND HOUSE -->
 <section class="brand-house">
     <div class="brand-title">CDN LIGHT</div>
 
@@ -290,9 +324,8 @@
     </div>
 </section>
 
-<!-- ============== FOOTER ============== -->
+<!-- FOOTER -->
 <section class="footer">
-
     <div class="footer-divider"></div>
 
     <div class="footer-grid">
@@ -331,4 +364,3 @@
 
 </body>
 </html>
-
