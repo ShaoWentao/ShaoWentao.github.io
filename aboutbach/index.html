@@ -3,320 +3,323 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>About BACH</title>
+<title>BACH</title>
 
-<!-- Google Fonts: Roboto Light / Regular / Medium -->
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+<!-- Google Fonts: Roboto Light -->
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400&display=swap" rel="stylesheet">
 
 <style>
-/* =========================================================
-   GLOBAL FONT & BASIC RESET
-   ========================================================= */
-body {
-    margin: 0;
-    background: #000;
-    color: white;
-    font-family:
-        "Roboto",
-        "Malgun Gothic",
-        "Microsoft YaHei",
-        "PingFang SC",
-        "Noto Sans",
-        Arial,
-        sans-serif;
-    font-weight: 300; /* Use Roboto Light */
-}
-
-/* =========================================================
-   HERO SECTION
-   ========================================================= */
-.hero {
-    position: relative;
-    width: 100%;
-    height: 90vh;
-    background: url("images/hero-bg.jpg") center/cover no-repeat;
-}
-
-.hero-logo {
-    position: absolute;
-    top: 28px;
-    right: 28px;
-    width: 140px;
-    filter: brightness(0) invert(1);
-    opacity: 0.9;
-    transition: 0.3s ease;
-}
-
-.hero-logo:hover {
-    opacity: 1;
-}
-
-.hero-title {
-    position: absolute;
-    bottom: 18%;
-    left: 50%;
-    transform: translateX(-50%);
-    text-align: center;
-    font-size: 3.4rem;
-    letter-spacing: 0.25em;
-    color: #d9b471; /* GOLD */
-    text-transform: uppercase;
-    line-height: 1.6;
-    font-weight: 300; /* Light */
-}
-
-@media (max-width: 768px) {
-    .hero-title { font-size: 2rem; }
-    .hero-logo { width: 100px; }
-}
-
-/* =========================================================
-   BRAND STORY
-   ========================================================= */
-.story {
-    display: flex;
-    padding: 100px 60px;
-    gap: 60px;
-    align-items: center;
-}
-
-.story-img {
-    flex: 1;
-    height: 420px;
-    background: url("images/story-bg.jpg") center/cover no-repeat;
-    border-radius: 12px;
-}
-
-.story-text {
-    flex: 1;
-    font-size: 1rem;
-    line-height: 1.7;
-    color: white;
-}
-
-.story-title {
-    font-size: 2rem;
-    color: white;
-    font-weight: 300;
-    letter-spacing: 0.15em;
-    margin-bottom: 20px;
-}
-
-@media (max-width: 900px) {
-    .story { flex-direction: column; padding: 60px 20px; }
-    .story-img { width: 100%; }
-}
-
-/* =========================================================
-   FULL IMAGE SECTION
-   ========================================================= */
-.pure-image {
-    width: 100%;
-    height: 80vh;
-    background: url("images/transition-bg.jpg") center/cover no-repeat;
-}
-
-/* =========================================================
-   BRAND HOUSE SECTION (with gradient line)
-   ========================================================= */
-.brand-house {
-    position: relative;
-    padding: 100px 40px;
-    text-align: center;
-    background: linear-gradient(to bottom, #0e0e0e 0%, #0a0a0a 100%);
-}
-
-.brand-house::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background: linear-gradient(
-        to right,
-        transparent,
-        #d9b471,
-        transparent
-    );
-    opacity: 0.7;
-}
-
-.brand-title {
-    font-size: 2.2rem;
-    margin-bottom: 40px;
-    letter-spacing: 0.2em;
-    color: #d9b471; /* GOLD */
-    font-weight: 300;
-}
-
-/* Desktop: 4 columns */
-.brand-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 22px;
-    padding: 0 20px;
-}
-
-/* super small screen: 2×2 */
-@media (max-width: 480px) {
-    .brand-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 16px;
+    /* ============= GLOBAL ============= */
+    body {
+        margin: 0;
+        background: #000;
+        font-family: "Roboto", "Helvetica Neue", Arial, sans-serif;
+        color: #ffffff;
+        font-weight: 300;
     }
-}
 
-.brand-box {
-    background: #141414;
-    padding: 28px 14px;
-    border-radius: 12px;
-    text-align: center;
-    box-shadow: 0 0 40px rgba(255,255,255,0.05);
-    transition: 0.35s ease;
-}
+    /* ============= HERO ============= */
+    .hero {
+        position: relative;
+        width: 100%;
+        height: 90vh;
+        background: url("images/hero-bg.jpg") center/cover no-repeat;
+    }
 
-.brand-box:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 10px 45px rgba(217,180,113,0.3);
-}
+    .hero-logo {
+        position: absolute;
+        top: 28px;
+        right: 28px;
+        width: 140px;
+        filter: brightness(0) invert(1);
+        opacity: 0.9;
+        transition: 0.3s ease;
+    }
+    .hero-logo:hover { opacity: 1; }
 
-.brand-box img {
-    width: 110px;
-    filter: brightness(0) invert(1);
-    margin-bottom: 12px;
-    transition: 0.25s ease;
-}
+    .hero-title {
+        position: absolute;
+        bottom: 18%;
+        left: 50%;
+        transform: translateX(-50%);
+        text-align: center;
+        font-size: 3.4rem;
+        letter-spacing: 0.25em;
+        color: #d9b471; /* 主题金色 */
+        text-transform: uppercase;
+        line-height: 1.6;
+        font-weight: 300;
+    }
 
-.brand-box:hover img {
-    filter: brightness(1);
-}
+    @media (max-width: 768px) {
+        .hero-title { font-size: 2rem; }
+        .hero-logo { width: 100px; }
+    }
 
-.brand-box h3 {
-    color: white; /* requested: white */
-    font-size: 0.9rem;
-    letter-spacing: 0.12em;
-    font-weight: 300;
-    margin-bottom: 10px;
-}
+    /* ============= BRAND STORY ============= */
+    .story {
+        display: flex;
+        padding: 100px 60px;
+        gap: 60px;
+        align-items: center;
+    }
 
-.brand-box p {
-    font-size: 0.8rem;
-    color: #ccc;
-    opacity: 0.85;
-}
+    .story-img {
+        flex: 1;
+        height: 420px;
+        background: url("images/story-bg.jpg") center/cover no-repeat;
+        border-radius: 12px;
+    }
 
-/* small screen */
-@media (max-width: 768px) {
-    .brand-box img { width: 70px; }
-    .brand-box h3 { font-size: 0.75rem; }
-    .brand-box p { font-size: 0.7rem; }
-}
+    .story-text {
+        flex: 1;
+        font-size: 1rem;
+        line-height: 1.7;
+        color: #ffffff;
+        font-weight: 300;
+    }
 
-/* =========================================================
-   FOOTER
-   ========================================================= */
-.footer {
-    background: #0a0a0a;
-    padding: 60px 20px;
-    color: white;
-    text-align: center;
-}
+    .story-title {
+        font-size: 2rem;
+        color: #ffffff;
+        letter-spacing: 0.15em;
+        margin-bottom: 20px;
+        font-weight: 300;
+    }
 
-.footer-divider {
-    width: 90%;
-    height: 1px;
-    margin: 0 auto 40px auto;
-    background: #d9b471;
-    opacity: 0.7;
-}
+    @media (max-width: 900px) {
+        .story {
+            flex-direction: column;
+            padding: 60px 20px;
+        }
+        .story-img { width: 100%; }
+    }
 
-.footer-grid {
-    display: flex;
-    justify-content: center;
-    gap: 80px;
-    flex-wrap: wrap;
-}
+    /* ============= PURE IMAGE ============= */
+    .pure-image {
+        width: 100%;
+        height: 80vh;
+        background: url("images/transition-bg.jpg") center/cover no-repeat;
+    }
 
-.footer-item {
-    min-width: 200px;
-    text-align: left;
-}
+    /* ============= BRAND HOUSE ============= */
+    .brand-house {
+        padding: 80px 20px;
+        text-align: center;
+        background: #0e0e0e;
+    }
 
-.footer-label {
-    color: #d9b471;
-    font-size: 0.9rem;
-    letter-spacing: 0.1em;
-}
+    .brand-title {
+        font-size: 2.2rem;
+        margin-bottom: 40px;
+        letter-spacing: 0.2em;
+        color: #d9b471;  /* CDN LIGHT 暗金色 */
+        font-weight: 300;
+    }
 
-.footer-value {
-    font-size: 0.9rem;
-    line-height: 1.6;
-}
+    /* PC: 四列布局 */
+    .brand-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 20px;
+        justify-items: center;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
 
-.footer-value a {
-    color: #d9b471;
-    text-decoration: none;
-}
+    /* 手机：2×2 布局，避免过窄 */
+    @media (max-width: 480px) {
+        .brand-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+    }
 
-@media (max-width: 768px) {
-    .footer-item { text-align: center; }
-}
+    .brand-box {
+        width: 100%;
+        background: #141414;
+        padding: 28px 16px;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 0 40px rgba(255,255,255,0.05);
+        transition: 0.35s ease;
+        transform: translateY(0);
+        display: flex;               /* 关键：纵向布局，方便对齐 */
+        flex-direction: column;
+        align-items: center;
+    }
 
+    .brand-box:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 10px 45px rgba(217,180,113,0.25);
+    }
+
+    .brand-box img {
+        width: 110px;
+        height: auto;
+        filter: brightness(0) invert(1);
+        margin-bottom: 14px;
+        transition: 0.25s ease;
+    }
+
+    .brand-box:hover img {
+        filter: brightness(1);
+    }
+
+    /* 关键：给标题固定高度，让下面一行统一起始位置 */
+    .brand-box h3 {
+        color: #ffffff;
+        font-size: 0.9rem;
+        letter-spacing: 0.12em;
+        font-weight: 300;
+        text-transform: uppercase;
+        margin: 0 0 10px 0;
+
+        line-height: 1.4;
+        min-height: 3.6em;          /* 约两行半高度，保证多字品牌也能放下 */
+        display: flex;
+        align-items: flex-end;      /* 文字靠下对齐，看起来更整齐 */
+        text-align: center;
+    }
+
+    .brand-box p {
+        font-size: 0.8rem;
+        color: #ffffff;
+        line-height: 1.5;
+        opacity: 0.9;
+        margin: 0;
+    }
+
+    @media (max-width: 768px) {
+        .brand-box img { width: 80px; }
+        .brand-box h3 {
+            font-size: 0.8rem;
+            min-height: 3.4em;      /* 小屏略缩小但仍保持统一高度 */
+        }
+        .brand-box p { font-size: 0.7rem; }
+    }
+
+    @media (max-width: 375px) {
+        .brand-box img { width: 72px; }
+        .brand-box h3 {
+            font-size: 0.75rem;
+            min-height: 3.2em;
+        }
+        .brand-box p { font-size: 0.68rem; }
+    }
+
+    /* ============= FOOTER ============= */
+    .footer {
+        background: #0a0a0a;
+        padding: 60px 20px;
+        color: #ffffff;
+        text-align: center;
+        border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .footer-divider {
+        width: 90%;
+        height: 1px;
+        background: #d9b471;
+        margin: 0 auto 40px auto;
+        opacity: 0.7;
+    }
+
+    .footer-grid {
+        display: flex;
+        justify-content: center;
+        gap: 80px;
+        flex-wrap: wrap;
+        margin-top: 20px;
+    }
+
+    .footer-item {
+        text-align: left;
+        min-width: 220px;
+    }
+
+    .footer-label {
+        color: #ffffff;
+        font-size: 0.9rem;
+        letter-spacing: 0.1em;
+        margin-bottom: 8px;
+        font-weight: 300;
+    }
+
+    .footer-value {
+        font-size: 0.9rem;
+        line-height: 1.6;
+        opacity: 0.9;
+        color: #ffffff;
+        font-weight: 300;
+    }
+
+    .footer-value a {
+        color: #ffffff;
+        text-decoration: none;
+    }
+
+    @media (max-width: 768px) {
+        .footer-item { text-align: center; }
+    }
 </style>
 </head>
 
 <body>
 
-<!-- HERO -->
+<!-- ========== HERO ========== -->
 <section class="hero">
-    <img src="images/logos/bach.png" class="hero-logo">
+    <img src="images/logos/bach.png" class="hero-logo" alt="BACH Logo">
     <div class="hero-title">LIGHT TUNES<br>ARCHITECTURE</div>
 </section>
 
-<!-- BRAND STORY -->
+<!-- ========== BRAND STORY ========== -->
 <section class="story">
     <div class="story-img"></div>
+
     <div class="story-text">
         <h2 class="story-title">Origin of BACH</h2>
-        In 2008, as China entered a new era of architectural dialogue with the world,
-        BACH was founded with a mission:
+        In 2008, as China embarked upon a new era of architectural dialogue with the world,
+        BACH was founded, bearing this mission:
         <br><br>
-        To explore how optics, rhythm and spatial perception merge into a new architectural language.
+        To explore how light, rhythm and spatial perception intertwine to forge
+        a novel architectural language.
         <br><br>
-        Inspired by Johann Sebastian Bach, we believe architecture is “frozen music,”
-        and light is the silent force shaping emotions, atmosphere, and human experience.
+        Inspired by Johann Sebastian Bach, we hold firm to the conviction that
+        architecture is “frozen music”, with light serving as the silent force
+        that shapes emotion, atmosphere, and human experience.
     </div>
 </section>
 
-<!-- PURE IMAGE -->
+<!-- ========== PURE IMAGE ========== -->
 <section class="pure-image"></section>
 
-<!-- BRAND HOUSE -->
+<!-- ========== BRAND HOUSE ========== -->
 <section class="brand-house">
     <div class="brand-title">CDN LIGHT</div>
 
     <div class="brand-grid">
 
         <div class="brand-box">
-            <img src="images/logos/cdn.png">
+            <img src="images/logos/cdn.png" alt="CDN LIGHT">
             <h3>ALL-CATEGORY LIGHTING</h3>
             <p>Professional & Trustworthy</p>
         </div>
 
         <div class="brand-box">
-            <img src="images/logos/bach.png">
+            <img src="images/logos/bach.png" alt="BACH">
             <h3>HIGH-END ARCHITECTURAL LIGHTING</h3>
             <p>Technology & Aesthetics</p>
         </div>
 
         <div class="brand-box">
-            <img src="images/logos/mayalit.png">
+            <img src="images/logos/mayalit.png" alt="Mayalit">
             <h3>MUSEUM LIGHTING</h3>
             <p>Professional Quality</p>
         </div>
 
         <div class="brand-box">
-            <img src="images/logos/sj.png">
+            <img src="images/logos/sj.png" alt="SJ Smart Home">
             <h3>PREMIUM SMART HOME</h3>
             <p>Inspiration & Intelligence</p>
         </div>
@@ -324,7 +327,7 @@ body {
     </div>
 </section>
 
-<!-- FOOTER -->
+<!-- ========== FOOTER ========== -->
 <section class="footer">
     <div class="footer-divider"></div>
 
