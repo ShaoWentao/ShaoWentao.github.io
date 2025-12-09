@@ -3,170 +3,330 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IES 配光文件编辑器 (网页版)</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>IES & LDT 配光文件编辑器 Pro</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f4f4f9; }
-        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h1 { color: #333; text-align: center; }
-        .control-group { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef; }
-        label { display: block; margin-bottom: 8px; font-weight: bold; }
-        input[type="number"] { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;} 
-        button { background-color: #ff4b4b; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; margin-top: 10px;}
-        button:hover { background-color: #ff3333; }
-        #chartContainer { margin-top: 30px; position: relative; height: 400px; width: 100%; display: flex; justify-content: center; }
+        body { background-color: #f3f4f6; font-family: 'Segoe UI', sans-serif; }
+        .drag-area { border: 2px dashed #cbd5e1; transition: all 0.3s; }
+        .drag-area:hover, .drag-area.active { border-color: #3b82f6; background-color: #eff6ff; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>💡 IES 配光文件编辑器</h1>
-    <p style="text-align: center; color: #666;">纯前端运行，数据不上传服务器</p>
-
-    <div class="control-group">
-        <label>1. 上传 IES 文件</label>
-        <input type="file" id="fileInput" accept=".ies">
+<div id="app" class="max-w-3xl mx-auto p-6">
+    
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">💡 IES & LDT 编辑器</h1>
+        <p class="text-gray-500 mt-2">支持修改厂家、功率、色温、显指及光通量</p>
     </div>
 
-    <div class="control-group" id="controls" style="display:none;">
-        <p><strong>文件名:</strong> <span id="fileName"></span></p>
-        <label>2. 修改倍增因子 (Multiplier)</label>
-        <input type="number" id="multiplierInput" step="0.0001">
-        <button onclick="downloadIES()">⬇️ 下载修改后的文件</button>
+    <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+        <div 
+            class="drag-area rounded-lg p-10 text-center cursor-pointer"
+            @click="$refs.fileInput.click()"
+            @dragover.prevent
+            @drop.prevent="handleDrop"
+        >
+            <input type="file" ref="fileInput" class="hidden" accept=".ies,.ldt" @change="handleFileSelect">
+            <div v-if="!fileName">
+                <p class="text-4xl mb-2">📂</p>
+                <p class="text-gray-600 font-medium">点击或拖拽上传 IES / LDT 文件</p>
+            </div>
+            <div v-else>
+                <p class="text-4xl mb-2">📄</p>
+                <p class="text-green-600 font-bold text-lg">{{ fileName }}</p>
+                <p class="text-xs text-gray-400 mt-1 uppercase">{{ fileType }} 格式</p>
+            </div>
+        </div>
     </div>
 
-    <div id="chartContainer">
-        <canvas id="polarChart"></canvas>
+    <div v-if="parsedData" class="bg-white rounded-xl shadow-md p-6 animate-fade-in">
+        <div class="flex justify-between items-center border-b pb-4 mb-4">
+            <h2 class="text-xl font-bold text-gray-700">参数修改</h2>
+            <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                {{ fileType === 'ies' ? 'IES 标准' : 'EULUMDAT (LDT) 标准' }}
+            </span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">厂家 (Manufacturer)</label>
+                <input v-model="parsedData.manufacturer" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">灯具名称 (Luminaire Name)</label>
+                <input v-model="parsedData.luminaireName" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">系统功率 (Watts)</label>
+                <input type="number" v-model="parsedData.watts" step="0.1" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            
+            <div v-if="fileType === 'ies'">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    光通量倍增因子 
+                    <span class="text-xs text-gray-400" title="修改此数值会等比缩放整个配光曲线">(Multiplier) ℹ️</span>
+                </label>
+                <input type="number" v-model="parsedData.multiplier" step="0.001" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none bg-yellow-50">
+            </div>
+            <div v-if="fileType === 'ldt'">
+                <label class="block text-sm font-medium text-gray-700 mb-1">总光通量 (Total Flux)</label>
+                <input type="number" v-model="parsedData.totalFlux" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none bg-yellow-50">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">产品型号 (Catalog/Type)</label>
+                <input v-model="parsedData.catalogNumber" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+        </div>
+
+        <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+            <h3 class="text-sm font-bold text-gray-600 mb-2">扩展信息 (色温/显指等)</h3>
+            <p v-if="fileType === 'ldt'" class="text-xs text-orange-500 mb-2">⚠️ LDT 标准不支持自定义标签，这些信息将追加到“灯具描述”字段中。</p>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-500">色温 (CCT)</label>
+                    <input v-model="parsedData.cct" placeholder="例如: 3000K" class="w-full p-2 border rounded text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-500">显色指数 (CRI)</label>
+                    <input v-model="parsedData.cri" placeholder="例如: Ra90" class="w-full p-2 border rounded text-sm">
+                </div>
+            </div>
+        </div>
+
+        <button 
+            @click="downloadFile" 
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 flex justify-center items-center gap-2"
+        >
+            <span>⬇️ 下载修改后的文件</span>
+        </button>
     </div>
+
 </div>
 
 <script>
-    let originalContent = "";
-    let fileLines = [];
-    let multiplierLineIndex = -1;
-    let originalMultiplier = 1.0;
-    let chartInstance = null;
+    const { createApp } = Vue
 
-    document.getElementById('fileInput').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            originalContent = e.target.result;
-            document.getElementById('fileName').innerText = file.name;
-            document.getElementById('controls').style.display = 'block';
-            parseIES(originalContent);
-        };
-        reader.readAsText(file);
-    });
-
-    function parseIES(content) {
-        fileLines = content.split(/\r?\n/);
-        let dataStartIndex = 0;
-        
-        // 简单查找 TILT，定位数据区
-        for(let i=0; i<fileLines.length; i++) {
-            if(fileLines[i].trim().startsWith("TILT=")) {
-                // 假设 TILT=NONE 或文件名后紧跟数据
-                // 这是一个简化处理，实际需要更复杂的逻辑跳过TILT文件
-                dataStartIndex = i + 1; 
-                break;
+    createApp({
+        data() {
+            return {
+                fileContent: null, // 原始文件内容字符串
+                rawLines: [],      // 按行分割
+                fileName: '',
+                fileType: '',      // 'ies' or 'ldt'
+                
+                // 统一的数据模型
+                parsedData: null 
+                // 结构: { manufacturer, luminaireName, catalogNumber, watts, multiplier(ies), totalFlux(ldt), cct, cri }
             }
-        }
-
-        // 尝试把数据区合并成一行字符串来查找参数
-        // 为了演示，我们假设数据在 TILT 后的一行或几行内
-        // 真正的解析需要像 Python 那样 Tokenize
-        
-        // 这里的逻辑主要为了演示 "读取并显示 Multiplier"
-        // 实际修改时，我们用正则去匹配这一块区域
-        
-        // 模拟解析: 寻找包含 lamp 数之后的 multiplier
-        // 这是一个模拟可视化，只是画个圈表示亮度
-        const dummyData = [];
-        for (let i = 0; i < 360; i+=10) dummyData.push(Math.random() * 10 + 50);
-        
-        // 尝试提取 Multiplier (非常简化的正则，仅供演示)
-        // 查找 TILT 后的数字序列
-        let rawDataStr = fileLines.slice(dataStartIndex).join(" ");
-        let tokens = rawDataStr.trim().split(/\s+/);
-        
-        if(tokens.length > 2) {
-            originalMultiplier = parseFloat(tokens[2]); // 第三个参数通常是 Multiplier
-            document.getElementById('multiplierInput').value = originalMultiplier;
-        }
-
-        drawChart(originalMultiplier);
-    }
-
-    // 监听输入框变化，实时重绘
-    document.getElementById('multiplierInput').addEventListener('input', function(e){
-        drawChart(parseFloat(e.target.value));
-    });
-
-    function drawChart(multiplier) {
-        const ctx = document.getElementById('polarChart').getContext('2d');
-        
-        // 模拟数据：这里没有真的解析复杂的IES矩阵，而是用一个椭圆模拟光斑
-        // 真实解析在JS里比较繁琐，但道理一样
-        const dataPoints = [];
-        const labels = [];
-        for (let i = 0; i < 360; i += 5) {
-            labels.push(i + "°");
-            // 用 sin 函数模拟一个配光，乘以 multiplier
-            let r = (Math.abs(Math.cos((i * Math.PI) / 180)) * 0.8 + 0.2) * multiplier * 1000;
-            dataPoints.push(r);
-        }
-
-        if (chartInstance) chartInstance.destroy();
-
-        chartInstance = new Chart(ctx, {
-            type: 'polarArea',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: '光强分布 (模拟)',
-                    data: dataPoints,
-                    backgroundColor: 'rgba(255, 206, 86, 0.5)',
-                    borderColor: 'rgba(255, 206, 86, 1)',
-                }]
+        },
+        methods: {
+            handleFileSelect(event) {
+                const file = event.target.files[0]
+                if (file) this.processFile(file)
             },
-            options: {
-                responsive: true,
-                scales: {
-                    r: { pointLabels: { display: false } } // 隐藏多余标签
+            handleDrop(event) {
+                const file = event.dataTransfer.files[0]
+                if (file) this.processFile(file)
+            },
+            processFile(file) {
+                this.fileName = file.name
+                const ext = file.name.split('.').pop().toLowerCase()
+                
+                const reader = new FileReader()
+                reader.onload = (e) => {
+                    this.fileContent = e.target.result
+                    this.rawLines = this.fileContent.split(/\r?\n/)
+                    
+                    if (ext === 'ies') {
+                        this.fileType = 'ies'
+                        this.parseIES()
+                    } else if (ext === 'ldt') {
+                        this.fileType = 'ldt'
+                        this.parseLDT()
+                    } else {
+                        alert("仅支持 .ies 和 .ldt 文件")
+                        this.parsedData = null
+                    }
                 }
-            }
-        });
-    }
+                reader.readAsText(file, 'ISO-8859-1') // LDT通常使用这种编码，IES一般是UTF-8或ASCII，这里兼容处理
+            },
 
-    function downloadIES() {
-        const newMultiplier = document.getElementById('multiplierInput').value;
-        
-        // 替换逻辑：这里需要非常小心，只替换参数位置的那个数字
-        // 简单替换法（有风险，建议生产环境用 Token 重组）：
-        // 我们假设用户不会改得极其离谱，我们在内存里把旧值替换成新值
-        
-        // 注意：这只是一个字符串替换演示。
-        // 如果文件里恰好有其他地方也是这个数字，会出错。
-        // 严谨做法是解析出 tokens 数组，修改 tokens[2] 再 join 回去。
-        
-        // 为了演示效果：
-        let newContent = originalContent.replace(
-            new RegExp("(\\s)" + originalMultiplier + "(\\s)", "m"), 
-            "$1" + newMultiplier + "$2"
-        );
-        
-        const blob = new Blob([newContent], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = "modified_by_web.ies";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-    }
+            // --- IES 解析逻辑 ---
+            parseIES() {
+                const lines = this.rawLines
+                let data = {
+                    manufacturer: '', luminaireName: '', catalogNumber: '', 
+                    watts: 0, multiplier: 1.0, cct: '', cri: ''
+                }
+
+                // 1. 提取 Header 标签
+                lines.forEach(line => {
+                    if (line.startsWith('[')) {
+                        if (line.includes('MANUFAC')) data.manufacturer = this.getIESValue(line)
+                        if (line.includes('LUMCAT')) data.catalogNumber = this.getIESValue(line)
+                        if (line.includes('LUMINAIRE')) data.luminaireName = this.getIESValue(line)
+                        // 自定义/非标准标签读取
+                        if (line.includes('CCT') || line.includes('COLORTEMP')) data.cct = this.getIESValue(line)
+                        if (line.includes('CRI') || line.includes('RA')) data.cri = this.getIESValue(line)
+                    }
+                })
+
+                // 2. 提取 TILT 后的参数 (Multiplier & Watts)
+                // 查找 TILT 行
+                let tiltIndex = lines.findIndex(l => l.trim().startsWith('TILT='))
+                if (tiltIndex !== -1) {
+                    // IES数据流通常在 TILT 后的第一行或拼合后的数据流中
+                    // 简化处理：假设数据紧跟其后。我们需要合并 TILT 后的几行来解析
+                    // 真实的 IES 解析比较复杂，这里做简化假设：
+                    // TILT=NONE 下一行通常是: #Lamps Lumens Multiplier V-Ang H-Ang Type Units Width Len Height
+                    // 再往后某处是 Ballast Factor 和 Input Watts
+                    
+                    // 为了找到 Wattage (通常在数据区的最后部分)，IES解析太复杂，
+                    // 这里我们尝试找包含 Multiplier 的那一行。
+                    
+                    // 暂时只支持精准修改 Multiplier，Wattage 在 IES 中通常是 Ballast Watts
+                    // 位于数据流的 "Input Watts" 位置
+                    
+                    // 简易抓取 Multiplier (假设在 TILT 后几行内)
+                    let dataStream = lines.slice(tiltIndex + 1, tiltIndex + 20).join(" ").trim().split(/\s+/)
+                    if (dataStream.length > 5) {
+                        data.multiplier = parseFloat(dataStream[2]) // 第3个参数
+                        // Wattage 在 IES 里的位置非常靠后，解析困难，暂设为默认或让用户填
+                        // 尝试读取: 最后一个非数据矩阵的参数通常是 Input Watts
+                        // 这里为了稳健，如果读不到就不填
+                    }
+                }
+                this.parsedData = data
+            },
+            getIESValue(line) {
+                return line.substring(line.indexOf(']') + 1).trim()
+            },
+
+            // --- LDT 解析逻辑 ---
+            parseLDT() {
+                const lines = this.rawLines
+                if (lines.length < 30) { alert("LDT 文件似乎已损坏"); return; }
+                
+                // LDT 是按行号来的 (EULUMDAT 标准)
+                // Line 0 (Index 0): Manufacturer
+                // Line 1: Type (Catalog Number) -> 有时也是 Name
+                // Line 2: Luminaire Name
+                // ...
+                // Line 26: Wattage
+                // Line 28: Total Luminous Flux
+                
+                this.parsedData = {
+                    manufacturer: lines[0].trim(),
+                    catalogNumber: lines[1].trim(), // Type
+                    luminaireName: lines[2].trim(), // Name
+                    watts: parseFloat(lines[26]),
+                    totalFlux: parseInt(lines[28]),
+                    cct: '', // LDT 无标准位
+                    cri: '', // LDT 无标准位
+                    multiplier: 1.0 // LDT 不用这个，但为了统一模型
+                }
+            },
+
+            // --- 下载与生成 ---
+            downloadFile() {
+                let content = ""
+                if (this.fileType === 'ies') {
+                    content = this.generateIES()
+                } else {
+                    content = this.generateLDT()
+                }
+
+                const blob = new Blob([content], { type: 'text/plain' })
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url
+                // 在原文件名前加 mod_
+                a.download = 'mod_' + this.fileName
+                document.body.appendChild(a)
+                a.click()
+                document.body.removeChild(a)
+            },
+
+            generateIES() {
+                let newLines = [...this.rawLines]
+                const d = this.parsedData
+                
+                // 1. 更新或添加 Header 标签
+                this.updateIESLine(newLines, 'MANUFAC', d.manufacturer)
+                this.updateIESLine(newLines, 'LUMINAIRE', d.luminaireName)
+                this.updateIESLine(newLines, 'LUMCAT', d.catalogNumber)
+                
+                // 写入自定义标签 CCT / CRI
+                if (d.cct) this.updateIESLine(newLines, 'CCT', d.cct, true)
+                if (d.cri) this.updateIESLine(newLines, 'CRI', d.cri, true)
+
+                // 2. 更新 Multiplier
+                // 这是一个简化替换，定位到 TILT 后，找到原来的 Multiplier 数字并替换
+                // 风险：如果原来的数字是 1，可能会误换成灯泡数量。
+                // 稳妥方案：重新构建 TILT 后的第一行数据字符串
+                
+                let tiltIndex = newLines.findIndex(l => l.trim().startsWith('TILT='))
+                if (tiltIndex !== -1) {
+                     // 读取TILT后的一行 (假设未换行)
+                     // 实际情况建议更复杂的 Token 处理，这里做简单正则替换
+                     // 替换逻辑：找到行内第3个数字
+                     let targetLineIdx = tiltIndex + 1
+                     // 如果是 TILT=INCLUDE，要跳过文件名，这里假设 TILT=NONE
+                     
+                     let tokens = newLines[targetLineIdx].trim().split(/\s+/)
+                     if (tokens.length >= 3) {
+                         tokens[2] = d.multiplier // 修改倍数
+                         // 重组该行
+                         newLines[targetLineIdx] = tokens.join(" ")
+                     }
+                }
+                
+                return newLines.join('\n')
+            },
+
+            updateIESLine(lines, key, value, forceAdd = false) {
+                const tag = `[${key}]`
+                const idx = lines.findIndex(l => l.startsWith(tag))
+                if (idx !== -1) {
+                    lines[idx] = `${tag} ${value}`
+                } else if (forceAdd && value) {
+                    // 如果没找到且需要强制添加，加在第一行后面
+                    lines.splice(1, 0, `${tag} ${value}`)
+                }
+            },
+
+            generateLDT() {
+                let newLines = [...this.rawLines]
+                const d = this.parsedData
+
+                // LDT 直接替换行
+                newLines[0] = d.manufacturer
+                newLines[1] = d.catalogNumber
+                newLines[2] = d.luminaireName
+                
+                // 处理 CCT / CRI -> LDT 没有位置放，追加到 Line 2 (Name) 后面，或者不做处理
+                // 许多软件会读取 Name 里的信息
+                if (d.cct || d.cri) {
+                    let extra = ` (${d.cct} ${d.cri})`.trim()
+                    if (!newLines[2].includes(extra)) {
+                        newLines[2] = newLines[2] + extra
+                    }
+                }
+
+                newLines[26] = d.watts.toString()
+                newLines[28] = d.totalFlux.toString()
+
+                return newLines.join('\r\n') // LDT 严格要求 CRLF
+            }
+        }
+    }).mount('#app')
 </script>
 
 </body>
