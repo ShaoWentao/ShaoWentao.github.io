@@ -3,27 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IES & LDT 配光文件编辑器 Pro</title>
+    <title>IES & LDT 专业配光编辑器</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    
     <style>
-        body { background-color: #f3f4f6; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: #f8fafc; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
         .drag-area { border: 2px dashed #cbd5e1; transition: all 0.3s; }
         .drag-area:hover, .drag-area.active { border-color: #3b82f6; background-color: #eff6ff; }
+        /* Plotly 图表容器高度 */
+        .plot-container { height: 450px; }
+        .tab-btn { @apply px-4 py-2 font-semibold text-sm rounded-t-lg; }
+        .tab-btn.active { @apply bg-white text-blue-600 border-t-2 border-blue-600; }
+        .tab-btn.inactive { @apply bg-gray-100 text-gray-500 hover:bg-gray-200; }
     </style>
 </head>
 <body>
 
-<div id="app" class="max-w-3xl mx-auto p-6">
+<div id="app" class="max-w-6xl mx-auto p-4">
     
-    <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-gray-800">💡 IES & LDT 编辑器</h1>
-        <p class="text-gray-500 mt-2">支持修改厂家、功率、色温、显指及光通量</p>
+    <div class="text-center mb-6">
+        <h1 class="text-3xl font-extrabold text-gray-800">💡 IES & LDT 配光分析专业版</h1>
+        <p class="text-gray-500 mt-2 text-sm">可视化编辑 / 极坐标 & 直角坐标图 / 对称性修改</p>
     </div>
 
-    <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+    <div class="bg-white rounded-xl shadow-sm p-4 mb-4">
         <div 
-            class="drag-area rounded-lg p-10 text-center cursor-pointer"
+            class="drag-area rounded-lg p-8 text-center cursor-pointer"
             @click="$refs.fileInput.click()"
             @dragover.prevent
             @drop.prevent="handleDrop"
@@ -33,297 +40,507 @@
                 <p class="text-4xl mb-2">📂</p>
                 <p class="text-gray-600 font-medium">点击或拖拽上传 IES / LDT 文件</p>
             </div>
-            <div v-else>
-                <p class="text-4xl mb-2">📄</p>
-                <p class="text-green-600 font-bold text-lg">{{ fileName }}</p>
-                <p class="text-xs text-gray-400 mt-1 uppercase">{{ fileType }} 格式</p>
+            <div v-else class="flex items-center justify-center gap-4">
+                <div class="text-4xl">📄</div>
+                <div class="text-left">
+                    <p class="text-green-600 font-bold text-lg truncate max-w-md">{{ fileName }}</p>
+                    <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded uppercase">
+                        {{ fileType }} 格式
+                    </span>
+                </div>
             </div>
         </div>
     </div>
 
-    <div v-if="parsedData" class="bg-white rounded-xl shadow-md p-6 animate-fade-in">
-        <div class="flex justify-between items-center border-b pb-4 mb-4">
-            <h2 class="text-xl font-bold text-gray-700">参数修改</h2>
-            <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
-                {{ fileType === 'ies' ? 'IES 标准' : 'EULUMDAT (LDT) 标准' }}
-            </span>
+    <div v-if="parsedData" class="bg-white rounded-xl shadow-sm overflow-hidden animate-fade-in">
+        
+        <div class="flex border-b bg-gray-50 px-4 pt-4 gap-2">
+             <button @click="currentTab = 'editor'" :class="['tab-btn', currentTab === 'editor' ? 'active' : 'inactive']">📝 参数编辑</button>
+             <button @click="currentTab = 'polar'" :class="['tab-btn', currentTab === 'polar' ? 'active' : 'inactive']">🕸️ 极坐标图 (Polar)</button>
+             <button @click="currentTab = 'cartesian'" :class="['tab-btn', currentTab === 'cartesian' ? 'active' : 'inactive']">📈 直角坐标图 (Cartesian)</button>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">厂家 (Manufacturer)</label>
-                <input v-model="parsedData.manufacturer" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">灯具名称 (Luminaire Name)</label>
-                <input v-model="parsedData.luminaireName" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">系统功率 (Watts)</label>
-                <input type="number" v-model="parsedData.watts" step="0.1" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
-            </div>
-            
-            <div v-if="fileType === 'ies'">
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                    光通量倍增因子 
-                    <span class="text-xs text-gray-400" title="修改此数值会等比缩放整个配光曲线">(Multiplier) ℹ️</span>
-                </label>
-                <input type="number" v-model="parsedData.multiplier" step="0.001" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none bg-yellow-50">
-            </div>
-            <div v-if="fileType === 'ldt'">
-                <label class="block text-sm font-medium text-gray-700 mb-1">总光通量 (Total Flux)</label>
-                <input type="number" v-model="parsedData.totalFlux" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none bg-yellow-50">
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">产品型号 (Catalog/Type)</label>
-                <input v-model="parsedData.catalogNumber" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
-            </div>
-        </div>
-
-        <div class="mb-6 p-4 bg-gray-50 rounded-lg">
-            <h3 class="text-sm font-bold text-gray-600 mb-2">扩展信息 (色温/显指等)</h3>
-            <p v-if="fileType === 'ldt'" class="text-xs text-orange-500 mb-2">⚠️ LDT 标准不支持自定义标签，这些信息将追加到“灯具描述”字段中。</p>
-            
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs font-medium text-gray-500">色温 (CCT)</label>
-                    <input v-model="parsedData.cct" placeholder="例如: 3000K" class="w-full p-2 border rounded text-sm">
+        <div class="p-6">
+            <div v-show="currentTab === 'editor'">
+                <div class="flex justify-between items-center border-b pb-4 mb-4">
+                    <h2 class="text-xl font-bold text-gray-700">基本信息与参数</h2>
                 </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-500">显色指数 (CRI)</label>
-                    <input v-model="parsedData.cri" placeholder="例如: Ra90" class="w-full p-2 border rounded text-sm">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">厂家 (Manufacturer)</label>
+                        <input v-model="parsedData.manufacturer" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">灯具名称 (Luminaire Name)</label>
+                        <input v-model="parsedData.luminaireName" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">系统功率 (Watts)</label>
+                        <input type="number" v-model.number="parsedData.watts" step="0.1" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    
+                    <div v-if="fileType === 'ies'">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">光通量倍增因子 (Multiplier)</label>
+                        <input type="number" v-model.number="parsedData.multiplier" step="0.001" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none bg-yellow-50">
+                    </div>
+                    <div v-if="fileType === 'ldt'">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">总光通量 (Total Flux)</label>
+                        <input type="number" v-model.number="parsedData.totalFlux" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none bg-yellow-50">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">产品型号 (Catalog/Type)</label>
+                        <input v-model="parsedData.catalogNumber" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                </div>
+
+                <div v-if="fileType === 'ldt'" class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                    <h3 class="text-sm font-bold text-blue-800 mb-2">🔄 对称性设置 (LDT)</h3>
+                    <select v-model.number="parsedData.symmetryIndicator" class="w-full p-2 border rounded outline-none">
+                        <option value="0">0 - 非对称 (Asymmetric)</option>
+                        <option value="1">1 - 关于 C0-C180 轴对称 (Bilateral)</option>
+                        <option value="2">2 - 关于 C0-180 和 C90-270 四分对称 (Quadrilateral)</option>
+                        <option value="3">3 - 关于所有 C 平面旋转对称 (Rotational)</option>
+                    </select>
+                    <p class="text-xs text-blue-500 mt-2">修改此项将改变软件解析数据的方式。</p>
+                </div>
+                
+                <div v-if="fileType === 'ies' && iesSymmetryInfo" class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                    <h3 class="text-sm font-bold text-gray-700 mb-2">ℹ️ IES 对称性信息 (只读)</h3>
+                    <p class="text-sm text-gray-600">{{ iesSymmetryInfo }}</p>
+                    <p class="text-xs text-gray-400 mt-1">IES 对称性由水平角度范围决定，修改需要重构数据矩阵，暂不支持在线修改。</p>
+                </div>
+
+
+                <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <h3 class="text-sm font-bold text-gray-600 mb-2">扩展信息 (CCT / CRI)</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500">色温 (CCT)</label>
+                            <input v-model="parsedData.cct" placeholder="例如: 3000K" class="w-full p-2 border rounded text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500">显色指数 (CRI)</label>
+                            <input v-model="parsedData.cri" placeholder="例如: Ra90" class="w-full p-2 border rounded text-sm">
+                        </div>
+                    </div>
+                     <p v-if="fileType === 'ldt'" class="text-xs text-orange-500 mt-2">⚠️ LDT 将追加到灯具名称后保存。</p>
+                </div>
+
+                 <button 
+                    @click="downloadFile" 
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 flex justify-center items-center gap-2"
+                >
+                    <span>⬇️ 下载修改后的文件</span>
+                </button>
+
+            </div>
+
+            <div v-show="currentTab === 'polar'">
+                <div id="polarPlot" class="plot-container"></div>
+                <div class="text-center text-sm text-gray-500 mt-2">
+                    <span class="inline-block w-3 h-3 bg-red-500 rounded-full mr-1"></span> C0/180 平面
+                    <span class="inline-block w-3 h-3 bg-blue-500 rounded-full ml-4 mr-1"></span> C90/270 平面 (如果存在)
                 </div>
             </div>
-        </div>
 
-        <button 
-            @click="downloadFile" 
-            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 flex justify-center items-center gap-2"
-        >
-            <span>⬇️ 下载修改后的文件</span>
-        </button>
+            <div v-show="currentTab === 'cartesian'">
+                <div id="cartesianPlot" class="plot-container"></div>
+                 <div class="text-center text-sm text-gray-500 mt-2">
+                    显示光强随垂直角度 (γ) 的变化
+                </div>
+            </div>
+
+        </div>
     </div>
 
 </div>
 
 <script>
-    const { createApp } = Vue
+    const { createApp, nextTick } = Vue
 
     createApp({
         data() {
             return {
-                fileContent: null, // 原始文件内容字符串
-                rawLines: [],      // 按行分割
+                currentTab: 'editor',
                 fileName: '',
-                fileType: '',      // 'ies' or 'ldt'
+                fileType: '',
+                rawContent: '',
+                rawLines: [],
+                // 解析后的核心数据模型
+                parsedData: null, 
+                // { manufacturer, luminaireName, catalogNumber, watts, multiplier(ies), totalFlux(ldt), cct, cri, symmetryIndicator(ldt) }
                 
-                // 统一的数据模型
-                parsedData: null 
-                // 结构: { manufacturer, luminaireName, catalogNumber, watts, multiplier(ies), totalFlux(ldt), cct, cri }
+                // 图表数据
+                chartData: {
+                    vAngles: [], // 垂直角度 (X轴)
+                    c0Values: [], // C0平面的光强
+                    c90Values: [], // C90平面的光强 (可能为空)
+                    maxCandela: 0
+                },
+                iesSymmetryInfo: ''
+            }
+        },
+        watch: {
+            // 监听 tab 切换，切换到图表 tab 时需要重新调整图表大小以适应容器
+            currentTab(newTab) {
+                if (newTab === 'polar' || newTab === 'cartesian') {
+                    nextTick(() => {
+                        Plotly.relayout('polarPlot', { autosize: true });
+                        Plotly.relayout('cartesianPlot', { autosize: true });
+                    });
+                }
+            },
+            // 监听倍数变化，实时更新图表 (仅 IES)
+            'parsedData.multiplier'(newVal) {
+                 if(this.fileType === 'ies' && newVal) {
+                    this.updateChartsWithMultiplier(newVal);
+                 }
             }
         },
         methods: {
-            handleFileSelect(event) {
-                const file = event.target.files[0]
-                if (file) this.processFile(file)
-            },
-            handleDrop(event) {
-                const file = event.dataTransfer.files[0]
-                if (file) this.processFile(file)
-            },
+            handleFileSelect(event) { const file = event.target.files[0]; if (file) this.processFile(file); },
+            handleDrop(event) { const file = event.dataTransfer.files[0]; if (file) this.processFile(file); },
+            
             processFile(file) {
                 this.fileName = file.name
                 const ext = file.name.split('.').pop().toLowerCase()
-                
                 const reader = new FileReader()
                 reader.onload = (e) => {
-                    this.fileContent = e.target.result
-                    this.rawLines = this.fileContent.split(/\r?\n/)
-                    
+                    this.rawContent = e.target.result
+                    this.rawLines = this.rawContent.split(/\r?\n/)
                     if (ext === 'ies') {
                         this.fileType = 'ies'
-                        this.parseIES()
+                        if(this.parseIESDeep()) { this.drawCharts(); }
                     } else if (ext === 'ldt') {
                         this.fileType = 'ldt'
-                        this.parseLDT()
+                        if(this.parseLDTDeep()) { this.drawCharts(); }
                     } else {
-                        alert("仅支持 .ies 和 .ldt 文件")
-                        this.parsedData = null
+                        alert("仅支持 .ies 和 .ldt 文件"); this.parsedData = null;
                     }
+                    this.currentTab = 'editor'; // 重置到编辑页
                 }
-                reader.readAsText(file, 'ISO-8859-1') // LDT通常使用这种编码，IES一般是UTF-8或ASCII，这里兼容处理
+                reader.readAsText(file, 'ISO-8859-1')
             },
 
-            // --- IES 解析逻辑 ---
-            parseIES() {
-                const lines = this.rawLines
-                let data = {
-                    manufacturer: '', luminaireName: '', catalogNumber: '', 
-                    watts: 0, multiplier: 1.0, cct: '', cri: ''
-                }
+            // =========================================
+            // 深度解析 (Deep Parsing) - 为图表提取数据
+            // =========================================
 
-                // 1. 提取 Header 标签
-                lines.forEach(line => {
+            parseLDTDeep() {
+                const lines = this.rawLines;
+                if (lines.length < 30) { alert("文件过短或损坏"); return false; }
+
+                // 1. 提取基础信息
+                this.parsedData = {
+                    manufacturer: lines[0].trim(),
+                    catalogNumber: lines[1].trim(),
+                    luminaireName: lines[2].trim(),
+                    symmetryIndicator: parseInt(lines[3]), // LDT对称性
+                    watts: parseFloat(lines[26]),
+                    totalFlux: parseInt(lines[28]),
+                    cct: '', cri: '', multiplier: 1.0
+                };
+
+                // 2. 提取图表数据
+                try {
+                    const numV = parseInt(lines[30]); // 垂直角度数量
+                    const numH = parseInt(lines[31]); // 水平角度数量
+                    let currentLine = 42; // 数据起始行
+
+                    // 读取垂直角度 (V-Angles / Gamma)
+                    this.chartData.vAngles = [];
+                    for(let i=0; i<numV; i++) {
+                        this.chartData.vAngles.push(parseFloat(lines[currentLine++]));
+                    }
+
+                    // 读取水平角度 (H-Angles / C-Planes) - LDT标准通常不明确列出H角度值，而是假设均分
+                    // 这里简化处理，我们只需要读取第一个平面(C0)和中间平面(C90)的数据
+                    
+                    // LDT数据存储方式：先是C0平面的所有V角度光强，然后是下一C平面的...
+                    
+                    // 读取 C0 平面数据
+                    this.chartData.c0Values = [];
+                    for(let i=0; i<numV; i++) {
+                         this.chartData.c0Values.push(parseFloat(lines[currentLine++]));
+                    }
+
+                    // 尝试尝试读取 C90 平面数据 (如果存在多个平面)
+                    this.chartData.c90Values = [];
+                    if (numH > 1) {
+                        // 跳过中间平面，粗略定位到 C90 附近
+                        let c90Index = Math.floor(numH / 4); // 假设是四分对称，C90在1/4处
+                        if (this.parsedData.symmetryIndicator === 1) c90Index = 0; // 左右对称，只有 C0-180
+
+                        let skipRows = (c90Index - 1) * numV;
+                        currentLine += skipRows;
+
+                        if(currentLine + numV < lines.length && this.parsedData.symmetryIndicator !== 1) {
+                             for(let i=0; i<numV; i++) {
+                                this.chartData.c90Values.push(parseFloat(lines[currentLine++]));
+                            }
+                        }
+                    }
+
+                    this.calculateMaxCandela();
+
+                } catch (e) {
+                    console.error("LDT图表数据解析失败", e);
+                    alert("无法解析配光曲线数据，可能文件格式不标准。仅可编辑表头信息。");
+                }
+                return true;
+            },
+
+            parseIESDeep() {
+                 const lines = this.rawLines;
+                 let data = { manufacturer: '', luminaireName: '', catalogNumber: '', watts: 0, multiplier: 1.0, cct: '', cri: '' };
+                 
+                 // 1. Header 解析
+                 lines.forEach(line => {
                     if (line.startsWith('[')) {
                         if (line.includes('MANUFAC')) data.manufacturer = this.getIESValue(line)
                         if (line.includes('LUMCAT')) data.catalogNumber = this.getIESValue(line)
                         if (line.includes('LUMINAIRE')) data.luminaireName = this.getIESValue(line)
-                        // 自定义/非标准标签读取
                         if (line.includes('CCT') || line.includes('COLORTEMP')) data.cct = this.getIESValue(line)
                         if (line.includes('CRI') || line.includes('RA')) data.cri = this.getIESValue(line)
                     }
-                })
+                });
 
-                // 2. 提取 TILT 后的参数 (Multiplier & Watts)
-                // 查找 TILT 行
-                let tiltIndex = lines.findIndex(l => l.trim().startsWith('TILT='))
-                if (tiltIndex !== -1) {
-                    // IES数据流通常在 TILT 后的第一行或拼合后的数据流中
-                    // 简化处理：假设数据紧跟其后。我们需要合并 TILT 后的几行来解析
-                    // 真实的 IES 解析比较复杂，这里做简化假设：
-                    // TILT=NONE 下一行通常是: #Lamps Lumens Multiplier V-Ang H-Ang Type Units Width Len Height
-                    // 再往后某处是 Ballast Factor 和 Input Watts
+                // 2. 定位数据区
+                let tiltIndex = lines.findIndex(l => l.trim().startsWith('TILT='));
+                if(tiltIndex === -1) { alert("无效的 IES 文件 (未找到 TILT)"); return false; }
+
+                try {
+                    // 将 TILT 后的所有内容合并为一个大字符串流进行解析
+                    // 这是一个简化的流式解析器
+                    let dataStreamStr = lines.slice(tiltIndex + 1).join(" ");
+                    // 清理多余空格
+                    let tokens = dataStreamStr.trim().split(/\s+/).map(Number);
+                    let p = 0; // 指针
+
+                    // 跳过 TILT 文件名 (如果 TILT=INCLUDE) - 简化处理，假设是 NONE 或者文件名占一个token
+                    if (lines[tiltIndex].includes("INCLUDE")) p++;
+
+                    // 读取参数行
+                    // #Lamps, Lumens, Multiplier, V-Ang#, H-Ang#, Type, Units, Width, Len, Height
+                    const numLamps = tokens[p++];
+                    const lumensPerLamp = tokens[p++];
+                    data.multiplier = tokens[p++];
+                    const numV = tokens[p++];
+                    const numH = tokens[p++];
+                    p += 5; // 跳过 Type, Units, Dimensions
+
+                    // 跳过 Ballast Factor, Input Watts (Wattage在这里)
+                    p += 1;
+                    data.watts = tokens[p++];
+                    p += 1; // Skip another value
+
+                    // 读取角度
+                    this.chartData.vAngles = tokens.slice(p, p + numV);
+                    p += numV;
+                    const hAngles = tokens.slice(p, p + numH);
+                    p += numH;
+
+                    // 确定 IES 对称性信息
+                    const lastH = hAngles[hAngles.length -1];
+                    if (lastH === 0) this.iesSymmetryInfo = "旋转对称 (Rotational)";
+                    else if (lastH === 90) this.iesSymmetryInfo = "四分对称 (Quadrilateral, 0-90°)";
+                    else if (lastH === 180) this.iesSymmetryInfo = "左右对称 (Bilateral, 0-180°)";
+                    else if (lastH === 360) this.iesSymmetryInfo = "非对称 (Asymmetric, 0-360°)";
+                    else this.iesSymmetryInfo = `自定义范围 (0-${lastH}°)`;
+
+                    // 读取光强数据矩阵 (Candela Matrix)
+                    // IES 数据排列：先列出所有 H 平面在第一个 V 角度的光强，再列出第二个 V 角度的...
                     
-                    // 为了找到 Wattage (通常在数据区的最后部分)，IES解析太复杂，
-                    // 这里我们尝试找包含 Multiplier 的那一行。
-                    
-                    // 暂时只支持精准修改 Multiplier，Wattage 在 IES 中通常是 Ballast Watts
-                    // 位于数据流的 "Input Watts" 位置
-                    
-                    // 简易抓取 Multiplier (假设在 TILT 后几行内)
-                    let dataStream = lines.slice(tiltIndex + 1, tiltIndex + 20).join(" ").trim().split(/\s+/)
-                    if (dataStream.length > 5) {
-                        data.multiplier = parseFloat(dataStream[2]) // 第3个参数
-                        // Wattage 在 IES 里的位置非常靠后，解析困难，暂设为默认或让用户填
-                        // 尝试读取: 最后一个非数据矩阵的参数通常是 Input Watts
-                        // 这里为了稳健，如果读不到就不填
+                    this.chartData.c0Values = [];
+                    this.chartData.c90Values = [];
+
+                    let c0Index = hAngles.indexOf(0);
+                    let c90Index = hAngles.indexOf(90); // 查找是否存在 C90
+
+                    for (let v = 0; v < numV; v++) {
+                        // 每一行 V 角度对应 numH 个水平角度的数据
+                        let rowStart = p + v * numH;
+                        if (c0Index !== -1) {
+                            this.chartData.c0Values.push(tokens[rowStart + c0Index]);
+                        }
+                        if (c90Index !== -1) {
+                            this.chartData.c90Values.push(tokens[rowStart + c90Index]);
+                        }
                     }
+                    
+                    this.parsedData = data;
+                    // 应用初始的倍增因子到图表数据
+                    this.updateChartsWithMultiplier(data.multiplier);
+
+                } catch(e) {
+                    console.error("IES解析失败", e);
+                    alert("IES 数据区解析失败，可能格式不标准。");
+                    this.parsedData = data; // 仍然允许编辑表头
                 }
-                this.parsedData = data
-            },
-            getIESValue(line) {
-                return line.substring(line.indexOf(']') + 1).trim()
+                return true;
             },
 
-            // --- LDT 解析逻辑 ---
-            parseLDT() {
-                const lines = this.rawLines
-                if (lines.length < 30) { alert("LDT 文件似乎已损坏"); return; }
-                
-                // LDT 是按行号来的 (EULUMDAT 标准)
-                // Line 0 (Index 0): Manufacturer
-                // Line 1: Type (Catalog Number) -> 有时也是 Name
-                // Line 2: Luminaire Name
-                // ...
-                // Line 26: Wattage
-                // Line 28: Total Luminous Flux
-                
-                this.parsedData = {
-                    manufacturer: lines[0].trim(),
-                    catalogNumber: lines[1].trim(), // Type
-                    luminaireName: lines[2].trim(), // Name
-                    watts: parseFloat(lines[26]),
-                    totalFlux: parseInt(lines[28]),
-                    cct: '', // LDT 无标准位
-                    cri: '', // LDT 无标准位
-                    multiplier: 1.0 // LDT 不用这个，但为了统一模型
-                }
+            getIESValue(line) { return line.substring(line.indexOf(']') + 1).trim() },
+            
+            calculateMaxCandela() {
+                 let max0 = Math.max(...(this.chartData.c0Values || [0]));
+                 let max90 = Math.max(...(this.chartData.c90Values || [0]));
+                 this.chartData.maxCandela = Math.max(max0, max90);
             },
 
-            // --- 下载与生成 ---
+            updateChartsWithMultiplier(multiplier) {
+                // IES图表数据存储的是原始值，显示时乘倍数
+                this.calculateMaxCandela();
+                this.drawCharts(multiplier);
+            },
+
+            // =========================================
+            // 绘图逻辑 (Plotly.js)
+            // =========================================
+            drawCharts(multiplier = 1.0) {
+                nextTick(() => {
+                    this.drawPolar(multiplier);
+                    this.drawCartesian(multiplier);
+                });
+            },
+
+            drawPolar(multiplier) {
+                const vRad = this.chartData.vAngles.map(a => a * Math.PI / 180); // 转弧度
+                // 应用倍数
+                const c0 = this.chartData.c0Values.map(v => v * multiplier);
+                const c90 = this.chartData.c90Values.map(v => v * multiplier);
+                const maxVal = this.chartData.maxCandela * multiplier * 1.05; //稍微留点边距
+
+                // 构造镜像数据以形成完整的圆 (对于 0-180 的数据)
+                const vFull = [...vRad, ...vRad.map(a => -a).reverse()];
+                const c0Full = [...c0, ...c0.reverse()];
+                const c90Full = [...c90, ...c90.reverse()];
+
+                const traces = [
+                    {
+                        type: 'scatterpolar',
+                        mode: 'lines',
+                        r: c0Full, theta: vFull.map(r => r * 180 / Math.PI), // 转回角度给 Plotly
+                        name: 'C0/180', line: { color: 'red', width: 2 }
+                    }
+                ];
+                if(c90.length > 0 && this.parsedData.symmetryIndicator !== 1) {
+                    traces.push({
+                        type: 'scatterpolar', mode: 'lines',
+                        r: c90Full, theta: vFull.map(r => r * 180 / Math.PI),
+                        name: 'C90/270', line: { color: 'blue', width: 2 }
+                    });
+                }
+
+                const layout = {
+                    polar: {
+                        radialaxis: { visible: true, range: [0, maxVal] },
+                        angularaxis: { 
+                            direction: "clockwise",
+                            rotation: 90, // 0度朝下
+                            tickmode: 'array',
+                            tickvals: [0, 30, 60, 90, 120, 150, 180, -30, -60, -90, -120, -150],
+                            ticktext: ['0°', '30°', '60°', '90°', '120°', '150°', '180°', '330°', '300°', '270°', '240°', '210°']
+                        } 
+                    },
+                    margin: { t: 30, b: 30, l: 30, r: 30 },
+                    showlegend: false // 使用自定义图例说明
+                };
+                Plotly.newPlot('polarPlot', traces, layout, {displayModeBar: false});
+            },
+
+            drawCartesian(multiplier) {
+                const v = this.chartData.vAngles;
+                 // 应用倍数
+                const c0 = this.chartData.c0Values.map(v => v * multiplier);
+                const c90 = this.chartData.c90Values.map(v => v * multiplier);
+
+                const traces = [
+                    { x: v, y: c0, type: 'scatter', mode: 'lines', name: 'C0', line: { color: 'red' } }
+                ];
+                 if(c90.length > 0 && this.parsedData.symmetryIndicator !== 1) {
+                    traces.push({ x: v, y: c90, type: 'scatter', mode: 'lines', name: 'C90', line: { color: 'blue' } });
+                }
+
+                const layout = {
+                    xaxis: { title: '垂直角度 γ (度)', range: [0, 180] },
+                    yaxis: { title: '光强 I (cd)' },
+                    margin: { t: 30, b: 50, l: 60, r: 30 },
+                    showlegend: true
+                };
+                Plotly.newPlot('cartesianPlot', traces, layout, {displayModeBar: false});
+            },
+
+            // =========================================
+            // 下载生成 (Generate & Download)
+            // =========================================
             downloadFile() {
-                let content = ""
-                if (this.fileType === 'ies') {
-                    content = this.generateIES()
-                } else {
-                    content = this.generateLDT()
-                }
-
+                let content = this.fileType === 'ies' ? this.generateIES() : this.generateLDT();
                 const blob = new Blob([content], { type: 'text/plain' })
                 const url = URL.createObjectURL(blob)
                 const a = document.createElement('a')
                 a.href = url
-                // 在原文件名前加 mod_
                 a.download = 'mod_' + this.fileName
-                document.body.appendChild(a)
-                a.click()
-                document.body.removeChild(a)
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
             },
 
             generateIES() {
+                // IES 生成逻辑与之前相同，主要更新Header和Multiplier
                 let newLines = [...this.rawLines]
                 const d = this.parsedData
-                
-                // 1. 更新或添加 Header 标签
                 this.updateIESLine(newLines, 'MANUFAC', d.manufacturer)
                 this.updateIESLine(newLines, 'LUMINAIRE', d.luminaireName)
                 this.updateIESLine(newLines, 'LUMCAT', d.catalogNumber)
-                
-                // 写入自定义标签 CCT / CRI
                 if (d.cct) this.updateIESLine(newLines, 'CCT', d.cct, true)
                 if (d.cri) this.updateIESLine(newLines, 'CRI', d.cri, true)
 
-                // 2. 更新 Multiplier
-                // 这是一个简化替换，定位到 TILT 后，找到原来的 Multiplier 数字并替换
-                // 风险：如果原来的数字是 1，可能会误换成灯泡数量。
-                // 稳妥方案：重新构建 TILT 后的第一行数据字符串
-                
                 let tiltIndex = newLines.findIndex(l => l.trim().startsWith('TILT='))
                 if (tiltIndex !== -1) {
-                     // 读取TILT后的一行 (假设未换行)
-                     // 实际情况建议更复杂的 Token 处理，这里做简单正则替换
-                     // 替换逻辑：找到行内第3个数字
-                     let targetLineIdx = tiltIndex + 1
-                     // 如果是 TILT=INCLUDE，要跳过文件名，这里假设 TILT=NONE
+                     // 简易替换 Multiplier。这假设 TILT 后几行数据结构标准。
+                     // 找到 TILT 后包含数字的行，替换第3个数字。
+                     let p = tiltIndex + 1;
+                     if (newLines[tiltIndex].includes("INCLUDE")) p++; // 跳过 potential filename
+                     // 寻找第一行有效数据
+                     while(p < newLines.length && !newLines[p].trim().match(/^\d/)) p++;
                      
-                     let tokens = newLines[targetLineIdx].trim().split(/\s+/)
-                     if (tokens.length >= 3) {
-                         tokens[2] = d.multiplier // 修改倍数
-                         // 重组该行
-                         newLines[targetLineIdx] = tokens.join(" ")
+                     if(p < newLines.length) {
+                        let tokens = newLines[p].trim().split(/\s+/);
+                        if (tokens.length >= 3) {
+                            tokens[2] = d.multiplier.toFixed(4); // 写入新的倍数
+                            newLines[p] = " " + tokens.join(" "); // 保持一点缩进
+                        }
                      }
                 }
-                
                 return newLines.join('\n')
             },
-
-            updateIESLine(lines, key, value, forceAdd = false) {
+             updateIESLine(lines, key, value, forceAdd = false) {
                 const tag = `[${key}]`
                 const idx = lines.findIndex(l => l.startsWith(tag))
-                if (idx !== -1) {
-                    lines[idx] = `${tag} ${value}`
-                } else if (forceAdd && value) {
-                    // 如果没找到且需要强制添加，加在第一行后面
-                    lines.splice(1, 0, `${tag} ${value}`)
-                }
+                if (idx !== -1) lines[idx] = `${tag} ${value}`
+                else if (forceAdd && value) lines.splice(1, 0, `${tag} ${value}`)
             },
 
             generateLDT() {
+                // LDT 生成逻辑，增加对称性修改
                 let newLines = [...this.rawLines]
                 const d = this.parsedData
-
-                // LDT 直接替换行
                 newLines[0] = d.manufacturer
                 newLines[1] = d.catalogNumber
                 newLines[2] = d.luminaireName
-                
-                // 处理 CCT / CRI -> LDT 没有位置放，追加到 Line 2 (Name) 后面，或者不做处理
-                // 许多软件会读取 Name 里的信息
                 if (d.cct || d.cri) {
                     let extra = ` (${d.cct} ${d.cri})`.trim()
-                    if (!newLines[2].includes(extra)) {
-                        newLines[2] = newLines[2] + extra
-                    }
+                    if (!newLines[2].includes(extra)) newLines[2] += extra
                 }
-
+                // 修改对称性 (Line 3 / Index 3)
+                newLines[3] = d.symmetryIndicator.toString();
                 newLines[26] = d.watts.toString()
                 newLines[28] = d.totalFlux.toString()
-
-                return newLines.join('\r\n') // LDT 严格要求 CRLF
+                return newLines.join('\r\n')
             }
         }
     }).mount('#app')
