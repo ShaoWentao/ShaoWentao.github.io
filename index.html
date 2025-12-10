@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Photometric Editor</title>
+    <title>Viso Style Photometric Editor (Fixed Linear)</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
@@ -46,7 +46,7 @@
     <div id="app-ui" class="flex flex-col h-screen">
         <header class="bg-[#1f2023] border-b border-[#2c2e33] px-4 py-2 flex justify-between items-center flex-shrink-0 z-50">
             <div class="flex items-center gap-3">
-                <div class="font-bold text-lg tracking-wider text-white">瓶子先森 <span class="text-[#4dabf7] text-xs align-top">EDITOR</span></div>
+                <div class="font-bold text-lg tracking-wider text-white">VISO <span class="text-[#4dabf7] text-xs align-top">EDITOR</span></div>
                 <div v-if="parsedData" class="text-xs text-gray-500 border-l border-gray-600 pl-3">{{ fileName }}</div>
             </div>
             <div v-if="parsedData" class="flex bg-[#141517] rounded p-1 gap-1">
