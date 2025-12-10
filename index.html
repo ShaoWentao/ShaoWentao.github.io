@@ -312,4 +312,48 @@
                 const layoutBase = { paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: isScreen?'#9ca3af':'black', size: 10 }, margin: { t: 30, b: 30, l: 30, r: 30 }, showlegend: false };
 
                 // 1. Polar
-                Plotly.newPlot(isScreen?'polarPlot':'printPolar', [{ type:
+                Plotly.newPlot(isScreen?'polarPlot':'printPolar', [{ type: 'scatterpolar', mode: 'lines', r: rFull, theta: thetaFull, line: {color: isScreen?'#ffeb3b':'red', width: 2} }, ...(c90.length ? [{ type: 'scatterpolar', mode: 'lines', r: [...c90, ...c90.reverse()], theta: thetaFull, line: {color: isScreen?'#4dabf7':'blue', width: 2, dash: 'dash'} }] : [])], 
+                { ...layoutBase, polar: { bgcolor: isScreen?'#1f2023':'white', angularaxis: { rotation: 270, direction: "clockwise", gridcolor: isScreen?'#333':'#eee' }, radialaxis: { gridcolor: isScreen?'#333':'#eee' } } }, {staticPlot: !isScreen, displayModeBar: false});
+
+                // 2. Linear (Fixed: Full Span -180 to 180)
+                // Use the stitched xLinear and yLinear arrays
+                Plotly.newPlot(isScreen?'linearPlot':'printLinear', [
+                    { x: xLinear, y: yLinearC0, type: 'scatter', line: {color: isScreen?'#ffeb3b':'red'}, fill: 'tozeroy', fillcolor: isScreen?'rgba(255, 235, 59, 0.1)':'rgba(255,0,0,0.1)' },
+                    ...(yLinearC90.length ? [{ x: xLinear, y: yLinearC90, type: 'scatter', line: {color: isScreen?'#4dabf7':'blue', dash: 'dash'} }] : [])
+                ], 
+                { ...layoutBase, xaxis: { gridcolor: isScreen?'#333':'#eee', title: 'Gamma (°)', range: [-180, 180] }, yaxis: { gridcolor: isScreen?'#333':'#eee' } }, {staticPlot: !isScreen, displayModeBar: false});
+
+                // 3. Iso-candela
+                if (isScreen && this.hasIsoData) {
+                    let z = this.matrixData.rows.map(row => row.map(v => v * mult));
+                    Plotly.newPlot('isoCandelaPlot', [{ z: z, x: this.matrixData.hAngles, y: this.matrixData.vAngles, type: 'contour', colorscale: 'Viridis', contours: { coloring: 'heatmap' } }], 
+                    { ...layoutBase, margin: {t:10,b:30,l:30,r:10}, xaxis: {title:'C-Plane'}, yaxis: {title:'Gamma', autorange: 'reversed'} }, {displayModeBar: false});
+                }
+                // 4. Iso-lux (Simulation)
+                if (isScreen) {
+                    let h = 3, range = 5, gridSize = 20, x=[], y=[], zLux=[];
+                    for(let i=-gridSize; i<=gridSize; i++) {
+                        let row=[], py=i*(range/gridSize); y.push(py);
+                        for(let j=-gridSize; j<=gridSize; j++) {
+                            let px=j*(range/gridSize); if(i===0) x.push(px);
+                            let d=Math.sqrt(px*px+py*py), gamma=Math.atan(d/h)*(180/Math.PI);
+                            let gIdx=Math.min(Math.round(gamma/(vAng[1]||1)), this.matrixData.rows.length-1);
+                            let I=(this.matrixData.rows[gIdx]?this.matrixData.rows[gIdx][0]:0)*mult;
+                            let lux=(I*Math.pow(Math.cos(gamma*Math.PI/180),3))/(h*h); row.push(lux);
+                        } zLux.push(row);
+                    }
+                    Plotly.newPlot('isoLuxPlot', [{ z: zLux, x: x, y: y, type: 'contour', colorscale: 'Jet' }], { ...layoutBase, xaxis: {title:'Meters'}, yaxis: {title:'Meters'} }, {displayModeBar: false});
+                }
+            },
+            printReport() { this.drawCharts('print'); setTimeout(() => window.print(), 500); },
+            downloadFile() {
+                let content = ""; const d = this.parsedData;
+                if (this.fileType === 'ies') { let lines = [...this.rawLines]; const setHeader = (k, v) => { let idx = lines.findIndex(l => l.includes(`[${k}]`)); if(idx > -1) lines[idx] = `[${k}] ${v}`; else if(v) lines.splice(1, 0, `[${k}] ${v}`); }; setHeader('MANUFAC', d.manufacturer); setHeader('LUMINAIRE', d.luminaireName); setHeader('LUMCAT', d.catalogNumber); content = lines.join("\n"); } 
+                else { let lines = [...this.rawLines]; lines[0] = d.manufacturer; lines[1] = d.catalogNumber; lines[2] = d.luminaireName; lines[26] = d.watts.toString(); lines[28] = d.totalFlux.toString(); content = lines.join("\r\n"); }
+                const blob = new Blob([content], { type: 'text/plain' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = "mod_" + this.fileName; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            }
+        }
+    }).mount('#app');
+</script>
+</body>
+</html>
