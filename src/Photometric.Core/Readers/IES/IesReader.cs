@@ -72,7 +72,13 @@ public static class IesReader
                 : new IesTilt { Type = "FILE", FileName = tiltValue };
 
         idx++;
-
+// ✅ 新增：如果是 INCLUDE，先读倾斜表（它在光度参数行之前）
+IesTiltReader.TiltIncludeData? tiltInclude = null;
+if (tilt.Type.Equals("INCLUDE", StringComparison.OrdinalIgnoreCase))
+{
+    tiltInclude = IesTiltReader.ReadInclude(lines, ref idx);
+    tilt = tilt with { Angles = tiltInclude.Angles, Multipliers = tiltInclude.Multipliers };
+}
         // 4) Numeric photometric header line (LM-63 core line)
         if (idx >= lines.Length) throw new FormatException("Missing photometric header numeric line.");
         var t = SplitTokens(lines[idx]);
@@ -170,6 +176,16 @@ public static class IesReader
         for (int h = 0; h < nh; h++)
             for (int v = 0; v < nv; v++)
                 matrix[h, v] = flat[k++] * candelaMultiplier;
+// ✅ 新增：应用 TILT 修正（按每个垂直角插值）
+if (tiltInclude is not null)
+{
+    var perV = IesTiltReader.BuildVerticalMultipliers(
+        verticalAngles: angles.Vertical,
+        tiltAngles: tiltInclude.Angles,
+        tiltMultipliers: tiltInclude.Multipliers);
+
+    IesTiltReader.ApplyToCandela(matrix, perV);
+}
 
         var candela = new CandelaMatrix { Values = matrix };
 
