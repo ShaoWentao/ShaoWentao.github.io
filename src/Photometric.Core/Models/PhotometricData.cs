@@ -1,7 +1,9 @@
+using Photometric.Core.Models.Common;
+
 namespace Photometric.Core.Models;
 
 /// <summary>
-/// Strongly typed access to photometric numeric data.
+/// Core photometric data structure (angles + candela).
 /// </summary>
 public class PhotometricData
 {
