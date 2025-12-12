@@ -1,98 +1,39 @@
 @page "/"
+@inject IJSRuntime JS
 
-@using System.Text
-@using Photometric.Core.Readers.IES
-@using Photometric.Core.Mapping
-@using Photometric.Core.Writers.TM33
-
-<h1>Photometric Tools (IES → TM-33)</h1>
+<h3>Photometric Tools</h3>
 
 <p>
-    选择一个 <b>.ies</b> 文件，解析后可导出 <b>TM-33 XML</b>。
+    Upload an IES file to convert it to TM-33 format.
 </p>
 
-<InputFile OnChange="OnFileChange" accept=".ies" />
+<InputFile OnChange="OnFileSelected" />
 
-@if (!string.IsNullOrWhiteSpace(_error))
+@if (!string.IsNullOrEmpty(StatusMessage))
 {
-    <p style="color:#b00020; white-space:pre-wrap;">@_error</p>
-}
-
-@if (_parsed is not null)
-{
-    <hr />
-
-    <h3>Parsed IES</h3>
-    <ul>
-        <li><b>IES Version:</b> @_parsed.IesHeader.IesVersion</li>
-        <li><b>Manufacturer:</b> @_parsed.CommonHeader.Manufacturer</li>
-        <li><b>Luminaire:</b> @_parsed.CommonHeader.Luminaire</li>
-        <li><b>Catalog #:</b> @_parsed.CommonHeader.CatalogNumber</li>
-        <li><b>TILT:</b> @_parsed.IesHeader.Tilt.Type</li>
-        <li><b>Angles:</b> V=@_parsed.Angles.Vertical.Count, H=@_parsed.Angles.Horizontal.Count</li>
-        <li><b>Candela Matrix:</b> Rows(H)=@_parsed.Candela.HorizontalCount, Cols(V)=@_parsed.Candela.VerticalCount</li>
-        <li><b>Input Watts:</b> @_parsed.CommonHeader.InputWatts</li>
-        <li><b>Total Lumens (lampCount * lumens/lamp):</b> @_parsed.CommonHeader.TotalLumens</li>
-    </ul>
-
-    <button @onclick="DownloadTm33">Download TM-33 XML</button>
+    <p>@StatusMessage</p>
 }
 
 @code {
-    private IesParseResult? _parsed;
-    private string? _tm33Xml;
-    private string _error = "";
 
-    private async Task OnFileChange(InputFileChangeEventArgs e)
+    private string? StatusMessage;
+
+    private async Task OnFileSelected(InputFileChangeEventArgs e)
     {
-        _error = "";
-        _parsed = null;
-        _tm33Xml = null;
-
         try
         {
             var file = e.File;
+            StatusMessage = $"Selected file: {file.Name} ({file.Size} bytes)";
 
-            using var stream = file.OpenReadStream(maxAllowedSize: 20 * 1024 * 1024);
-            using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
-            var text = await reader.ReadToEndAsync();
-
-            _parsed = IesReader.Parse(text, file.Name);
-
-            var tm = IesToTm33Mapper.Map(_parsed);
-            _tm33Xml = Tm33XmlWriter.WriteToString(tm);
+            // 示例：JS 交互（确认 JS 注入是可用的）
+            await JS.InvokeVoidAsync(
+                "console.log",
+                $"IES file selected: {file.Name}"
+            );
         }
         catch (Exception ex)
         {
-            _error = ex.ToString();
+            StatusMessage = $"Error: {ex.Message}";
         }
-    }
-
-    private async Task DownloadTm33()
-    {
-        if (string.IsNullOrWhiteSpace(_tm33Xml))
-            return;
-
-        // 用 JS-less 方式：生成 data: URL 触发下载
-        // （Blazor WASM 里无需额外 JS 文件也能工作）
-        var bytes = Encoding.UTF8.GetBytes(_tm33Xml);
-        var base64 = Convert.ToBase64String(bytes);
-        var url = $"data:application/xml;base64,{base64}";
-        await JSDownload("tm33.xml", url);
-    }
-
-    [Inject] private IJSRuntime JS { get; set; } = default!;
-
-    private async Task JSDownload(string filename, string url)
-    {
-        await JS.InvokeVoidAsync("eval", $@"
-            (function(){{
-                const a=document.createElement('a');
-                a.href='{url}';
-                a.download='{filename}';
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-            }})();");
     }
 }
