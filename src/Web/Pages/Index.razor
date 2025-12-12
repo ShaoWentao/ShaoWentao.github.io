@@ -24,19 +24,22 @@
                 </ButtonTemplate>
             </MudFileUpload>
 
-            @if (parsedData != null)
+            @if (parsedResult != null)
             {
                 <MudDivider Class="my-4" />
                 <MudList T="string" Dense="true">
                     <MudText Typo="Typo.h6" Color="Color.Primary">解析数据</MudText>
                     <MudListItem Icon="@Icons.Material.Filled.Lightbulb">
-                        <MudText><b>灯具数量:</b> @parsedData.LampCount</MudText>
+                        <MudText><b>灯具数量:</b> @parsedResult.IesHeader.Photometry.LampCount</MudText>
                     </MudListItem>
                     <MudListItem Icon="@Icons.Material.Filled.BrightnessHigh">
-                        <MudText><b>单灯流明:</b> @parsedData.LumensPerLamp lm</MudText>
+                        <MudText><b>单灯流明:</b> @parsedResult.IesHeader.Photometry.LumensPerLamp lm</MudText>
                     </MudListItem>
                     <MudListItem Icon="@Icons.Material.Filled.Info">
-                        <MudText><b>版本:</b> @parsedData.Version</MudText>
+                        <MudText><b>版本:</b> @parsedResult.IesHeader.IesVersion</MudText>
+                    </MudListItem>
+                     <MudListItem Icon="@Icons.Material.Filled.FlashOn">
+                        <MudText><b>功率:</b> @parsedResult.IesHeader.Photometry.InputWatts W</MudText>
                     </MudListItem>
                 </MudList>
             }
@@ -51,7 +54,7 @@
                 <canvas id="iesCanvas" width="600" height="600"></canvas>
             </div>
 
-            @if (parsedData != null)
+            @if (parsedResult != null)
             {
                 <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Class="mt-4" OnClick="DownloadTransparentImage">
                     下载透明 PNG
@@ -66,44 +69,47 @@
 </MudGrid>
 
 @code {
-    private IesPhotometry? parsedData;
+    // 修正 1: 类型改为 IesParseResult
+    private IesParseResult? parsedResult;
 
     private async Task UploadFile(InputFileChangeEventArgs e)
     {
         var file = e.File;
         try
         {
-            // 读取文件流
             using var stream = file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
             using var reader = new StreamReader(stream);
             var content = await reader.ReadToEndAsync();
 
-            // 使用你的 Core 库进行解析
-            var parser = new IesReader();
-            parsedData = parser.Read(content);
+            // 修正 2: IesReader 是静态类，直接调用 Parse 方法
+            parsedResult = IesReader.Parse(content);
 
-            // 提示成功
             Snackbar.Add($"成功解析: {file.Name}", Severity.Success);
 
-            // 调用 JS 绘图 (传入解析后的数据)
-            // 注意：这里需要根据你的 IesPhotometry 数据结构提取 Candela 值传给 JS
-            // 假设你提取了一个二维数组或者特定的角度光强数据
-            await JS.InvokeVoidAsync("drawPolarCurve", GenerateMockData()); 
+            // 修正 3: 提取 Candela 数据传给 JS 绘图
+            // 这里我们取 C0 平面 (第一个水平角) 的数据作为演示
+            // 真实情况可能需要根据用户选择的角度来切片
+            if (parsedResult.Candela.Values.GetLength(0) > 0)
+            {
+                 var verticalCount = parsedResult.Candela.Values.GetLength(1);
+                 var curveData = new double[verticalCount];
+                 for(int i=0; i<verticalCount; i++) 
+                 {
+                     // 取第 0 个水平面的所有垂直角数据
+                     curveData[i] = parsedResult.Candela.Values[0, i];
+                 }
+                 await JS.InvokeVoidAsync("drawPolarCurve", curveData); 
+            }
         }
         catch (Exception ex)
         {
             Snackbar.Add($"解析失败: {ex.Message}", Severity.Error);
+            Console.WriteLine(ex);
         }
     }
 
     private async Task DownloadTransparentImage()
     {
         await JS.InvokeVoidAsync("downloadCanvasImage", "photometric-curve.png");
-    }
-
-    // 临时模拟数据，你需要替换为从 parsedData 中提取的真实 Candela 值
-    private double[] GenerateMockData()
-    {
-        return new double[] { 100, 95, 90, 80, 60, 40, 20, 10, 5, 0 }; // 示例
     }
 }
