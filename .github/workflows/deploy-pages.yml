@@ -1,0 +1,32 @@
+name: Deploy Blazor to GitHub Pages
+
+on:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  pages: write
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Publish Blazor site
+        run: |
+          dotnet publish src/Web/Web.csproj -c Release -o publish
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: publish/wwwroot
+          clean: true
