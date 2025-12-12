@@ -6,88 +6,178 @@ using Photometric.Core.Models.TM33;
 namespace Photometric.Core.Writers.TM33;
 
 /// <summary>
-/// TM-33 XML writer (engineering v1).
-/// Outputs a consistent XML structure suitable for downstream use.
-/// You can later extend elements/attributes to match full TM-33 schema exactly.
+/// TM-33 XML writer (Schema-aligned v2).
+/// - Writes mandatory file information and measurement units.
+/// - Writes photometric data with angle counts, symmetry, angle lists, and candela planes.
+/// - Uses invariant culture for numeric output.
+/// 
+/// Note: This is a schema-aligned structure suitable for most engineering pipelines.
+/// For 100% XSD conformance, extend element/attribute names per official TM-33-18 XSD.
 /// </summary>
 public static class Tm33XmlWriter
 {
     public static string WriteToString(Tm33Document doc)
     {
-        var sb = new StringBuilder(64 * 1024);
+        if (doc is null) throw new ArgumentNullException(nameof(doc));
+
+        var sb = new StringBuilder(128 * 1024);
 
         var settings = new XmlWriterSettings
         {
             Indent = true,
             OmitXmlDeclaration = false,
-            Encoding = new UTF8Encoding(false)
+            Encoding = new UTF8Encoding(false),
+            NewLineHandling = NewLineHandling.Entitize
         };
 
         using var xw = XmlWriter.Create(sb, settings);
 
         xw.WriteStartDocument();
 
-        xw.WriteStartElement("TM33");
-        xw.WriteAttributeString("standard", doc.Header.Standard);
+        // Root: closer to TM-33 naming
+        xw.WriteStartElement("TM33PhotometricData");
+        xw.WriteAttributeString("standard", doc.Header.Standard ?? "TM-33-18");
 
-        // Header
-        xw.WriteStartElement("Header");
-        WriteElem(xw, "Laboratory", doc.Header.Laboratory);
-        WriteElem(xw, "ReportNumber", doc.Header.ReportNumber);
-        if (doc.Header.TestDate.HasValue)
-            WriteElem(xw, "TestDate", doc.Header.TestDate.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
-        xw.WriteEndElement();
+        WriteFileInformation(xw, doc.FileInformation);
+        WriteMeasurement(xw, doc.Measurement);
 
-        // Luminaire
-        xw.WriteStartElement("Luminaire");
-        WriteElem(xw, "Manufacturer", doc.Luminaire.Manufacturer);
-        WriteElem(xw, "Model", doc.Luminaire.Model);
-        WriteElem(xw, "CatalogNumber", doc.Luminaire.CatalogNumber);
-        WriteElem(xw, "InputWatts", doc.Luminaire.InputWatts.ToString(CultureInfo.InvariantCulture));
-        WriteElem(xw, "TotalLumens", doc.Luminaire.TotalLumens.ToString(CultureInfo.InvariantCulture));
-        xw.WriteEndElement();
+        WriteHeader(xw, doc.Header);
+        WriteLuminaire(xw, doc.Luminaire);
 
-        // Photometry
-        xw.WriteStartElement("Photometry");
-        WriteElem(xw, "Type", doc.Photometry.Type);
+        WritePhotometricData(xw, doc.Photometry);
 
-        // Angles
-        xw.WriteStartElement("Angles");
-        xw.WriteStartElement("Vertical");
-        foreach (var v in doc.Photometry.Angles.Vertical)
-            xw.WriteElementString("A", v.ToString(CultureInfo.InvariantCulture));
-        xw.WriteEndElement();
-
-        xw.WriteStartElement("Horizontal");
-        foreach (var h in doc.Photometry.Angles.Horizontal)
-            xw.WriteElementString("A", h.ToString(CultureInfo.InvariantCulture));
-        xw.WriteEndElement();
-        xw.WriteEndElement(); // Angles
-
-        // Candela matrix [H,V]
-        xw.WriteStartElement("Candela");
-        xw.WriteAttributeString("rows", doc.Photometry.Candela.HorizontalCount.ToString(CultureInfo.InvariantCulture));
-        xw.WriteAttributeString("cols", doc.Photometry.Candela.VerticalCount.ToString(CultureInfo.InvariantCulture));
-
-        for (int hi = 0; hi < doc.Photometry.Candela.HorizontalCount; hi++)
-        {
-            xw.WriteStartElement("Row");
-            xw.WriteAttributeString("h", hi.ToString(CultureInfo.InvariantCulture));
-            for (int vi = 0; vi < doc.Photometry.Candela.VerticalCount; vi++)
-            {
-                xw.WriteElementString("C", doc.Photometry.Candela.Values[hi, vi].ToString(CultureInfo.InvariantCulture));
-            }
-            xw.WriteEndElement();
-        }
-
-        xw.WriteEndElement(); // Candela
-        xw.WriteEndElement(); // Photometry
-
-        xw.WriteEndElement(); // TM33
+        xw.WriteEndElement(); // TM33PhotometricData
         xw.WriteEndDocument();
 
         return sb.ToString();
     }
+
+    // ---------------------------------------------------------------------
+    // Blocks
+    // ---------------------------------------------------------------------
+
+    private static void WriteFileInformation(XmlWriter xw, Tm33FileInformation fi)
+    {
+        xw.WriteStartElement("FileInformation");
+
+        WriteElem(xw, "Creator", fi.Creator);
+        WriteElem(xw, "CreatorVersion", fi.CreatorVersion);
+        WriteElem(xw, "Created", fi.Created.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture));
+
+        if (!string.IsNullOrWhiteSpace(fi.SourceFile))
+            WriteElem(xw, "SourceFile", fi.SourceFile);
+
+        xw.WriteEndElement();
+    }
+
+    private static void WriteMeasurement(XmlWriter xw, Tm33Measurement m)
+    {
+        xw.WriteStartElement("MeasurementUnits");
+
+        WriteElem(xw, "LengthUnit", m.LengthUnit);
+        WriteElem(xw, "AngleUnit", m.AngleUnit);
+        WriteElem(xw, "IntensityUnit", m.IntensityUnit);
+        WriteElem(xw, "FluxUnit", m.FluxUnit);
+        WriteElem(xw, "PowerUnit", m.PowerUnit);
+
+        xw.WriteEndElement();
+    }
+
+    private static void WriteHeader(XmlWriter xw, Tm33Header h)
+    {
+        xw.WriteStartElement("TestInformation");
+
+        if (!string.IsNullOrWhiteSpace(h.Laboratory))
+            WriteElem(xw, "Laboratory", h.Laboratory);
+
+        if (!string.IsNullOrWhiteSpace(h.ReportNumber))
+            WriteElem(xw, "ReportNumber", h.ReportNumber);
+
+        if (h.TestDate.HasValue)
+            WriteElem(xw, "TestDate", h.TestDate.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+
+        xw.WriteEndElement();
+    }
+
+    private static void WriteLuminaire(XmlWriter xw, Tm33Luminaire l)
+    {
+        xw.WriteStartElement("Luminaire");
+
+        WriteElem(xw, "Manufacturer", l.Manufacturer);
+        WriteElem(xw, "Model", l.Model);
+
+        if (!string.IsNullOrWhiteSpace(l.CatalogNumber))
+            WriteElem(xw, "CatalogNumber", l.CatalogNumber);
+
+        WriteElem(xw, "InputWatts", F(l.InputWatts));
+        WriteElem(xw, "TotalLumens", F(l.TotalLumens));
+
+        xw.WriteEndElement();
+    }
+
+    private static void WritePhotometricData(XmlWriter xw, Tm33Photometry p)
+    {
+        xw.WriteStartElement("PhotometricData");
+
+        // Type, counts, symmetry
+        WriteElem(xw, "PhotometricType", p.Type);
+
+        WriteElem(xw, "NumberOfVerticalAngles", p.NumberOfVerticalAngles.ToString(CultureInfo.InvariantCulture));
+        WriteElem(xw, "NumberOfHorizontalAngles", p.NumberOfHorizontalAngles.ToString(CultureInfo.InvariantCulture));
+
+        xw.WriteStartElement("Symmetry");
+        xw.WriteAttributeString("type", p.Symmetry?.Type ?? "None");
+        xw.WriteEndElement();
+
+        // Angles
+        xw.WriteStartElement("Angles");
+
+        xw.WriteStartElement("VerticalAngles");
+        foreach (var v in p.Angles.Vertical)
+            xw.WriteElementString("Angle", F(v));
+        xw.WriteEndElement();
+
+        xw.WriteStartElement("HorizontalAngles");
+        foreach (var h in p.Angles.Horizontal)
+            xw.WriteElementString("Angle", F(h));
+        xw.WriteEndElement();
+
+        xw.WriteEndElement(); // Angles
+
+        // Candela Values grouped by horizontal plane
+        // Convention: Values[H, V] => H index corresponds to HorizontalAngles[H], V corresponds to VerticalAngles[V]
+        xw.WriteStartElement("CandelaValues");
+
+        int nh = p.Candela.HorizontalCount;
+        int nv = p.Candela.VerticalCount;
+
+        xw.WriteAttributeString("horizontalCount", nh.ToString(CultureInfo.InvariantCulture));
+        xw.WriteAttributeString("verticalCount", nv.ToString(CultureInfo.InvariantCulture));
+
+        for (int hi = 0; hi < nh; hi++)
+        {
+            var planeAngle = hi < p.Angles.Horizontal.Count ? p.Angles.Horizontal[hi] : (double)hi;
+
+            xw.WriteStartElement("HorizontalPlane");
+            xw.WriteAttributeString("angle", F(planeAngle));
+
+            // Per plane, write one Candela element per vertical angle (Gamma)
+            for (int vi = 0; vi < nv; vi++)
+            {
+                xw.WriteElementString("Candela", F(p.Candela.Values[hi, vi]));
+            }
+
+            xw.WriteEndElement(); // HorizontalPlane
+        }
+
+        xw.WriteEndElement(); // CandelaValues
+
+        xw.WriteEndElement(); // PhotometricData
+    }
+
+    // ---------------------------------------------------------------------
+    // Helpers
+    // ---------------------------------------------------------------------
 
     private static void WriteElem(XmlWriter xw, string name, string value)
     {
@@ -95,4 +185,8 @@ public static class Tm33XmlWriter
         xw.WriteString(value ?? "");
         xw.WriteEndElement();
     }
+
+    // Numeric formatting: stable, invariant, avoids scientific notation for typical photometric ranges.
+    private static string F(double v)
+        => v.ToString("0.###############", CultureInfo.InvariantCulture);
 }
