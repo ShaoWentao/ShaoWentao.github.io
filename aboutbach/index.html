@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BACH | Light Tunes Architecture</title>
+
+<style>
+    /* -----------------------------------------
+       FONT — Roboto Light
+    ----------------------------------------- */
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap');
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        background: #000;
+        font-family: "Roboto", "Helvetica Neue", Arial, sans-serif;
+        color: #fff;
+    }
+
+    a {
+        text-decoration: none;
+    }
+
+    /* -----------------------------------------
+       HERO
+    ----------------------------------------- */
+    .hero {
+        position: relative;
+        width: 100%;
+        height: 90vh;
+        background: url("images/hero-bg.jpg") center/cover no-repeat;
+    }
+
+    .hero-logo {
+        position: absolute;
+        top: 28px;
+        right: 28px;
+        width: 140px;
+        filter: brightness(0) invert(1);
+        opacity: 0.9;
+        transition: 0.3s ease;
+    }
+
+    .hero-logo:hover {
+        opacity: 1;
+    }
+
+    .hero-title {
+        position: absolute;
+        bottom: 18%;
+        left: 50%;
+        transform: translateX(-50%);
+        text-align: center;
+        font-size: 3.6rem;
+        letter-spacing: 0.28em;
+        color: #d9b471; /* 金色 */
+        text-transform: uppercase;
+        font-weight: 600;  /* 加粗一点更突出 */
+        line-height: 1.6;
+        text-shadow: 0 0 16px rgba(0,0,0,0.5);
+        white-space: pre-line;
+    }
+
+    @media (max-width: 768px) {
+        .hero-title {
+            font-size: 2rem;
+            width: 90%;
+        }
+        .hero-logo {
+            width: 100px;
+        }
+    }
+
+    /* -----------------------------------------
+       BRAND STORY
+    ----------------------------------------- */
+    .story {
+        display: flex;
+        padding: 100px 60px;
+        gap: 60px;
+        align-items: center;
+    }
+
+    .story-img {
+        flex: 1;
+        height: 420px;
+        background: url("images/story-bg.jpg") center/cover no-repeat;
+        border-radius: 12px;
+    }
+
+    .story-text {
+        flex: 1;
+        font-size: 1rem;
+        line-height: 1.8;
+        color: #fff;
+    }
+
+    .story-title {
+        font-size: 2rem;
+        color: #d9b471;
+        letter-spacing: 0.15em;
+        margin-bottom: 20px;
+        text-transform: uppercase;
+    }
+
+    @media (max-width: 900px) {
+        .story {
+            flex-direction: column;
+            padding: 60px 20px;
+        }
+        .story-img {
+            width: 100%;
+        }
+    }
+
+    /* -----------------------------------------
+       PURE IMAGE
+    ----------------------------------------- */
+    .pure-image {
+        width: 100%;
+        height: 80vh;
+        background: url("images/transition-bg.jpg") center/cover no-repeat;
+    }
+
+    @media (max-width: 768px) {
+        .pure-image {
+            height: 60vh;
+        }
+    }
+
+/* -----------------------------------------
+   BRAND HOUSE SECTION
+----------------------------------------- */
+.brand-house {
+    padding: 80px 40px;
+    text-align: center;
+    background: #0e0e0e;
+}
+
+/* CDN Brandhouse Gold Logo */
+.cdn-logo-wrap {
+    margin-bottom: 30px;
+}
+
+.cdn-brandhouse-logo {
+    width: 160px;     /* 推荐大小，可调整 */
+    height: auto;
+}
+
+/* -------------------------
+   4-BRAND GRID — DESKTOP
+------------------------- */
+.brand-grid {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.brand-box {
+    flex: 1;
+    background: #141414;
+    padding: 30px 10px;
+    border-radius: 12px;
+    text-align: center;
+    min-width: 0;
+
+    /* 新增 */
+    position: relative;
+    transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+
+/* Brand Box Hover – Surrounding Gold Glow */
+.brand-box:hover {
+    transform: translateY(-6px);
+
+    box-shadow:
+        0 0 24px rgba(217,180,113,0.28);   /* 柔和外光 */
+}
+
+.brand-box img {
+    width: 90px;
+    height: 90px;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+    margin-bottom: 12px;
+}
+
+.brand-box h3 {
+    color: #ffffff;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    margin-bottom: 6px;
+}
+
+.brand-box p {
+    color: #ffffff;
+    opacity: 0.85;
+    white-space: nowrap;
+    font-size: 0.70rem;
+}
+
+
+/* -----------------------------------------
+   BRAND HOUSE — MOBILE FIX  (≤ 600px)
+   → Four brands stay in one row
+   → Text can wrap naturally into two lines
+----------------------------------------- */
+@media (max-width: 600px) {
+
+    .brand-house {
+        padding: 60px 20px;
+    }
+
+    .cdn-brandhouse-logo {
+        width: 130px;   /* 更适合手机比例 */
+    }
+
+    /* still 4 columns (no wrap) */
+    .brand-grid {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    .brand-box {
+        flex: 0 0 23%;   /* 四个品牌固定一行 */
+        padding: 16px 4px;
+        min-width: 0;    /* 保证不会溢出 */
+    }
+
+    .brand-box img {
+        width: 55px;
+        height: 55px;
+        margin-bottom: 8px;
+    }
+
+    /* ⭐ 自动换两行文字，不堆叠、不重叠 */
+    .brand-box h3,
+    .brand-box p {
+        white-space: normal;       /* 允许换行 */
+        word-break: break-word;    /* 防止英文撑破 */
+        font-size: 0.58rem;
+        line-height: 1.25;
+        margin-bottom: 4px;
+        text-align: center;
+    }
+}
+
+    /* -----------------------------------------
+       PRODUCT CARD STYLE (全系列通用)
+    ----------------------------------------- */
+    .product-card {
+        background: #0e0e0e;
+        border-radius: 18px;
+        padding: 55px 40px;
+        margin: 80px auto;
+        width: 100%;
+        max-width: 100%;
+        box-shadow: 0 0 48px rgba(0,0,0,0.55);
+        border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .product-title {
+        font-size: 2.1rem;
+        letter-spacing: 0.18em;
+        margin-bottom: 40px;
+        color: #ffffff;
+        text-align: center;
+        font-weight: 300;
+    }
+
+    .product-hero {
+        width: 100%;
+        border-radius: 14px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .product-hero img {
+        width: 100%;
+        height: auto;
+        border-radius: 14px;
+        transition: 0.4s ease;
+        max-height: none;
+        object-fit: contain;
+    }
+
+    .product-hero img:hover {
+        transform: scale(1.02);
+    }
+
+    .product-thumbs {
+        display: flex;
+        gap: 14px;
+        overflow-x: auto;
+        padding-bottom: 10px;
+        margin-top: 22px; /* 与主图拉开距离，避免遮挡 */
+        scroll-snap-type: x mandatory;
+    }
+
+    .product-thumbs::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .product-thumbs::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.18);
+        border-radius: 4px;
+    }
+
+    .thumb-item {
+        min-width: 160px;
+        max-width: 160px;
+        aspect-ratio: 1 / 1;
+        background: #1a1a1a;
+        border-radius: 12px;
+        overflow: hidden;
+        scroll-snap-align: start;
+        border: 1px solid rgba(255,255,255,0.06);
+        transition: 0.3s ease;
+    }
+
+    .thumb-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        transition: 0.3s ease;
+    }
+
+    .thumb-item:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 0 18px rgba(217,180,113,0.35);
+    }
+
+    .thumb-item:hover img {
+        transform: scale(1.06);
+    }
+
+    @media (max-width: 900px) {
+        .product-card {
+            padding: 40px 26px;
+            margin: 60px auto;
+        }
+        .product-title {
+            font-size: 1.7rem;
+            letter-spacing: 0.14em;
+        }
+        .product-hero img {
+            height: auto
+            max-height: none;
+            object-fit: contain;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .thumb-item {
+            min-width: 80px;
+            max-width: 80px;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .product-hero img {
+            max-height: 420px;
+            object-fit: cover;
+        }
+        .product-thumbs {
+            margin-top: 26px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .thumb-item {
+            min-width: 70px;
+            max-width: 70px;
+        }
+    }
+
+   /* -----------------------------------------
+       FOOTER
+----------------------------------------- */
+.footer {
+    background: #0a0a0a;
+    padding: 60px 20px 70px 20px;
+    color: #ccc;
+    text-align: center;
+    border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Gold Line Divider */
+.footer-divider {
+    width: 90%;
+    height: 1px;
+    background: #d9b471;
+    margin: 0 auto 40px auto;
+    opacity: 0.7;
+}
+
+/* Desktop – 4 Columns */
+.footer-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 40px;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.footer-item {
+    text-align: left;
+    min-width: 0;
+    white-space: normal;
+}
+
+/* Label */
+.footer-label {
+    color: #d9b471;
+    font-size: 0.9rem;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+/* Value */
+.footer-value {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: #ffffff;
+    opacity: 0.9;
+    word-break: break-word; /* 避免长内容挤破布局 */
+}
+
+.footer-value a {
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.footer-value a:hover {
+    color: #d9b471;
+}
+
+/* -----------------------------------------
+      MOBILE FIX — 2×2 Layout
+----------------------------------------- */
+@media (max-width: 768px) {
+
+    .footer-grid {
+        grid-template-columns: repeat(2, 1fr); /* 手机端分两列 */
+        gap: 25px;
+        text-align: left;
+    }
+
+    .footer-item {
+        text-align: left;
+    }
+
+    .footer-label {
+        font-size: 0.75rem;
+    }
+
+    .footer-value {
+        font-size: 0.75rem;
+        line-height: 1.4;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+    <img src="images/logos/bach.png" class="hero-logo" alt="BACH Logo">
+    <div class="hero-title">LIGHT TUNES<br>ARCHITECTURE</div>
+</section>
+
+<!-- ================= STORY ================= -->
+<section class="story">
+    <div class="story-img"></div>
+
+    <div class="story-text">
+        <h2 class="story-title">Origin of BACH</h2>
+
+        BACH was established in 2008, initially focusing on the hospitality sector,
+        and has progressively evolved into a supplier of high-end architectural
+        lighting systems globally.
+        <br><br>
+        To explore how light, rhythm and spatial perception intertwine to forge a
+        novel architectural language.
+        <br><br>
+        Inspired by Johann Sebastian Bach, we hold firm to the conviction that
+        architecture is “frozen music”, with light serving as the silent force
+        that shapes emotion, atmosphere and human experience.
+    </div>
+</section>
+
+<!-- ================= PURE IMAGE ================= -->
+<section class="pure-image"></section>
+
+<!-- ================= PRODUCTS: BACH 5S ================= -->
+<section class="product-card">
+    <div class="product-title">BACH 5S</div>
+
+    <div class="product-hero">
+        <img src="images/products/bach5s/hero.jpg" alt="BACH 5S Hero Image">
+    </div>
+
+    <div class="product-thumbs">
+        <div class="thumb-item"><img src="images/products/bach5s/thumb-1.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/bach5s/thumb-2.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/bach5s/thumb-3.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/bach5s/thumb-4.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/bach5s/thumb-5.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/bach5s/thumb-6.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/bach5s/thumb-7.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/bach5s/thumb-8.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/bach5s/thumb-9.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/bach5s/thumb-10.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/bach5s/thumb-11.jpg" alt=""></div>
+    </div>
+</section>
+
+<!-- ================= PRODUCTS: Beidou ================= -->
+<section class="product-card">
+    <div class="product-title">Beidou</div>
+
+    <div class="product-hero">
+        <img src="images/products/beidou/hero.jpg" alt="Beidou Hero Image">
+    </div>
+
+    <div class="product-thumbs">
+        <div class="thumb-item"><img src="images/products/beidou/thumb-1.jpg" alt=""></div>
+    </div>
+</section>
+
+<!-- ================= PRODUCTS: BACH 3 ================= -->
+<section class="product-card">
+    <div class="product-title">BACH 3</div>
+
+    <div class="product-hero">
+        <img src="images/products/bach3/hero.jpg" alt="BACH 3 Hero Image">
+    </div>
+
+    <div class="product-thumbs">
+        <div class="thumb-item"><img src="images/products/bach3/thumb-1.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/bach3/thumb-2.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/bach3/thumb-3.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/bach3/thumb-4.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/bach3/thumb-5.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/bach3/thumb-6.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/bach3/thumb-7.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/bach3/thumb-8.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/bach3/thumb-9.jpg" alt=""></div>
+    </div>
+</section>
+
+<!-- ================= PRODUCTS: PIN ================= -->
+<section class="product-card">
+    <div class="product-title">PIN</div>
+
+    <div class="product-hero">
+        <img src="images/products/pin/hero.jpg" alt="PIN Hero Image">
+    </div>
+
+    <div class="product-thumbs">
+        <div class="thumb-item"><img src="images/products/pin/thumb-1.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/pin/thumb-2.jpg" alt=""></div>
+    </div>
+</section>
+
+<!-- ================= PRODUCTS: inFlash ================= -->
+<section class="product-card">
+    <div class="product-title">inFlash</div>
+
+    <div class="product-hero">
+        <img src="images/products/inflash/hero.jpg" alt="inFlash Hero Image">
+    </div>
+
+    <div class="product-thumbs">
+        <div class="thumb-item"><img src="images/products/inflash/thumb-1.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/inflash/thumb-2.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/inflash/thumb-3.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/inflash/thumb-4.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/inflash/thumb-5.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/inflash/thumb-6.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/inflash/thumb-7.jpg" alt=""></div>
+    </div>
+</section>
+
+<!-- ================= PRODUCTS: HiSlot ================= -->
+<section class="product-card">
+    <div class="product-title">HiSlot</div>
+
+    <div class="product-hero">
+        <img src="images/products/hislot/hero.jpg" alt="HiSlot Hero Image">
+    </div>
+
+    <div class="product-thumbs">
+        <div class="thumb-item"><img src="images/products/hislot/thumb-1.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/hislot/thumb-2.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/hislot/thumb-3.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/hislot/thumb-4.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/hislot/thumb-5.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/hislot/thumb-6.jpg" alt=""></div>
+    </div>
+</section>
+
+<!-- ================= PRODUCTS: Flash ================= -->
+<section class="product-card">
+    <div class="product-title">Flash</div>
+
+    <div class="product-hero">
+        <img src="images/products/flash/hero.jpg" alt="Flash Hero Image">
+    </div>
+
+    <div class="product-thumbs">
+        <div class="thumb-item"><img src="images/products/flash/thumb-1.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/flash/thumb-2.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/flash/thumb-3.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/flash/thumb-4.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/flash/thumb-5.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/flash/thumb-6.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/flash/thumb-7.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/flash/thumb-8.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/flash/thumb-9.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/flash/thumb-10.jpg" alt=""></div>
+    </div>
+</section>
+
+<!-- ================= PRODUCTS: Argos ================= -->
+<section class="product-card">
+    <div class="product-title">Argos</div>
+
+    <div class="product-hero">
+        <img src="images/products/argos/hero.jpg" alt="Argos Hero Image">
+    </div>
+
+    <div class="product-thumbs">
+        <div class="thumb-item"><img src="images/products/argos/thumb-1.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/argos/thumb-2.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/argos/thumb-3.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/argos/thumb-4.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/argos/thumb-5.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/argos/thumb-6.jpg" alt=""></div>
+    </div>
+</section>
+
+<!-- ================= PRODUCTS: Limber ================= -->
+<section class="product-card">
+    <div class="product-title">Limber</div>
+
+    <div class="product-hero">
+        <img src="images/products/limber/hero.jpg" alt="Limber Hero Image">
+    </div>
+
+    <div class="product-thumbs">
+        <div class="thumb-item"><img src="images/products/limber/thumb-1.jpg" alt=""></div>
+    </div>
+</section>
+
+<!-- ================= PRODUCTS: CW ================= -->
+<section class="product-card">
+    <div class="product-title">CW</div>
+
+    <div class="product-hero">
+        <img src="images/products/cw/hero.jpg" alt="CW Hero Image">
+    </div>
+
+    <div class="product-thumbs">
+        <div class="thumb-item"><img src="images/products/cw/thumb-1.jpg" alt=""></div>
+        <div class="thumb-item"><img src="images/products/cw/thumb-2.jpg" alt=""></div>
+    </div>
+</section>
+
+<!-- ================= PRODUCTS: Sola ================= -->
+<section class="product-card">
+    <div class="product-title">Sola</div>
+
+    <div class="product-hero">
+        <img src="images/products/sola/hero.jpg" alt="Sola Hero Image">
+    </div>
+
+    <div class="product-thumbs">
+        <div class="thumb-item"><img src="images/products/sola/thumb-1.jpg" alt=""></div>
+    </div>
+</section>
+
+<!-- ================= BRAND HOUSE ================= -->
+<section class="brand-house">
+
+    <!-- CDN Brand House Title Logo (Gold Version) -->
+    <div class="cdn-logo-wrap">
+    <img src="images/logos/cdn-brandhouse.png" class="cdn-brandhouse-logo">
+</div>
+
+<div class="brandhouse-divider"></div>
+
+    <!-- Four Brands in One Row -->
+    <div class="brand-grid">
+
+        <div class="brand-box">
+            <img src="images/logos/cdn.png" alt="CDN Logo">
+            <h3>ALL-CATEGORY LIGHTING</h3>
+            <p>Professional & Trustworthy</p>
+        </div>
+
+        <div class="brand-box">
+            <img src="images/logos/bach.png" alt="BACH Logo">
+            <h3>ARCHITECTURAL LIGHTING</h3>
+            <p>Technology & Aesthetics</p>
+        </div>
+
+        <div class="brand-box">
+            <img src="images/logos/mayalit.png" alt="Mayalit Logo">
+            <h3>MUSEUM LIGHTING</h3>
+            <p>Professional Quality</p>
+        </div>
+
+        <div class="brand-box">
+            <img src="images/logos/sj.png" alt="SJ Logo">
+            <h3>PREMIUM SMART HOME</h3>
+            <p>Inspiration & Intelligence</p>
+        </div>
+
+    </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<section class="footer">
+
+    <div class="footer-divider"></div>
+
+    <div class="footer-grid">
+
+        <!-- WEBSITE -->
+        <div class="footer-item">
+            <div class="footer-label">WEBSITE</div>
+            <div class="footer-value">
+                <a href="https://www.cdnlighting.cc/" target="_blank">
+                    https://www.cdnlighting.cc/
+                </a>
+            </div>
+        </div>
+
+        <!-- E-MAIL -->
+        <div class="footer-item">
+            <div class="footer-label">E-MAIL</div>
+            <div class="footer-value">
+                <a href="mailto:sales@cdnlighting.com.cn">
+                    sales@cdnlighting.com.cn
+                </a>
+            </div>
+        </div>
+
+        <!-- TELEPHONE -->
+        <div class="footer-item">
+            <div class="footer-label">TELEPHONE</div>
+            <div class="footer-value">
+                +86-752-533 3256
+            </div>
+        </div>
+
+        <!-- ADDRESS -->
+        <div class="footer-item">
+            <div class="footer-label">ADDRESS</div>
+            <div class="footer-value">
+                No. A17, Xianghe West Rd., Dongjiang Ind. Zone,<br>
+                Shuikou, Huizhou, Guangdong, China
+            </div>
+        </div>
+
+    </div>
+</section>
+
+</body>
+</html>

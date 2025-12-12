@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BACH 5s | Light Tunes Architecture</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Global Font Setting */
+        body { font-family: 'Roboto', sans-serif; }
+        
+        .hero-bg {
+            background-color: #000;
+            background-image: radial-gradient(circle at 50% 50%, #1a1a1a 0%, #000000 100%);
+        }
+        .text-bach-red { color: #E60012; }
+        .bg-bach-red { background-color: #E60012; }
+        .border-bach-red { border-color: #E60012; }
+        .hover\:border-bach-red:hover { border-color: #E60012; }
+        
+        /* Hide scrollbar for horizontal scroll areas but keep functionality */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none;  scrollbar-width: none; }
+        
+        /* Mobile menu transition */
+        #mobile-menu { transition: max-height 0.3s ease-in-out; max-height: 0; overflow: hidden; }
+        #mobile-menu.open { max-height: 300px; }
+    </style>
+</head>
+<body class="bg-black text-white antialiased font-light">
+
+    <nav class="fixed w-full z-50 bg-black/95 backdrop-blur-sm border-b border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0 flex items-center">
+                    <img src="bach_logo_white.png" alt="BACH Lighting Logo" class="h-8 w-auto object-contain">
+                </div>
+                
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-8">
+                        <a href="#family" class="hover:text-bach-red px-3 py-2 rounded-md text-sm font-normal transition">Full Family</a>
+                        <a href="#applications" class="hover:text-bach-red px-3 py-2 rounded-md text-sm font-normal transition">Applications</a>
+                        <a href="#wallwasher" class="hover:text-bach-red px-3 py-2 rounded-md text-sm font-normal transition">Wallwasher</a>
+                        <a href="#versions" class="hover:text-bach-red px-3 py-2 rounded-md text-sm font-normal transition">Versions</a>
+                        <a href="#specs" class="hover:text-bach-red px-3 py-2 rounded-md text-sm font-normal transition">Specs</a>
+                    </div>
+                </div>
+                
+                <div class="hidden md:block">
+                    <a href="#contact" class="bg-bach-red hover:bg-red-700 text-white px-4 py-2 rounded-sm text-sm font-medium transition">Contact Us</a>
+                </div>
+
+                <div class="-mr-2 flex md:hidden">
+                    <button type="button" onclick="document.getElementById('mobile-menu').classList.toggle('open')" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-800 focus:outline-none">
+                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="md:hidden bg-neutral-900" id="mobile-menu">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#family" class="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-normal">Full Family</a>
+                <a href="#applications" class="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-normal">Applications</a>
+                <a href="#wallwasher" class="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-normal">Wallwasher</a>
+                <a href="#versions" class="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-normal">Versions</a>
+                <a href="#contact" class="text-white bg-bach-red block px-3 py-2 rounded-md text-base font-medium mt-4 text-center">Contact Us</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="relative h-screen flex items-center justify-center hero-bg overflow-hidden px-4">
+        <div class="absolute inset-0 z-0 opacity-40">
+            <img src="hero_mobile.jpg" class="w-full h-full object-cover md:hidden" alt="BACH 5s Family Mobile">
+            <img src="hero_desktop.jpg" class="w-full h-full object-cover hidden md:block" alt="BACH 5s Family Desktop">
+        </div>
+        
+        <div class="relative z-10 text-center w-full max-w-7xl mx-auto mt-16 md:mt-0 px-4">
+            <h2 class="text-bach-red font-medium tracking-[0.2em] mb-4 text-lg md:text-2xl animate-fade-in-up">BACH 5s SERIES</h2>
+            
+            <h1 class="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-light mb-6 tracking-wide leading-tight whitespace-nowrap">
+                LIGHT TUNES ARCHITECTURE
+            </h1>
+            
+            <p class="mt-2 text-base md:text-xl text-gray-300 font-light max-w-2xl mx-auto">
+                Comprehensive and Capable Lighting Equipment
+            </p>
+        </div>
+    </section>
+
+    <section id="family" class="py-20 bg-neutral-900 border-b border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h3 class="text-3xl md:text-4xl font-light mb-4">Complete Size Range</h3>
+                <p class="text-gray-400 max-w-2xl mx-auto font-light">From Φ45mm accent lighting to Φ200mm high-ceiling solutions.</p>
+            </div>
+
+            <div class="relative w-full">
+                <div class="overflow-x-auto no-scrollbar pb-8">
+                    <div class="min-w-max md:min-w-full flex justify-center items-end px-4 md:px-12 gap-8 h-64">
+                        
+                        <div class="flex flex-col items-center gap-4 group">
+                            <div class="flex-1 flex items-end justify-center w-full">
+                                <img src="size_45.png" class="w-auto h-auto max-h-[180px] object-contain opacity-90 group-hover:opacity-100 transition duration-300" alt="45mm">
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xl font-normal text-white">Φ45</div>
+                                <div class="text-xs text-bach-red">Max 5W</div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col items-center gap-4 group">
+                            <div class="flex-1 flex items-end justify-center w-full">
+                                <img src="size_55.png" class="w-auto h-auto max-h-[180px] object-contain opacity-90 group-hover:opacity-100 transition duration-300" alt="55mm">
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xl font-normal text-white">Φ55</div>
+                                <div class="text-xs text-bach-red">Max 7W</div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col items-center gap-4 group">
+                            <div class="flex-1 flex items-end justify-center w-full">
+                                <img src="size_75.png" class="w-auto h-auto max-h-[180px] object-contain opacity-90 group-hover:opacity-100 transition duration-300" alt="75mm">
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xl font-normal text-white">Φ75</div>
+                                <div class="text-xs text-bach-red">Max 18W</div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col items-center gap-4 group">
+                            <div class="flex-1 flex items-end justify-center w-full">
+                                <img src="size_105.png" class="w-auto h-auto max-h-[180px] object-contain opacity-90 group-hover:opacity-100 transition duration-300" alt="105mm">
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xl font-normal text-white">Φ105</div>
+                                <div class="text-xs text-bach-red">Max 24W</div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col items-center gap-4 group">
+                            <div class="flex-1 flex items-end justify-center w-full">
+                                <img src="size_125.png" class="w-auto h-auto max-h-[180px] object-contain opacity-90 group-hover:opacity-100 transition duration-300" alt="125mm">
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xl font-normal text-white">Φ125</div>
+                                <div class="text-xs text-bach-red">Max 35W</div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col items-center gap-4 group">
+                            <div class="flex-1 flex items-end justify-center w-full">
+                                <img src="size_150.png" class="w-auto h-auto max-h-[180px] object-contain opacity-90 group-hover:opacity-100 transition duration-300" alt="150mm">
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xl font-normal text-white">Φ150</div>
+                                <div class="text-xs text-bach-red">Max 60W</div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col items-center gap-4 group">
+                            <div class="flex-1 flex items-end justify-center w-full">
+                                <img src="size_200.png" class="w-auto h-auto max-h-[180px] object-contain opacity-90 group-hover:opacity-100 transition duration-300" alt="200mm">
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xl font-normal text-white">Φ200</div>
+                                <div class="text-xs text-bach-red">Max 100W</div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="text-center text-xs text-gray-500 md:hidden mt-4 animate-pulse font-light">← Swipe to compare sizes →</div>
+            </div>
+        </div>
+    </section>
+
+    <section id="applications" class="py-24 bg-black border-b border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h3 class="text-3xl md:text-4xl font-light mb-4">Height Application Guide</h3>
+                <p class="text-gray-400 font-light">Perfect lighting levels from residential spaces to grand atriums.</p>
+            </div>
+
+            <div class="w-full px-4 md:px-0">
+                <img src="height_guide_full.png" alt="Height Application Guide Chart" class="w-full h-auto object-contain">
+            </div>
+            
+        </div>
+    </section>
+
+    <section id="wallwasher" class="py-24 bg-neutral-900 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-black to-transparent opacity-50 pointer-events-none"></div>
+        
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="flex flex-col md:flex-row items-center gap-16">
+                <div class="w-full md:w-1/2">
+                    <div class="inline-block bg-bach-red text-white text-xs font-bold px-3 py-1 mb-4 rounded-full">OPTICAL INNOVATION</div>
+                    <h2 class="text-4xl md:text-5xl font-light mb-6 leading-tight">Redefining the <br><span class="text-gray-500">Wallwasher</span></h2>
+                    <p class="text-xl text-gray-300 mb-8 font-light">
+                        Indirect beam optical design. Lateral light source installation utilizing the principle of optical reflection.
+                    </p>
+                    
+                    <div class="space-y-8">
+                        <div class="border-l-4 border-neutral-700 pl-6 hover:border-bach-red transition duration-300">
+                            <h4 class="text-xl font-normal text-white mb-2">"Glare-Free" Zone</h4>
+                            <p class="text-gray-400 text-sm font-light">No visible glare in non-illuminated areas. Pure visual comfort for the observer.</p>
+                        </div>
+                        <div class="border-l-4 border-neutral-700 pl-6 hover:border-bach-red transition duration-300">
+                            <h4 class="text-xl font-normal text-white mb-2">Indirect Beam Optics</h4>
+                            <p class="text-gray-400 text-sm font-light">Creatively uses side-mounted light sources to improve light efficiency and uniformity.</p>
+                        </div>
+                        <div class="border-l-4 border-neutral-700 pl-6 hover:border-bach-red transition duration-300">
+                            <h4 class="text-xl font-normal text-white mb-2">Easy Commissioning</h4>
+                            <p class="text-gray-400 text-sm font-light">Pull ring structure allows for easy on-site lighting adjustments and horizontal rotation.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-full md:w-1/2 relative">
+                    <img src="wallwasher_effect.jpg" alt="Wallwasher Glare Free Diagram" class="w-full rounded-lg shadow-2xl border border-gray-800">
+                    <div class="absolute -bottom-6 -left-6 bg-black p-4 rounded-lg border border-gray-700 shadow-xl hidden md:block">
+                        <p class="text-xs text-gray-400 font-light">Available in</p>
+                        <p class="text-lg font-normal text-white">Φ75 / Φ105mm</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="py-16 bg-black">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row gap-10 items-center">
+                <div class="w-full md:w-1/2">
+                    <img src="tech_structure.png" alt="Structure Exploded View" class="w-full rounded-lg shadow-lg mb-4">
+                </div>
+                
+                <div class="w-full md:w-1/2">
+                    <h3 class="text-2xl md:text-3xl font-light mb-6">User-Friendly Design</h3>
+                    <p class="text-gray-400 mb-8 text-sm font-light">Designed for easy installation and maintenance without compromising optical performance.</p>
+                    
+                    <div class="space-y-6">
+                        <div class="flex">
+                            <div class="flex-shrink-0 h-8 w-8 rounded-full bg-bach-red/20 text-bach-red flex items-center justify-center text-sm font-bold">1</div>
+                            <div class="ml-4">
+                                <h5 class="text-base font-normal text-white">Visualized Adjustment</h5>
+                                <p class="text-gray-500 text-xs mt-1 font-light">Clear scale markings for accurate and consistent tilting.</p>
+                            </div>
+                        </div>
+                        <div class="flex">
+                            <div class="flex-shrink-0 h-8 w-8 rounded-full bg-bach-red/20 text-bach-red flex items-center justify-center text-sm font-bold">2</div>
+                            <div class="ml-4">
+                                <h5 class="text-base font-normal text-white">No Light Leak</h5>
+                                <p class="text-gray-500 text-xs mt-1 font-light">Precise mechanical structure prevents backlight leakage.</p>
+                            </div>
+                        </div>
+                        <div class="flex">
+                            <div class="flex-shrink-0 h-8 w-8 rounded-full bg-bach-red/20 text-bach-red flex items-center justify-center text-sm font-bold">3</div>
+                            <div class="ml-4">
+                                <h5 class="text-base font-normal text-white">Narrow Trim</h5>
+                                <p class="text-gray-500 text-xs mt-1 font-light">1.5mm ultra-thin trim for seamless integration.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="versions" class="py-20 bg-neutral-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h3 class="text-2xl md:text-3xl font-light mb-12 text-center">5 Versions for Every Need</h3>
+            
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-black p-8 rounded-lg border-l-4 border-transparent hover:border-bach-red transition duration-300">
+                    <h4 class="text-xl font-normal mb-2 text-white">STANDARD</h4>
+                    <p class="text-gray-400 text-sm mb-4 font-light">Accurate tilt and no light leak. The versatile choice.</p>
+                    <ul class="text-xs text-gray-500 space-y-2 font-light">
+                        <li>• Cut-out: Φ45-150mm</li>
+                        <li>• Visualized Adjustment</li>
+                        <li>• User-friendly Assembly</li>
+                    </ul>
+                </div>
+
+                <div class="bg-black p-8 rounded-lg border-l-4 border-transparent hover:border-bach-red transition duration-300">
+                    <h4 class="text-xl font-normal mb-2 text-white">AIR</h4>
+                    <p class="text-gray-400 text-sm mb-4 font-light">Twin lens system with compact heatsink for limited spaces.</p>
+                    <ul class="text-xs text-gray-500 space-y-2 font-light">
+                        <li>• Cut-out: Φ55-105mm</li>
+                        <li>• Twin Lens System</li>
+                        <li>• High cost-performance</li>
+                    </ul>
+                </div>
+
+                <div class="bg-black p-8 rounded-lg border-l-4 border-transparent hover:border-bach-red transition duration-300 relative overflow-hidden">
+                    <h4 class="text-xl font-normal mb-2 text-white">PRO</h4>
+                    <p class="text-gray-400 text-sm mb-4 font-light">Digital zoom and tunable white. Magic of light.</p>
+                    <ul class="text-xs text-gray-500 space-y-2 font-light">
+                        <li>• Digital Zoomable</li>
+                        <li>• Tunable White (2700K-6000K)</li>
+                        <li>• Cut-out: Φ150mm</li>
+                    </ul>
+                </div>
+
+                <div class="bg-black p-8 rounded-lg border-l-4 border-transparent hover:border-bach-red transition duration-300 md:col-span-1">
+                    <h4 class="text-xl font-normal mb-2 text-white">HIGH CEILING</h4>
+                    <p class="text-gray-400 text-sm mb-4 font-light">For opera houses and airports.</p>
+                    <ul class="text-xs text-gray-500 space-y-2 font-light">
+                        <li>• 60W - 100W High Power</li>
+                        <li>• High Efficacy (100lm/W)</li>
+                        <li>• IP65 / IP67 Driver</li>
+                    </ul>
+                </div>
+
+                <div class="bg-black p-8 rounded-lg border-l-4 border-transparent hover:border-bach-red transition duration-300 md:col-span-2">
+                    <h4 class="text-xl font-normal mb-2 text-white">WALLWASHER</h4>
+                    <p class="text-gray-400 text-sm mb-4 font-light">Revolutionary "Glare-free" wallwashing experience.</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <ul class="text-xs text-gray-500 space-y-2 font-light">
+                            <li>• Indirect Beam Optical Design</li>
+                            <li>• Horizontal Rotation</li>
+                        </ul>
+                        <div class="bg-neutral-900 p-3 rounded text-xs text-gray-400 border border-gray-800 font-light">
+                            <strong>The "Glare-free" Zone:</strong><br>
+                            No visible glare from non-illuminated areas, ensuring pure visual comfort.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="specs" class="py-16 bg-black">
+        <div class="max-w-6xl mx-auto px-4">
+            <h3 class="text-2xl font-light mb-6 text-center">Specifications Matrix</h3>
+            
+            <div class="overflow-x-auto -mx-4 px-4 pb-4">
+                <table class="w-full text-sm text-left text-gray-400 min-w-[600px] font-light">
+                    <thead class="text-xs text-white uppercase bg-neutral-900">
+                        <tr>
+                            <th scope="col" class="px-4 py-3 rounded-tl-lg font-medium">Cut-out</th>
+                            <th scope="col" class="px-4 py-3 font-medium">Max Power</th>
+                            <th scope="col" class="px-4 py-3 font-medium">Height Rec.</th>
+                            <th scope="col" class="px-4 py-3 rounded-tr-lg font-medium">Versions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="bg-black border-b border-gray-800 hover:bg-neutral-900 transition">
+                            <td class="px-4 py-4 font-medium text-white">Φ45mm</td>
+                            <td class="px-4 py-4">5W</td>
+                            <td class="px-4 py-4">≤ 2M</td>
+                            <td class="px-4 py-4">Standard</td>
+                        </tr>
+                        <tr class="bg-black border-b border-gray-800 hover:bg-neutral-900 transition">
+                            <td class="px-4 py-4 font-medium text-white">Φ55mm</td>
+                            <td class="px-4 py-4">7W</td>
+                            <td class="px-4 py-4">≤ 3M</td>
+                            <td class="px-4 py-4">Standard, Air</td>
+                        </tr>
+                        <tr class="bg-black border-b border-gray-800 hover:bg-neutral-900 transition">
+                            <td class="px-4 py-4 font-medium text-white">Φ75mm</td>
+                            <td class="px-4 py-4">18W</td>
+                            <td class="px-4 py-4">≤ 5M</td>
+                            <td class="px-4 py-4">Standard, Air, Wallwasher</td>
+                        </tr>
+                        <tr class="bg-black border-b border-gray-800 hover:bg-neutral-900 transition">
+                            <td class="px-4 py-4 font-medium text-white">Φ105mm</td>
+                            <td class="px-4 py-4">24W</td>
+                            <td class="px-4 py-4">≤ 7M</td>
+                            <td class="px-4 py-4">Standard, Air, Wallwasher</td>
+                        </tr>
+                         <tr class="bg-black border-b border-gray-800 hover:bg-neutral-900 transition">
+                            <td class="px-4 py-4 font-medium text-white">Φ150mm</td>
+                            <td class="px-4 py-4">35W / 60W</td>
+                            <td class="px-4 py-4">≤ 15M</td>
+                            <td class="px-4 py-4">Standard, Pro, High Ceiling</td>
+                        </tr>
+                        <tr class="bg-black hover:bg-neutral-900 transition">
+                            <td class="px-4 py-4 font-medium text-white">Φ200mm</td>
+                            <td class="px-4 py-4">100W</td>
+                            <td class="px-4 py-4">≤ 25M</td>
+                            <td class="px-4 py-4">High Ceiling</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="mt-4 text-xs text-gray-600 text-center md:text-left font-light">Swipe left to view full table on mobile.</p>
+        </div>
+    </section>
+
+    <footer id="contact" class="bg-neutral-900 py-16 border-t border-gray-800 text-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-2 gap-12">
+                <div>
+                    <img src="bach_logo_white.png" alt="BACH Logo" class="h-8 mb-6 opacity-80">
+                    <p class="text-gray-400 mb-4 text-base font-light">LIGHT TUNES ARCHITECTURE</p>
+                    <p class="text-gray-600 text-xs font-light">© 2025 BACH Lighting. All rights reserved.</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 text-gray-400 font-light">
+                    <div>
+                        <h5 class="text-white font-medium mb-4 uppercase tracking-wider">Contact</h5>
+                        <p class="mb-2">T: <a href="tel:+867525333256" class="hover:text-bach-red transition">+86-752-533 3256</a></p>
+                        <p class="mb-2">E: <a href="mailto:sales@cdnlighting.com.cn" class="hover:text-bach-red transition">sales@cdnlighting.com.cn</a></p>
+                        <p>W: <a href="https://www.cdnlighting.cc/" target="_blank" class="hover:text-bach-red transition">www.cdnlighting.cc</a></p>
+                    </div>
+                    <div>
+                        <h5 class="text-white font-medium mb-4 uppercase tracking-wider">Address</h5>
+                        <p class="leading-relaxed">
+                            No. A17, Xianghe West Rd.,<br>
+                            Dongjiang Ind. Zone, Shuikou,<br>
+                            Huizhou, Guangdong, China
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
