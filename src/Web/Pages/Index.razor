@@ -1,57 +1,46 @@
 @page "/"
+@using Web.Services
 @inject IJSRuntime JS
 
 <h3>Photometric Tools</h3>
 
-<p>
-    Upload an IES file to convert it to TM-33 format.
-</p>
+<p>Upload an IES file to preview photometric data.</p>
 
 <InputFile OnChange="OnFileSelected" />
 
-@if (!string.IsNullOrEmpty(StatusMessage))
+@if (ies != null)
 {
-    <p>@StatusMessage</p>
+    <hr />
+    <p><b>Peak intensity:</b> @ies.PeakCandela cd</p>
+    <p><b>Beam angle (50%):</b> @ies.BeamAngle°</p>
 }
 
-@if (iesBytes != null)
+@if (!string.IsNullOrEmpty(error))
 {
-    <button @onclick="ConvertToTm33">
-        Convert to TM-33
-    </button>
+    <p style="color:red">@error</p>
 }
 
 @code {
+    IesData? ies;
+    string? error;
 
-    private string? StatusMessage;
-    private byte[]? iesBytes;
-
-    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    async Task OnFileSelected(InputFileChangeEventArgs e)
     {
         try
         {
+            error = null;
+            ies = null;
+
             var file = e.File;
-            StatusMessage = $"Selected file: {file.Name} ({file.Size} bytes)";
+            using var stream = file.OpenReadStream();
+            using var reader = new StreamReader(stream);
 
-            using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
-            using var ms = new MemoryStream();
-            await stream.CopyToAsync(ms);
-
-            iesBytes = ms.ToArray();
-
-            await JS.InvokeVoidAsync(
-                "console.log",
-                $"IES file loaded, {iesBytes.Length} bytes"
-            );
+            var text = await reader.ReadToEndAsync();
+            ies = IesParser.Parse(text);
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Error: {ex.Message}";
+            error = ex.Message;
         }
-    }
-
-    private void ConvertToTm33()
-    {
-        StatusMessage = "Ready to convert to TM-33 (logic pending)";
     }
 }
