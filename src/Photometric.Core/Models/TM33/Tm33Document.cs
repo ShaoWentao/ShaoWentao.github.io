@@ -1,3 +1,7 @@
+using Photometric.Core.Models.TM33;
+
+namespace Photometric.Core.Models.TM33;
+
 public class Tm33Document
 {
     public Tm33FileInformation FileInformation { get; init; } = new();
