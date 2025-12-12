@@ -4,7 +4,7 @@ using Photometric.Core.Models.IES;
 namespace Photometric.Core.Readers.IES;
 
 /// <summary>
-/// Result of parsing an IES file (header + angles).
+/// Result of parsing an IES file (header + angles + candela).
 /// </summary>
 public class IesParseResult
 {
@@ -22,4 +22,9 @@ public class IesParseResult
     /// Angular definition (vertical & horizontal angles).
     /// </summary>
     public PhotometricAngles Angles { get; init; } = new();
+
+    /// <summary>
+    /// Candela matrix (rows = horizontal, cols = vertical).
+    /// </summary>
+    public CandelaMatrix Candela { get; init; } = new();
 }
