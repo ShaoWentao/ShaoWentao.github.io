@@ -6,7 +6,7 @@ using Photometric.Core.Models.IES;
 namespace Photometric.Core.Readers.IES;
 
 /// <summary>
-/// Reads IES header section (before numeric photometric data).
+/// Reads IES header and angular definitions (no candela data).
 /// </summary>
 public static class IesHeaderReader
 {
@@ -19,17 +19,24 @@ public static class IesHeaderReader
             .Replace("\r", string.Empty)
             .Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
-        var common = new PhotometricHeader();
-        var ies = new IesHeader();
-        var tilt = new IesTilt();
-
         int index = 0;
 
-        // ---- IES version (first line) ----
-        ies = ies with { IesVersion = lines[index].Trim() };
+        var common = new PhotometricHeader();
+        var iesHeader = new IesHeader();
+        var tilt = new IesTilt();
+
+        // ------------------------------------------------------------------
+        // 1. IES version (first line)
+        // ------------------------------------------------------------------
+        iesHeader = iesHeader with
+        {
+            IesVersion = lines[index].Trim()
+        };
         index++;
 
-        // ---- Keyword section ----
+        // ------------------------------------------------------------------
+        // 2. Keyword section
+        // ------------------------------------------------------------------
         while (index < lines.Length)
         {
             var line = lines[index].Trim();
@@ -59,104 +66,7 @@ public static class IesHeaderReader
             index++;
         }
 
-        // ---- TILT line ----
-        if (index < lines.Length && lines[index].StartsWith("TILT=", StringComparison.OrdinalIgnoreCase))
-        {
-            var tiltValue = lines[index][5..].Trim();
-
-            if (tiltValue.Equals("NONE", StringComparison.OrdinalIgnoreCase))
-            {
-                tilt = tilt with { Type = "NONE" };
-            }
-            else if (tiltValue.Equals("INCLUDE", StringComparison.OrdinalIgnoreCase))
-            {
-                tilt = tilt with { Type = "INCLUDE" };
-            }
-            else
-            {
-                tilt = tilt with
-                {
-                    Type = "FILE",
-                    FileName = tiltValue
-                };
-            }
-
-            index++;
-        }
-
-        // ---- Numeric header line (photometry block header) ----
-        // lamps, lumens/lamp, multiplier, etc.
-        if (index < lines.Length)
-        {
-            var tokens = lines[index]
-                .Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-            if (tokens.Length >= 10)
-            {
-                var photometry = new IesPhotometry
-                {
-                    LampCount = ParseInt(tokens[0]),
-                    LumensPerLamp = ParseDouble(tokens[1]),
-                    CandelaMultiplier = ParseDouble(tokens[2]),
-                    PhotometricType = ParseInt(tokens[5]),
-                    UnitsType = ParseInt(tokens[6]),
-                    BallastFactor = ParseDouble(tokens[9]),
-                    InputWatts = ParseDouble(tokens[^1])
-                };
-
-                ies = ies with
-                {
-                    Tilt = tilt,
-                    Photometry = photometry,
-                    Dimensions = new LuminaireDimensions
-                    {
-                        Width = ParseDouble(tokens[7]),
-                        Length = ParseDouble(tokens[8]),
-                        Height = ParseDouble(tokens[9])
-                    }
-                };
-
-                common = common with
-                {
-                    InputWatts = photometry.InputWatts,
-                    TotalLumens = photometry.LampCount * photometry.LumensPerLamp
-                };
-            }
-        }
-
-        return new IesParseResult
-        {
-            CommonHeader = common,
-            IesHeader = ies
-        };
-    }
-
-    private static int ParseInt(string value)
-        => int.Parse(value, CultureInfo.InvariantCulture);
-
-    private static double ParseDouble(string value)
-        => double.Parse(value, CultureInfo.InvariantCulture);
-
-    private static IReadOnlyList<double> ReadAngleList(
-    string[] lines,
-    ref int index,
-    int count)
-{
-    var list = new List<double>(count);
-
-    while (list.Count < count && index < lines.Length)
-    {
-        var tokens = lines[index]
-            .Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-        foreach (var token in tokens)
-        {
-            if (list.Count < count)
-                list.Add(ParseDouble(token));
-        }
-
-        index++;
-    }
-
-    return list;
-}
+        // ------------------------------------------------------------------
+        // 3. TILT line
+        // ------------------------------------------------------------------
+        if (index
