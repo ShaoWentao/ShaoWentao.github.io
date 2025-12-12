@@ -72,32 +72,20 @@ public static class IesReader
                 : new IesTilt { Type = "FILE", FileName = tiltValue };
 
         idx++;
-// ✅ 新增：如果是 INCLUDE，先读倾斜表（它在光度参数行之前）
-IesTiltReader.TiltIncludeData? tiltInclude = null;
-if (tilt.Type.Equals("INCLUDE", StringComparison.OrdinalIgnoreCase))
-{
-    tiltInclude = IesTiltReader.ReadInclude(lines, ref idx);
-    tilt = tilt with { Angles = tiltInclude.Angles, Multipliers = tiltInclude.Multipliers };
-}
+
+        // ✅ 新增：如果是 INCLUDE，先读倾斜表（它在光度参数行之前）
+        IesTiltReader.TiltIncludeData? tiltInclude = null;
+        if (tilt.Type.Equals("INCLUDE", StringComparison.OrdinalIgnoreCase))
+        {
+            tiltInclude = IesTiltReader.ReadInclude(lines, ref idx);
+            tilt = tilt with { Angles = tiltInclude.Angles, Multipliers = tiltInclude.Multipliers };
+        }
+
         // 4) Numeric photometric header line (LM-63 core line)
         if (idx >= lines.Length) throw new FormatException("Missing photometric header numeric line.");
         var t = SplitTokens(lines[idx]);
 
         // Typical LM-63 expects 13 values, but we guard by accessing safely.
-        // Indices:
-        // 0 lamps
-        // 1 lumens/lamp
-        // 2 candela multiplier
-        // 3 Nv
-        // 4 Nh
-        // 5 photometric type
-        // 6 units type
-        // 7 width
-        // 8 length
-        // 9 height
-        // 10 ballast factor
-        // 11 future use
-        // 12 input watts
         if (t.Length < 10)
             throw new FormatException("Photometric header numeric line has too few fields.");
 
@@ -176,18 +164,30 @@ if (tilt.Type.Equals("INCLUDE", StringComparison.OrdinalIgnoreCase))
         for (int h = 0; h < nh; h++)
             for (int v = 0; v < nv; v++)
                 matrix[h, v] = flat[k++] * candelaMultiplier;
-// ✅ 新增：应用 TILT 修正（按每个垂直角插值）
-if (tiltInclude is not null)
-{
-    var perV = IesTiltReader.BuildVerticalMultipliers(
-        verticalAngles: angles.Vertical,
-        tiltAngles: tiltInclude.Angles,
-        tiltMultipliers: tiltInclude.Multipliers);
 
-    IesTiltReader.ApplyToCandela(matrix, perV);
-}
+        // ✅ 新增：应用 TILT 修正（按每个垂直角插值）
+        if (tiltInclude is not null)
+        {
+            var perV = IesTiltReader.BuildVerticalMultipliers(
+                verticalAngles: angles.Vertical,
+                tiltAngles: tiltInclude.Angles,
+                tiltMultipliers: tiltInclude.Multipliers);
 
-        var candela = new CandelaMatrix { Values = matrix };
+            IesTiltReader.ApplyToCandela(matrix, perV);
+        }
+
+        // ✅ 新增：计算 Peak + BeamAngle(50%)（在 Peak 所在的水平面上，左右插值）
+        var (peakCandela, peakPlaneIndex, peakVerticalAngle, beamAngle) =
+            ComputePeakAndBeamAngle(matrix, angles.Vertical);
+
+        var candela = new CandelaMatrix
+        {
+            Values = matrix,
+            PeakCandela = peakCandela,
+            PeakPlaneIndex = peakPlaneIndex,
+            PeakVerticalAngle = peakVerticalAngle,
+            BeamAngle = beamAngle
+        };
 
         return new IesParseResult
         {
@@ -196,6 +196,92 @@ if (tiltInclude is not null)
             Angles = angles,
             Candela = candela
         };
+    }
+
+    // ============================
+    // Peak + Beam Angle (50%)
+    // ============================
+    private static (double peakCd, int peakPlane, double peakVAngle, double beamAngle)
+        ComputePeakAndBeamAngle(double[,] values, List<double> verticalAngles)
+    {
+        int nh = values.GetLength(0);
+        int nv = values.GetLength(1);
+
+        if (verticalAngles.Count != nv)
+            throw new ArgumentException("Vertical angles count does not match candela matrix.");
+
+        // 1) Global peak
+        double peak = 0;
+        int peakPlane = 0;
+        int peakV = 0;
+
+        for (int h = 0; h < nh; h++)
+        {
+            for (int v = 0; v < nv; v++)
+            {
+                double cd = values[h, v];
+                if (cd > peak)
+                {
+                    peak = cd;
+                    peakPlane = h;
+                    peakV = v;
+                }
+            }
+        }
+
+        double half = peak * 0.5;
+
+        // 2) Search left crossing (toward smaller vertical index)
+        double? left = null;
+        for (int i = peakV; i > 0; i--)
+        {
+            double cNow = values[peakPlane, i];
+            double cPrev = values[peakPlane, i - 1];
+
+            if (cNow >= half && cPrev < half)
+            {
+                left = InterpolateAngle(
+                    verticalAngles[i - 1], verticalAngles[i],
+                    cPrev, cNow, half);
+                break;
+            }
+        }
+
+        // 3) Search right crossing (toward larger vertical index)
+        double? right = null;
+        for (int i = peakV; i < nv - 1; i++)
+        {
+            double cNow = values[peakPlane, i];
+            double cNext = values[peakPlane, i + 1];
+
+            if (cNow >= half && cNext < half)
+            {
+                right = InterpolateAngle(
+                    verticalAngles[i], verticalAngles[i + 1],
+                    cNow, cNext, half);
+                break;
+            }
+        }
+
+        // Fallbacks if crossing isn't found (very wide / odd data)
+        double leftAngle = left ?? verticalAngles[0];
+        double rightAngle = right ?? verticalAngles[^1];
+
+        double beam = rightAngle - leftAngle;
+        if (beam < 0) beam = 0; // safety
+
+        return (peak, peakPlane, verticalAngles[peakV], beam);
+    }
+
+    private static double InterpolateAngle(
+        double a1, double a2,
+        double c1, double c2,
+        double target)
+    {
+        // linear interpolation in candela domain
+        double dc = c2 - c1;
+        if (Math.Abs(dc) < 1e-12) return a1;
+        return a1 + (target - c1) * (a2 - a1) / dc;
     }
 
     private static string AppendLine(string existing, string value)
