@@ -1,20 +1,14 @@
 namespace Photometric.Core.Models;
 
-/// <summary>
-/// Common photometric metadata shared across formats.
-/// </summary>
-public class PhotometricHeader
+public record PhotometricHeader
 {
-    public string Manufacturer { get; init; } = string.Empty;
-    public string Luminaire { get; init; } = string.Empty;
-    public string CatalogNumber { get; init; } = string.Empty;
-    public string Lamp { get; init; } = string.Empty;
-
-    public string TestLaboratory { get; init; } = string.Empty;
-    public string TestReport { get; init; } = string.Empty;
-
+    public string Manufacturer { get; init; } = "";
+    public string Luminaire { get; init; } = "";
+    public string CatalogNumber { get; init; } = "";
+    public string Lamp { get; init; } = "";
+    public string TestLaboratory { get; init; } = "";
+    public string TestReport { get; init; } = "";
+    public string Notes { get; init; } = "";
     public double InputWatts { get; init; }
     public double TotalLumens { get; init; }
-
-    public string Notes { get; init; } = string.Empty;
 }
