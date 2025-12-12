@@ -25,17 +25,17 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: "8.0.x"
 
       - name: Publish Blazor app
         run: dotnet publish src/Web/Web.csproj -c Release -o publish
 
       - name: Inspect publish output
-  run: |
-    echo "===== publish ====="
-    ls -la publish
-    echo "===== publish/wwwroot ====="
-    ls -la publish/wwwroot || echo "NO publish/wwwroot"
+        run: |
+          echo "===== publish ====="
+          ls -la publish
+          echo "===== publish/wwwroot ====="
+          ls -la publish/wwwroot || echo "NO publish/wwwroot"
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
