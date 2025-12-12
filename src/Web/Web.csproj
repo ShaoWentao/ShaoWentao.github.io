@@ -2,15 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-
-    <!-- ⭐ 关键：必须是 Exe -->
     <OutputType>Exe</OutputType>
-
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-
-    <!-- GitHub Pages 友好（保留即可） -->
-    <StaticWebAssetBasePath />
   </PropertyGroup>
 
   <ItemGroup>
