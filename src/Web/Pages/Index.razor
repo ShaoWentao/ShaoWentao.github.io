@@ -14,9 +14,17 @@
     <p>@StatusMessage</p>
 }
 
+@if (iesBytes != null)
+{
+    <button @onclick="ConvertToTm33">
+        Convert to TM-33
+    </button>
+}
+
 @code {
 
     private string? StatusMessage;
+    private byte[]? iesBytes;
 
     private async Task OnFileSelected(InputFileChangeEventArgs e)
     {
@@ -25,15 +33,25 @@
             var file = e.File;
             StatusMessage = $"Selected file: {file.Name} ({file.Size} bytes)";
 
-            // 示例：JS 交互（确认 JS 注入是可用的）
+            using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+
+            iesBytes = ms.ToArray();
+
             await JS.InvokeVoidAsync(
                 "console.log",
-                $"IES file selected: {file.Name}"
+                $"IES file loaded, {iesBytes.Length} bytes"
             );
         }
         catch (Exception ex)
         {
             StatusMessage = $"Error: {ex.Message}";
         }
+    }
+
+    private void ConvertToTm33()
+    {
+        StatusMessage = "Ready to convert to TM-33 (logic pending)";
     }
 }
