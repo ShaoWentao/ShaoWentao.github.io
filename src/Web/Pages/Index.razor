@@ -1,46 +1,109 @@
 @page "/"
-@using Web.Services
+@using Photometric.Core.Readers.IES
+@using Photometric.Core.Models.IES
+@using System.IO
+@inject ISnackbar Snackbar
 @inject IJSRuntime JS
 
-<h3>Photometric Tools</h3>
+<PageTitle>配光文件编辑器</PageTitle>
 
-<p>Upload an IES file to preview photometric data.</p>
+<MudGrid>
+    <MudItem xs="12" md="4">
+        <MudPaper Elevation="3" Class="p-4">
+            <MudText Typo="Typo.h5" Class="mb-4">文件操作</MudText>
+            
+            <MudFileUpload T="IBrowserFile" Accept=".ies" OnFilesChanged="UploadFile">
+                <ButtonTemplate>
+                    <MudButton HtmlTag="label"
+                               Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.CloudUpload"
+                               for="@context.Id">
+                        上传 IES 文件
+                    </MudButton>
+                </ButtonTemplate>
+            </MudFileUpload>
 
-<InputFile OnChange="OnFileSelected" />
+            @if (parsedData != null)
+            {
+                <MudDivider Class="my-4" />
+                <MudList T="string" Dense="true">
+                    <MudText Typo="Typo.h6" Color="Color.Primary">解析数据</MudText>
+                    <MudListItem Icon="@Icons.Material.Filled.Lightbulb">
+                        <MudText><b>灯具数量:</b> @parsedData.LampCount</MudText>
+                    </MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.BrightnessHigh">
+                        <MudText><b>单灯流明:</b> @parsedData.LumensPerLamp lm</MudText>
+                    </MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.Info">
+                        <MudText><b>版本:</b> @parsedData.Version</MudText>
+                    </MudListItem>
+                </MudList>
+            }
+        </MudPaper>
+    </MudItem>
 
-@if (ies != null)
-{
-    <hr />
-    <p><b>Peak intensity:</b> @ies.PeakCandela cd</p>
-    <p><b>Beam angle (50%):</b> @ies.BeamAngle°</p>
-}
+    <MudItem xs="12" md="8">
+        <MudPaper Elevation="3" Class="p-4 d-flex flex-column align-center justify-center" Style="min-height: 500px;">
+            <MudText Typo="Typo.h6" Class="mb-2">配光曲线 (Polar Curve)</MudText>
+            
+            <div style="background-color: transparent; border: 1px solid #eee;">
+                <canvas id="iesCanvas" width="600" height="600"></canvas>
+            </div>
 
-@if (!string.IsNullOrEmpty(error))
-{
-    <p style="color:red">@error</p>
-}
+            @if (parsedData != null)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Class="mt-4" OnClick="DownloadTransparentImage">
+                    下载透明 PNG
+                </MudButton>
+            }
+            else
+            {
+                <MudText Color="Color.Default">请先上传 IES 文件以生成预览</MudText>
+            }
+        </MudPaper>
+    </MudItem>
+</MudGrid>
 
 @code {
-    IesData? ies;
-    string? error;
+    private IesPhotometry? parsedData;
 
-    async Task OnFileSelected(InputFileChangeEventArgs e)
+    private async Task UploadFile(InputFileChangeEventArgs e)
     {
+        var file = e.File;
         try
         {
-            error = null;
-            ies = null;
-
-            var file = e.File;
-            using var stream = file.OpenReadStream();
+            // 读取文件流
+            using var stream = file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
             using var reader = new StreamReader(stream);
+            var content = await reader.ReadToEndAsync();
 
-            var text = await reader.ReadToEndAsync();
-            ies = IesParser.Parse(text);
+            // 使用你的 Core 库进行解析
+            var parser = new IesReader();
+            parsedData = parser.Read(content);
+
+            // 提示成功
+            Snackbar.Add($"成功解析: {file.Name}", Severity.Success);
+
+            // 调用 JS 绘图 (传入解析后的数据)
+            // 注意：这里需要根据你的 IesPhotometry 数据结构提取 Candela 值传给 JS
+            // 假设你提取了一个二维数组或者特定的角度光强数据
+            await JS.InvokeVoidAsync("drawPolarCurve", GenerateMockData()); 
         }
         catch (Exception ex)
         {
-            error = ex.Message;
+            Snackbar.Add($"解析失败: {ex.Message}", Severity.Error);
         }
+    }
+
+    private async Task DownloadTransparentImage()
+    {
+        await JS.InvokeVoidAsync("downloadCanvasImage", "photometric-curve.png");
+    }
+
+    // 临时模拟数据，你需要替换为从 parsedData 中提取的真实 Candela 值
+    private double[] GenerateMockData()
+    {
+        return new double[] { 100, 95, 90, 80, 60, 40, 20, 10, 5, 0 }; // 示例
     }
 }
