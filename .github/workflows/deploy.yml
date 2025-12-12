@@ -24,7 +24,7 @@ jobs:
 
     # 3. 发布 Blazor 项目 (编译)
     - name: Publish .NET Core Project
-      run: dotnet publish Web/Web.csproj -c Release -o release --nologo
+      run: dotnet publish src/Web/Web.csproj -c Release -o release --nologo
 
     # 4. 修改 index.html 的 base href (防止路径错误)
     # 如果你是 username.github.io 仓库，这一步通常不需要，或者设为 '/'
