@@ -1,14 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
-
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
-<ItemGroup>
-  <ProjectReference Include="..\Photometric.Core\Photometric.Core.csproj" />
-</ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Photometric.Core\Photometric.Core.csproj" />
+  </ItemGroup>
 </Project>
-
-
