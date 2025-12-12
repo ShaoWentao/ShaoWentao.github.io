@@ -1,6 +1,5 @@
 name: Deploy to GitHub Pages
 
-# 触发条件：推送到 main 分支时
 on:
   push:
     branches: [ main ]
@@ -20,29 +19,29 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: '8.0.x' # 确保这里和你项目用的版本一致 (6.0, 7.0 或 8.0)
+        dotnet-version: '8.0.x'
 
-    # 3. 发布 Blazor 项目 (编译)
+    # 3. 发布 Blazor 项目 (关键修复：路径指向 src/Web/Web.csproj)
     - name: Publish .NET Core Project
       run: dotnet publish src/Web/Web.csproj -c Release -o release --nologo
 
-    # 4. 修改 index.html 的 base href (防止路径错误)
-    # 如果你是 username.github.io 仓库，这一步通常不需要，或者设为 '/'
-    # 如果是子项目，这里要设为 '/项目名/'
+    # 4. 修复 base href (适应 GitHub Pages)
+    # 如果你的仓库是根域名(ShaoWentao.github.io)，这里保持 / 
+    # 如果是子项目，这里需要改为 /仓库名/
     - name: Change base-tag in index.html from / to /
       run: sed -i 's/<base href="\/" \/>/<base href="\/" \/>/g' release/wwwroot/index.html
 
-    # 5. 将 wwwroot 下的 _framework 复制一下 (GitHub Pages 对下划线文件夹有时候会 404)
+    # 5. 复制 index.html 为 404.html (解决 Blazor 刷新变 404 的问题)
     - name: copy index.html to 404.html
       run: cp release/wwwroot/index.html release/wwwroot/404.html
 
-    # 6. 禁用 Jekyll (这也是为了防止下划线文件 404)
+    # 6. 添加 .nojekyll 文件 (防止 GitHub 忽略 _framework 文件夹，导致 404)
     - name: Add .nojekyll file
       run: touch release/wwwroot/.nojekyll
 
-    # 7. 部署到 gh-pages 分支
+    # 7. 部署到 gh-pages 分支 (关键：只部署 wwwroot 文件夹)
     - name: Commit wwwroot to GitHub Pages
       uses: JamesIves/github-pages-deploy-action@v4
       with:
-        branch: gh-pages # 部署到的分支
-        folder: release/wwwroot # 要部署的文件夹
+        branch: gh-pages
+        folder: release/wwwroot
