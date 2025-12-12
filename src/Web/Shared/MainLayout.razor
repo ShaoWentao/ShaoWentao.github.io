@@ -5,21 +5,18 @@
 <MudSnackbarProvider />
 
 <MudLayout>
-    <MudAppBar Elevation="1" Dense="true" Style="background-color: #f7f7f7; color: #333; border-bottom: 1px solid #d6d5d5;">
+    <MudAppBar Elevation="1" Dense="true" Style="background-color: #f7f7f7; color: #333;">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
         <MudSpacer />
-        <MudText Typo="Typo.body1"><b>Viso Photometric Editor (复刻版)</b></MudText>
+        <MudText Typo="Typo.body1"><b>配光文件编辑器</b></MudText>
         <MudSpacer />
-        <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Inherit" />
     </MudAppBar>
 
     <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2" 
                Style="background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%); color: white;">
         <MudNavMenu>
             <MudText Typo="Typo.h6" Class="px-4 py-4">工具箱</MudText>
-            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard" IconColor="Color.Surface" Style="color:white;">总览 (Overview)</MudNavLink>
-            <MudNavLink Href="/editor" Icon="@Icons.Material.Filled.Edit" IconColor="Color.Surface" Style="color:white;">编辑 (Editor)</MudNavLink>
-            <MudNavLink Href="/export" Icon="@Icons.Material.Filled.FileDownload" IconColor="Color.Surface" Style="color:white;">导出 (Export)</MudNavLink>
+            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard" IconColor="Color.Surface" Style="color:white;">首页</MudNavLink>
         </MudNavMenu>
     </MudDrawer>
 
