@@ -1,5 +1,4 @@
 using System.Globalization;
-using Photometric.Core.Models;
 using Photometric.Core.Models.Common;
 using Photometric.Core.Models.IES;
 
@@ -151,12 +150,6 @@ public static class IesHeaderReader
         {
             Tilt = tilt,
             Photometry = photometry,
-            Dimensions = new LuminaireDimensions
-            {
-                Width = width,
-                Length = length,
-                Height = height
-            }
         };
 
         common = common with
