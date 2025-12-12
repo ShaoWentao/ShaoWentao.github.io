@@ -136,4 +136,27 @@ public static class IesHeaderReader
 
     private static double ParseDouble(string value)
         => double.Parse(value, CultureInfo.InvariantCulture);
+
+    private static IReadOnlyList<double> ReadAngleList(
+    string[] lines,
+    ref int index,
+    int count)
+{
+    var list = new List<double>(count);
+
+    while (list.Count < count && index < lines.Length)
+    {
+        var tokens = lines[index]
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        foreach (var token in tokens)
+        {
+            if (list.Count < count)
+                list.Add(ParseDouble(token));
+        }
+
+        index++;
+    }
+
+    return list;
 }
