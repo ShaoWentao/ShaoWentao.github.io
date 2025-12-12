@@ -1,27 +1,16 @@
 namespace Photometric.Core.Models.IES;
 
-/// <summary>
-/// IES TILT definition.
-/// </summary>
-public class IesTilt
+public record IesTilt
 {
-    /// <summary>
-    /// TILT type: NONE, INCLUDE, or FILE.
-    /// </summary>
+    /// <summary>NONE / INCLUDE / FILE</summary>
     public string Type { get; init; } = "NONE";
 
-    /// <summary>
-    /// Referenced external tilt file (if Type = FILE).
-    /// </summary>
+    /// <summary>If Type = FILE</summary>
     public string? FileName { get; init; }
 
-    /// <summary>
-    /// Tilt angles in degrees (if INCLUDE).
-    /// </summary>
+    /// <summary>If Type = INCLUDE (not applied yet in this version)</summary>
     public IReadOnlyList<double>? Angles { get; init; }
 
-    /// <summary>
-    /// Multipliers corresponding to tilt angles.
-    /// </summary>
+    /// <summary>If Type = INCLUDE (not applied yet in this version)</summary>
     public IReadOnlyList<double>? Multipliers { get; init; }
 }
