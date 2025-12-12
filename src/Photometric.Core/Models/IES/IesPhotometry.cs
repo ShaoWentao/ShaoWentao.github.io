@@ -1,42 +1,22 @@
 namespace Photometric.Core.Models.IES;
 
-/// <summary>
-/// IES photometric system parameters.
-/// </summary>
-public class IesPhotometry
+public record IesPhotometry
 {
-    /// <summary>
-    /// Photometric type (1 = Type C, 2 = Type B, 3 = Type A).
-    /// </summary>
-    public int PhotometricType { get; init; }
-
-    /// <summary>
-    /// Units type (1 = feet, 2 = meters).
-    /// </summary>
-    public int UnitsType { get; init; }
-
-    /// <summary>
-    /// Number of lamps.
-    /// </summary>
     public int LampCount { get; init; }
-
-    /// <summary>
-    /// Lumens per lamp.
-    /// </summary>
     public double LumensPerLamp { get; init; }
-
-    /// <summary>
-    /// Candela multiplier.
-    /// </summary>
     public double CandelaMultiplier { get; init; }
 
-    /// <summary>
-    /// Ballast factor.
-    /// </summary>
-    public double BallastFactor { get; init; }
+    public int VerticalAngleCount { get; init; }     // Nv
+    public int HorizontalAngleCount { get; init; }   // Nh
 
-    /// <summary>
-    /// Input watts.
-    /// </summary>
+    public int PhotometricType { get; init; }        // 1=C,2=B,3=A
+    public int UnitsType { get; init; }              // 1=feet,2=meters
+
+    public double Width { get; init; }
+    public double Length { get; init; }
+    public double Height { get; init; }
+
+    public double BallastFactor { get; init; }
+    public double FutureUse { get; init; }
     public double InputWatts { get; init; }
 }
