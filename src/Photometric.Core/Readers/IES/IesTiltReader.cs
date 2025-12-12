@@ -1,157 +1,154 @@
+using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq; // 确保引用 Linq
 
-namespace Photometric.Core.Readers.IES;
-
-/// <summary>
-/// Reads and applies IES LM-63 TILT=INCLUDE data.
-/// Notes:
-/// - TILT=INCLUDE appears immediately after the TILT line, BEFORE the numeric photometric header line.
-/// - The tilt table provides multipliers vs. angles (degrees).
-/// - To correct candela values, we interpolate multipliers at each vertical angle (Gamma) and
-///   apply per-vertical-angle scaling to the candela matrix.
-/// </summary>
-public static class IesTiltReader
+namespace Photometric.Core.Readers.IES
 {
-    public sealed class TiltIncludeData
+    public static class IesTiltReader
     {
-        public IReadOnlyList<double> Angles { get; init; } = Array.Empty<double>();
-        public IReadOnlyList<double> Multipliers { get; init; } = Array.Empty<double>();
-    }
-
-    /// <summary>
-    /// Reads the TILT=INCLUDE block starting at current index (the line right after "TILT=INCLUDE").
-    /// Advances index to the first line AFTER the include block.
-    /// </summary>
-    public static TiltIncludeData ReadInclude(string[] lines, ref int index)
-    {
-        if (index >= lines.Length)
-            throw new FormatException("Unexpected end of file while reading TILT=INCLUDE.");
-
-        // First token after TILT=INCLUDE is number of tilt angles
-        var nTokens = SplitTokens(lines[index]);
-        if (nTokens.Length < 1)
-            throw new FormatException("Invalid TILT=INCLUDE angle count line.");
-
-        int n = ParseInt(nTokens[0]);
-        index++;
-
-        if (n <= 0)
-            throw new FormatException("Invalid TILT=INCLUDE angle count.");
-
-        var angles = ReadDoubles(lines, ref index, n);
-        var multipliers = ReadDoubles(lines, ref index, n);
-
-        return new TiltIncludeData
+        // 定义一个内部类来传递解析结果
+        public class TiltIncludeData
         {
-            Angles = angles,
-            Multipliers = multipliers
-        };
-    }
-
-    /// <summary>
-    /// Builds per-vertical-angle multipliers by linear interpolation from the tilt table.
-    /// Clamp to endpoints outside the tilt angle range.
-    /// </summary>
-    public static double[] BuildVerticalMultipliers(
-        IReadOnlyList<double> verticalAngles,
-        IReadOnlyList<double> tiltAngles,
-        IReadOnlyList<double> tiltMultipliers)
-    {
-        if (tiltAngles.Count != tiltMultipliers.Count || tiltAngles.Count == 0)
-            throw new ArgumentException("Tilt angle/multiplier table is invalid.");
-
-        var result = new double[verticalAngles.Count];
-
-        for (int i = 0; i < verticalAngles.Count; i++)
-        {
-            double x = verticalAngles[i];
-            result[i] = InterpClamp(tiltAngles, tiltMultipliers, x);
+            public List<double> Angles { get; set; } = new();
+            public List<double> Multipliers { get; set; } = new();
         }
 
-        return result;
-    }
-
-    /// <summary>
-    /// Applies per-vertical multipliers to candela matrix in-place:
-    /// candela[h, v] *= verticalMultiplier[v]
-    /// </summary>
-    public static void ApplyToCandela(double[,] candela, double[] verticalMultipliers)
-    {
-        int hCount = candela.GetLength(0);
-        int vCount = candela.GetLength(1);
-
-        if (verticalMultipliers.Length != vCount)
-            throw new ArgumentException("Vertical multiplier length does not match candela matrix.");
-
-        for (int h = 0; h < hCount; h++)
+        /// <summary>
+        /// 当 TILT=INCLUDE 时，读取随后的参数（灯泡数, 角度数, 角度列表, 系数列表）
+        /// </summary>
+        public static TiltIncludeData ReadInclude(string[] lines, ref int idx)
         {
-            for (int v = 0; v < vCount; v++)
+            // 1. 读取 LampCount (通常是 1)
+            // 有些 IES 文件这一行可能包含多个数字，我们只取第一个有效数字
+            // 格式示例: 1
+            if (idx >= lines.Length) throw new FormatException("Unexpected end of file reading TILT lamp count.");
+            
+            // 跳过可能的空行
+            while (string.IsNullOrWhiteSpace(lines[idx])) 
             {
-                candela[h, v] *= verticalMultipliers[v];
+                idx++;
+                if (idx >= lines.Length) throw new FormatException("Unexpected end of file reading TILT lamp count.");
             }
-        }
-    }
 
-    // ---------------- helpers ----------------
+            var tokens = SplitTokens(lines[idx]);
+            if (tokens.Length == 0) throw new FormatException("Invalid TILT lamp count line.");
+            
+            // 我们其实不太关心这里的 lampCount 具体是多少，只要格式对就行，通常是 1
+            // int lampCount = int.Parse(tokens[0]); 
+            idx++;
 
-    private static string[] SplitTokens(string line)
-        => line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            // 2. 读取 角度数量 (N)
+            if (idx >= lines.Length) throw new FormatException("Unexpected end of file reading TILT angles count.");
+            tokens = SplitTokens(lines[idx]);
+            if (tokens.Length == 0) throw new FormatException("Invalid TILT angles count line.");
+            
+            int count = int.Parse(tokens[0]);
+            idx++;
 
-    private static List<double> ReadDoubles(string[] lines, ref int index, int count)
-    {
-        var list = new List<double>(count);
+            // 3. 读取 N 个角度
+            var angles = ReadDoubles(lines, ref idx, count);
 
-        while (list.Count < count && index < lines.Length)
-        {
-            var tokens = SplitTokens(lines[index]);
-            foreach (var token in tokens)
+            // 4. 读取 N 个乘数因子 (Multipliers)
+            var multipliers = ReadDoubles(lines, ref idx, count);
+
+            return new TiltIncludeData
             {
-                if (list.Count < count)
-                    list.Add(ParseDouble(token));
+                Angles = angles,
+                Multipliers = multipliers
+            };
+        }
+
+        /// <summary>
+        /// 根据垂直角度列表，计算出对应的 TILT 修正系数列表
+        /// </summary>
+        public static List<double> BuildVerticalMultipliers(
+            List<double> verticalAngles,
+            List<double> tiltAngles,
+            List<double> tiltMultipliers)
+        {
+            var result = new List<double>(verticalAngles.Count);
+
+            foreach (var vAngle in verticalAngles)
+            {
+                // 插值计算当前垂直角对应的修正系数
+                double mult = Interpolate(tiltAngles, tiltMultipliers, vAngle);
+                result.Add(mult);
             }
-            index++;
+
+            return result;
         }
 
-        if (list.Count != count)
-            throw new FormatException($"Expected {count} numeric values, got {list.Count}.");
-
-        return list;
-    }
-
-    private static int ParseInt(string s)
-        => int.Parse(s, CultureInfo.InvariantCulture);
-
-    private static double ParseDouble(string s)
-        => double.Parse(s, CultureInfo.InvariantCulture);
-
-    private static double InterpClamp(IReadOnlyList<double> xs, IReadOnlyList<double> ys, double x)
-    {
-        // Assumes xs are in ascending order (common in IES tilt tables).
-        // If not strictly sorted, this will still behave reasonably for monotonic-ish data.
-        if (x <= xs[0]) return ys[0];
-        if (x >= xs[^1]) return ys[^1];
-
-        // Find segment [i, i+1] such that xs[i] <= x <= xs[i+1]
-        // Linear scan is OK for typical small tables; can optimize later if needed.
-        for (int i = 0; i < xs.Count - 1; i++)
+        /// <summary>
+        /// 将修正系数应用到 Candela 矩阵上
+        /// </summary>
+        public static void ApplyToCandela(double[,] matrix, List<double> verticalMultipliers)
         {
-            double x0 = xs[i];
-            double x1 = xs[i + 1];
+            int nh = matrix.GetLength(0);
+            int nv = matrix.GetLength(1);
 
-            if (x >= x0 && x <= x1)
+            if (verticalMultipliers.Count != nv)
+                throw new ArgumentException("Vertical multipliers count mismatch.");
+
+            for (int h = 0; h < nh; h++)
             {
-                double y0 = ys[i];
-                double y1 = ys[i + 1];
-
-                if (Math.Abs(x1 - x0) < 1e-12)
-                    return y0;
-
-                double t = (x - x0) / (x1 - x0);
-                return y0 + (y1 - y0) * t;
+                for (int v = 0; v < nv; v++)
+                {
+                    matrix[h, v] *= verticalMultipliers[v];
+                }
             }
         }
 
-        // Fallback (should not happen if xs monotonic)
-        return ys[^1];
+        // ================== Helpers ==================
+
+        private static string[] SplitTokens(string line)
+            => line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+
+        private static List<double> ReadDoubles(string[] lines, ref int idx, int count)
+        {
+            var list = new List<double>(count);
+            while (list.Count < count && idx < lines.Length)
+            {
+                var tokens = SplitTokens(lines[idx]);
+                foreach (var token in tokens)
+                {
+                    if (list.Count < count && double.TryParse(token, NumberStyles.Any, CultureInfo.InvariantCulture, out var val))
+                    {
+                        list.Add(val);
+                    }
+                }
+                idx++;
+            }
+            return list;
+        }
+
+        private static double Interpolate(List<double> xValues, List<double> yValues, double xTarget)
+        {
+            // 简单的线性插值
+            // 假设 xValues 是有序的
+            if (xValues.Count == 0) return 1.0;
+            if (xValues.Count == 1) return yValues[0];
+
+            // 边界处理
+            if (xTarget <= xValues[0]) return yValues[0];
+            if (xTarget >= xValues[^1]) return yValues[^1];
+
+            // 查找区间
+            for (int i = 0; i < xValues.Count - 1; i++)
+            {
+                if (xTarget >= xValues[i] && xTarget <= xValues[i + 1])
+                {
+                    double x1 = xValues[i];
+                    double x2 = xValues[i + 1];
+                    double y1 = yValues[i];
+                    double y2 = yValues[i + 1];
+
+                    double t = (xTarget - x1) / (x2 - x1);
+                    return y1 + t * (y2 - y1);
+                }
+            }
+
+            return 1.0; // Should not reach here
+        }
     }
 }
