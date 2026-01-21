@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>About CDN Lighting</title>
+<meta name="description" content="CDN Lighting — Light Designed for Designed Light. Full-chain lighting systems since 2005. Serving 10,000+ masterpieces, 8M households, across 55 countries & regions."/>
+
+<style>
+:root{
+  --bg:#0b0f19; --text:#f5f7ff; --muted:#aab3cf;
+  --line:rgba(255,255,255,.08); --radius:18px;
+  --shadow: 0 14px 38px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(1000px 600px at 20% 10%, rgba(122,167,255,.12), transparent 55%),
+    radial-gradient(900px 600px at 85% 15%, rgba(255,255,255,.06), transparent 60%),
+    var(--bg);
+}
+.container{max-width:1100px;margin:auto;padding:0 20px;}
+section{padding:60px 0;}
+h1,h2,h3{margin:0;}
+h2{font-size:22px;margin-bottom:6px;}
+p{margin:8px 0;color:var(--muted);font-size:14px;}
+a{color:inherit;text-decoration:none}
+hr.sep{border:0;border-top:1px solid var(--line);margin:0;}
+
+.card{
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  background:rgba(255,255,255,.03);
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.pad{padding:16px;}
+
+.grid{display:grid;gap:20px;}
+.grid-2{grid-template-columns:repeat(2,1fr);}
+.grid-3{grid-template-columns:repeat(3,1fr);}
+
+/* TOP BAR (Logo at top-left) */
+.topbar{
+  position:sticky;
+  top:0;
+  z-index:60;
+  background:rgba(11,15,25,.55);
+  backdrop-filter: blur(14px);
+  border-bottom:1px solid var(--line);
+}
+.topbar-inner{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:12px 0;
+  gap:16px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.logo-img{
+  height:36px;
+  width:auto;
+  display:block;
+}
+.brand-name{
+  font-size:14px;
+  font-weight:650;
+  letter-spacing:.4px;
+  line-height:1.1;
+}
+.brand-slogan{
+  font-size:11px;
+  color:var(--muted);
+  margin-top:2px;
+  line-height:1.1;
+}
+.nav{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+.nav a{
+  font-size:12px;
+  color:var(--muted);
+  padding:7px 10px;
+  border-radius:999px;
+  border:1px solid transparent;
+}
+.nav a:hover{
+  color:var(--text);
+  border-color:rgba(255,255,255,.12);
+  background:rgba(255,255,255,.04);
+}
+
+/* HERO */
+.hero{
+  display:grid;
+  grid-template-columns:1.1fr .9fr;
+  gap:30px;
+  align-items:center;
+}
+.hero-img{
+  background:url('images/hero.jpg') center/cover no-repeat;
+  border-radius:var(--radius);
+  height:360px;
+  border:1px solid var(--line);
+}
+.hero-title{
+  font-size:52px;
+  line-height:1.02;
+  font-weight:750;
+  letter-spacing:1px;
+  margin:0 0 10px;
+}
+.hero-title span{
+  font-weight:400;
+  opacity:.88;
+}
+.hero-lead{
+  max-width:560px;
+}
+.tags{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;}
+.tag{
+  border:1px solid var(--line);
+  border-radius:999px;
+  padding:7px 10px;
+  color:var(--muted);
+  font-size:12px;
+  background:rgba(255,255,255,.02);
+}
+
+/* KPI */
+.kpis{
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:14px;
+  margin-top:26px;
+}
+.kpi{
+  border:1px solid var(--line);
+  padding:14px;
+  border-radius:var(--radius);
+  background:rgba(255,255,255,.02);
+  text-align:center;
+}
+.kpi b{font-size:16px;display:block;margin-bottom:2px;color:var(--text);}
+.kpi span{color:var(--muted);font-size:12px;}
+
+/* BRANDS */
+.brands{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}
+.brand-card{
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+  background:rgba(255,255,255,.02);
+}
+.brand-img{height:160px;background-size:cover;background-position:center;}
+.brand-body{padding:14px;}
+.brand-body h4{margin:0;font-size:15px;}
+.brand-body p{margin:6px 0 0;}
+
+/* CAPABILITIES */
+.cap-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+.cap-card{
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+  background:rgba(255,255,255,.02);
+}
+.cap-img{height:160px;background-size:cover;background-position:center;}
+.cap-body{padding:14px;}
+.cap-body h4{margin:0;font-size:15px;}
+.cap-body p{margin:6px 0 0;}
+
+/* PROJECTS */
+.projects{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+.project-card{
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+  background:rgba(255,255,255,.02);
+}
+.project-img{height:160px;background-size:cover;background-position:center;}
+.project-body{padding:14px;}
+.project-body h4{margin:0;font-size:15px;}
+.project-body p{margin:6px 0 0;}
+
+/* FOOTER */
+footer{
+  border-top:1px solid var(--line);
+  padding:30px 0;
+  text-align:center;
+  color:var(--muted);
+  font-size:13px;
+}
+
+/* RESPONSIVE */
+@media(max-width:1000px){
+  .kpis{grid-template-columns:repeat(3,1fr);}
+}
+@media(max-width:900px){
+  .nav{display:none;}
+  .hero{grid-template-columns:1fr;}
+  .hero-img{height:240px;}
+  .hero-title{font-size:38px;}
+  .kpis{grid-template-columns:repeat(2,1fr);gap:12px;margin-top:20px;}
+  .brands, .cap-grid, .projects, .grid-2, .grid-3{grid-template-columns:1fr;}
+}
+
+/* FOOTER (2 columns on desktop, 1 column on mobile) */
+.site-footer{
+  border-top:1px solid var(--line);
+  padding:44px 0 28px;
+  color:var(--muted);
+  font-size:13px;
+}
+
+.footer-grid{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap:22px 26px; /* row gap / column gap */
+  align-items:start;
+}
+
+.footer-block{
+  border:1px solid var(--line);
+  background: rgba(255,255,255,.02);
+  border-radius: var(--radius);
+  padding:16px 16px 14px;
+}
+
+.footer-label{
+  font-size:11px;
+  letter-spacing:1px;
+  color: rgba(170,179,207,.85);
+  margin-bottom:8px;
+}
+
+.footer-link{
+  color: var(--text);
+  text-decoration:none;
+  word-break: break-word;
+}
+
+.footer-link:hover{ text-decoration: underline; }
+
+.footer-text{
+  color: var(--text);
+  opacity:.92;
+  line-height:1.6;
+}
+
+.footer-bottom{
+  margin-top:18px;
+  padding-top:16px;
+  border-top:1px solid var(--line);
+  text-align:center;
+  color: rgba(170,179,207,.9);
+}
+
+/* Mobile: stack to 1 column */
+@media(max-width:900px){
+  .footer-grid{
+    grid-template-columns: 1fr;
+    gap:12px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- TOP BAR with main logo -->
+<header class="topbar">
+  <div class="container">
+    <div class="topbar-inner">
+      <div class="brand" aria-label="CDN Lighting">
+  <img class="logo-img" src="images/logo-cdn.png" alt="CDN Lighting Logo">
+</div>
+
+      <nav class="nav" aria-label="Page navigation">
+        <a href="#about">About</a>
+        <a href="#brands">Brands</a>
+        <a href="#capabilities">Capabilities</a>
+        <a href="#technology">Technology</a>
+        <a href="#milestones">Milestones</a>
+        <a href="#projects">References</a>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<!-- HERO + KPI -->
+<section id="about">
+  <div class="container hero">
+    <div>
+      <h1 class="hero-title">
+        LIGHT<br>
+        DESIGNED<br>
+        <span>BY DESIGNED</span><br>
+        LIGHT.
+      </h1>
+
+      <p class="hero-lead">
+        Founded in 2005, CDN Lighting is a high-end lighting brand in China, delivering full-chain lighting systems
+        across indoor, outdoor, and smart solutions.
+      </p>
+      <p class="hero-lead">
+        We support landmark architecture, hospitality, museums, commercial spaces, infrastructure, and premium residences,
+        with products sold in 55 countries & regions.
+      </p>
+
+      <div class="tags" aria-label="Highlights">
+        <span class="tag">Full-chain System Service</span>
+        <span class="tag">Indoor · Outdoor · Smart</span>
+        <span class="tag">Design · Delivery · Operations</span>
+      </div>
+    </div>
+
+    <div class="hero-img" aria-label="CDN Lighting landmark project image"></div>
+  </div>
+
+  <div class="container kpis" aria-label="Key figures">
+    <div class="kpi"><b>Since 2005</b><span>Founded</span></div>
+    <div class="kpi"><b>10,000+</b><span>Architectural Masterpieces</span></div>
+    <div class="kpi"><b>8M</b><span>Households Served</span></div>
+    <div class="kpi"><b>55</b><span>Countries & Regions</span></div>
+    <div class="kpi"><b>2,800+</b><span>Five-star Hotels</span></div>
+    <div class="kpi"><b>40+</b><span>Fortune Global 500 Partners</span></div>
+  </div>
+</section>
+
+<hr class="sep"/>
+
+<!-- BRANDS -->
+<section id="brands">
+  <div class="container">
+    <h2>Brand Portfolio</h2>
+    <p>Four specialized brands serving landmarks, hospitality, museums and premium residences.</p>
+
+    <div class="brands">
+      <div class="brand-card">
+        <div class="brand-img" style="background-image:url('images/brand-cdn.png');" aria-label="CDN Lighting brand"></div>
+        <div class="brand-body"><h4>CDN Lighting</h4><p>Landmark & public-building lighting.</p></div>
+      </div>
+
+      <div class="brand-card">
+        <div class="brand-img" style="background-image:url('images/brand-bach.png');" aria-label="BACH brand"></div>
+        <div class="brand-body"><h4>BACH</h4><p>Five-star hospitality lighting with deep hotel expertise.</p></div>
+      </div>
+
+      <div class="brand-card">
+        <div class="brand-img" style="background-image:url('images/brand-mayalit.png');" aria-label="Mayalit brand"></div>
+        <div class="brand-body"><h4>Mayalit</h4><p>Museum & gallery lighting for demanding visual environments.</p></div>
+      </div>
+
+      <div class="brand-card">
+        <div class="brand-img" style="background-image:url('images/brand-shejian.png');" aria-label="SJ brand"></div>
+        <div class="brand-body"><h4>SJ</h4><p>Premium residential smart lighting brand of CDN Lighting.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="sep"/>
+
+<!-- CAPABILITIES -->
+<section id="capabilities">
+  <div class="container">
+    <h2>Capabilities</h2>
+    <p>Design · Smart Systems · Manufacturing · Global Delivery</p>
+
+    <div class="cap-grid">
+      <div class="cap-card">
+        <div class="cap-img" style="background-image:url('images/cap-design.jpg');" aria-label="Lighting design"></div>
+        <div class="cap-body"><h4>Lighting Design</h4><p>Professional design, consulting, and application support.</p></div>
+      </div>
+
+      <div class="cap-card">
+        <div class="cap-img" style="background-image:url('images/cap-smart.jpg');" aria-label="Smart systems"></div>
+        <div class="cap-body"><h4>Smart Systems</h4><p>IES intelligent energy platform for management and efficiency.</p></div>
+      </div>
+
+      <div class="cap-card">
+        <div class="cap-img" style="background-image:url('images/cap-factory.jpg');" aria-label="Manufacturing"></div>
+        <div class="cap-body"><h4>Manufacturing</h4><p>Industrialized delivery for reliable quality and consistency.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="sep"/>
+
+<!-- TECHNOLOGY & CREDENTIALS -->
+<section id="technology">
+  <div class="container">
+    <h2>Technology & Credentials</h2>
+    <p>Innovation backed by accredited testing, standards participation, patents, and international design recognition.</p>
+
+    <div class="grid grid-3">
+      <div class="card"><div class="pad">
+        <h3 style="font-size:15px;margin:0;">Accredited Testing</h3>
+        <p style="margin-top:6px;">
+          CNAS-accredited testing center and TÜV Rheinland CTF registered lab, supporting robust verification and compliance.
+        </p>
+      </div></div>
+
+      <div class="card"><div class="pad">
+        <h3 style="font-size:15px;margin:0;">Standards & Patents</h3>
+        <p style="margin-top:6px;">
+          Participation in 34 industry standards; 639 patents covering invention, utility models, and design.
+        </p>
+      </div></div>
+
+      <div class="card"><div class="pad">
+        <h3 style="font-size:15px;margin:0;">Design Awards</h3>
+        <p style="margin-top:6px;">
+          46 international design awards, including iF, Red Dot, and Japan IDPA.
+        </p>
+      </div></div>
+    </div>
+
+    <!-- Optional image: lab / certification wall -->
+    <div class="card" style="margin-top:20px;">
+      <div style="height:300px;background:url('images/tech-lab.jpg') center/cover no-repeat;" aria-label="CDN testing and certification lab"></div>
+    </div>
+
+    <p style="margin-top:10px;font-size:12px;color:var(--muted);">
+      Note: “High-tech enterprise” recognition has been maintained for 15 consecutive years.
+    </p>
+  </div>
+</section>
+
+<hr class="sep"/>
+
+<!-- MILESTONES -->
+<section id="milestones">
+  <div class="container">
+    <h2>Milestones</h2>
+    <p>A concise timeline reflecting major expansion, brand building, and global presence.</p>
+
+    <div class="grid grid-2">
+      <div class="card"><div class="pad">
+        <h3 style="font-size:15px;margin:0;">2005–2012</h3>
+        <p style="margin-top:6px;">
+          Founded in 2005; supplied the Beijing Olympics News Center in 2008; entered the hotel segment and became an early LED adopter.
+        </p>
+      </div></div>
+
+      <div class="card"><div class="pad">
+        <h3 style="font-size:15px;margin:0;">2013–2020</h3>
+        <p style="margin-top:6px;">
+          Expanded from real-estate partnerships to broader ecosystems; launched Mayalit (museum) and SJ (residential); accelerated international strategy.
+        </p>
+      </div></div>
+
+      <div class="card"><div class="pad">
+        <h3 style="font-size:15px;margin:0;">2021–2025</h3>
+        <p style="margin-top:6px;">
+          Distributors signed in 30+ countries; served leading tech enterprises; strengthened leadership in high-end downlights, hotels, and museum lighting.
+        </p>
+      </div></div>
+
+      <div class="card"><div class="pad">
+        <h3 style="font-size:15px;margin:0;">Today</h3>
+        <p style="margin-top:6px;">
+          Listed among China’s Brand Value Top 500, serving 10,000+ masterpieces and 8M households worldwide.
+        </p>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<hr class="sep"/>
+
+<!-- REPRESENTATIVE REFERENCES -->
+<section id="projects">
+  <div class="container">
+    <h2>Representative References</h2>
+    <p>Across national events, museums, infrastructure, commercial icons, and flagship headquarters.</p>
+
+    <div class="projects">
+      <div class="project-card">
+        <div class="project-img" style="background-image:url('images/project-event.jpg');" aria-label="National events"></div>
+        <div class="project-body"><h4>National Events</h4><p>Beijing Olympics · Shanghai Expo · APEC venues</p></div>
+      </div>
+
+      <div class="project-card">
+        <div class="project-img" style="background-image:url('images/project-museum.jpg');" aria-label="Museums and arts"></div>
+        <div class="project-body"><h4>Museums & Arts</h4><p>The Palace Museum · National Museum of China</p></div>
+      </div>
+
+      <div class="project-card">
+        <div class="project-img" style="background-image:url('images/project-hotel.jpg');" aria-label="Hospitality"></div>
+        <div class="project-body"><h4>Hospitality</h4><p>Atlantis The Palm (Dubai) · Waldorf Astoria (Shanghai)</p></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+      <div class="pad">
+        <h3 style="font-size:15px;margin:0;">More Reference Types</h3>
+        <div class="tags" aria-label="Reference types">
+          <span class="tag">DJI HQ (Shenzhen)</span>
+          <span class="tag">Xiaomi Tech Park (Beijing)</span>
+          <span class="tag">Huawei HQ (Beijing Lize SOHO)</span>
+          <span class="tag">Wuhan SKP</span>
+          <span class="tag">Shenzhen–Zhongshan Link</span>
+          <span class="tag">Hong Kong–Zhuhai–Macao Bridge</span>
+          <span class="tag">Beijing Daxing Airport</span>
+          <span class="tag">Tsinghua SEM</span>
+          <span class="tag">Shougang Industrial Park</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div class="footer-block">
+      <div class="footer-label">WEBSITE</div>
+      <a class="footer-link" href="https://www.cdnlighting.cc/" target="_blank" rel="noopener">
+        https://www.cdnlight.com/
+      </a>
+    </div>
+
+    <div class="footer-block">
+      <div class="footer-label">E-MAIL</div>
+      <a class="footer-link" href="mailto:sales@cdnlighting.com.cn">
+        sales@cdnlighting.com.cn
+      </a>
+    </div>
+
+    <div class="footer-block">
+      <div class="footer-label">TELEPHONE</div>
+      <a class="footer-link" href="tel:+867525333256">
+        +86-752-533 3256
+      </a>
+    </div>
+
+    <div class="footer-block">
+      <div class="footer-label">ADDRESS</div>
+      <div class="footer-text">
+        No. A17, Xianghe West Rd., Dongjiang Industrial Zone,<br>
+        Shuikou, Huizhou, Guangdong, China
+      </div>
+    </div>
+  </div>
+
+  <div class="container footer-bottom">
+    © <span id="year"></span> CDN Lighting. All Rights Reserved.
+  </div>
+</footer>
+
+<script>
+document.getElementById("year").textContent=new Date().getFullYear();
+// Smooth anchor scroll
+document.addEventListener("click", (e) => {
+  const a = e.target.closest('a[href^="#"]');
+  if (!a) return;
+  const id = a.getAttribute("href").slice(1);
+  const el = document.getElementById(id);
+  if (!el) return;
+  e.preventDefault();
+  el.scrollIntoView({ behavior: "smooth", block: "start" });
+});
+</script>
+
+</body>
+</html>
