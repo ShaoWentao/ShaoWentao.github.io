@@ -243,6 +243,43 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:0;}
   }
 }
 
+.product-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:22px;
+  margin-top:24px;
+}
+
+.product-card{
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+  background:rgba(255,255,255,.02);
+}
+
+.product-card img{
+  width:100%;
+  height:200px;
+  object-fit:cover;
+  display:block;
+}
+
+.product-card h4{
+  margin:12px 14px 4px;
+  font-size:15px;
+}
+
+.product-card p{
+  margin:0 14px 14px;
+  font-size:13px;
+  color:var(--muted);
+}
+
+@media(max-width:900px){
+  .product-grid{
+    grid-template-columns:1fr;
+  }
+}
 
 /* FOOTER */
 footer{
@@ -598,6 +635,41 @@ footer{
   </div>
 </section>
 
+<section id="products">
+  <div class="container">
+    <h2>Representative Products</h2>
+    <p>Signature product families that define our optical, intelligent, and spatial lighting capabilities.</p>
+
+    <div class="product-grid">
+
+      <div class="product-card">
+        <img src="images/prod-karma.jpg" alt="KARMA Series">
+        <h4>KARMA Series</h4>
+        <p>Fermat optics technology redefining precision lighting aesthetics.</p>
+      </div>
+
+      <div class="product-card">
+        <img src="images/prod-beidou.jpg" alt="BEIDOU Series">
+        <h4>BEIDOU Series</h4>
+        <p>BDS intelligent control system enabling dynamic optical performance.</p>
+      </div>
+
+      <div class="product-card">
+        <img src="images/prod-ben.jpg" alt="BEN Series">
+        <h4>BEN Series</h4>
+        <p>International award-winning design balancing aesthetics and function.</p>
+      </div>
+
+      <div class="product-card">
+        <img src="images/prod-magicline.jpg" alt="Magic Line 5.0">
+        <h4>Magic Line 5.0</h4>
+        <p>Magnetic lighting system shaping flexible spatial experiences.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
 <footer class="site-footer">
   <div class="container footer-grid">
     <div class="footer-block">
@@ -651,6 +723,3 @@ document.addEventListener("click", (e) => {
 
 </body>
 </html>
-
-
-
