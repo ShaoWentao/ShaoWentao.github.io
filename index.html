@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>马年快乐！</title>
+    <style>
+        body { 
+            margin: 0; 
+            background: #000; 
+            overflow: hidden; 
+            font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+        }
+        canvas { display: block; }
+
+        /* ===== 祝福文字层 ===== */
+        .blessing {
+            position: fixed;
+            left: 50%;
+            bottom: 60px;
+            transform: translateX(-50%);
+            text-align: center;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .blessing .title {
+            font-size: 42px;
+            font-weight: 600;
+            letter-spacing: 6px;
+            color: #ff3b1f;
+            text-shadow:
+                0 0 12px rgba(255, 36, 0, 0.6),
+                0 0 28px rgba(255, 36, 0, 0.35);
+        }
+
+        .blessing .sub {
+            margin-top: 12px;
+            font-size: 16px;
+            letter-spacing: 3px;
+            color: rgba(255, 255, 255, 0.75);
+            text-shadow: 0 0 10px rgba(255,255,255,0.25);
+        }
+
+        .blessing .en {
+            margin-top: 6px;
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.45);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 祝福文案 -->
+    <div class="blessing">
+        <div class="title">马到成功 · 奔赴新程</div>
+        <div class="sub">愿你步履如风，所向皆成</div>
+        <div class="en">Run Forward. Win Ahead.</div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+        let scene, camera, renderer, mixer, clock;
+
+        init();
+
+        function init() {
+            scene = new THREE.Scene();
+            clock = new THREE.Clock();
+
+            camera = new THREE.PerspectiveCamera(
+                35, 
+                window.innerWidth / window.innerHeight, 
+                1, 
+                2000
+            );
+            camera.position.set(450, 0, 0);
+            camera.lookAt(0, 0, 0);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            document.body.appendChild(renderer.domElement);
+
+            const loader = new GLTFLoader();
+            loader.load(
+                'https://threejs.org/examples/models/gltf/Horse.glb',
+                (gltf) => {
+                    const mesh = gltf.scene.children[0];
+
+                    const pointMaterial = new THREE.PointsMaterial({
+                        color: 0xFF2400,
+                        size: 1.6,
+                        blending: THREE.AdditiveBlending,
+                        transparent: true,
+                        opacity: 0.9
+                    });
+
+                    mesh.material = pointMaterial;
+                    mesh.drawMode = THREE.Points;
+
+                    // 居中对齐
+                    const box = new THREE.Box3().setFromObject(mesh);
+                    const center = box.getCenter(new THREE.Vector3());
+                    mesh.position.set(
+                        -center.x,
+                        -center.y,
+                        -center.z
+                    );
+
+                    mesh.rotation.y = 0;
+                    scene.add(mesh);
+
+                    mixer = new THREE.AnimationMixer(mesh);
+                    const action = mixer.clipAction(gltf.animations[0]);
+                    action.setDuration(0.7).play();
+
+                    animate();
+                }
+            );
+
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = clock.getDelta();
+            if (mixer) mixer.update(delta);
+            renderer.render(scene, camera);
+        }
+    </script>
+</body>
+</html>
