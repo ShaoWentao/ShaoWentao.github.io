@@ -1,150 +1,694 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <title>马年快乐！</title>
-    <style>
-        body { 
-            margin: 0; 
-            background: #000; 
-            overflow: hidden; 
-            font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
-        }
-        canvas { display: block; }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shao Wentao | Digital Lighting Portfolio</title>
+<meta name="description" content="A digital portfolio collecting lighting brand pages, product storytelling pages, and CDN Lighting newsletter projects.">
+<style>
+  :root {
+    --bg: #0b0c0f;
+    --ink: #f4f1ea;
+    --muted: #aeb4bd;
+    --line: rgba(255, 255, 255, 0.14);
+    --red: #d71920;
+    --gold: #d9a441;
+    --cyan: #62d4ff;
+    --green: #8bd67c;
+    --panel: rgba(255, 255, 255, 0.075);
+  }
 
-        /* ===== 祝福文字层 ===== */
-        .blessing {
-            position: fixed;
-            left: 50%;
-            bottom: 60px;
-            transform: translateX(-50%);
-            text-align: center;
-            pointer-events: none;
-            user-select: none;
-        }
+  * { box-sizing: border-box; }
 
-        .blessing .title {
-            font-size: 42px;
-            font-weight: 600;
-            letter-spacing: 6px;
-            color: #ff3b1f;
-            text-shadow:
-                0 0 12px rgba(255, 36, 0, 0.6),
-                0 0 28px rgba(255, 36, 0, 0.35);
-        }
+  html {
+    scroll-behavior: smooth;
+  }
 
-        .blessing .sub {
-            margin-top: 12px;
-            font-size: 16px;
-            letter-spacing: 3px;
-            color: rgba(255, 255, 255, 0.75);
-            text-shadow: 0 0 10px rgba(255,255,255,0.25);
-        }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(circle at 18% 0%, rgba(215, 25, 32, 0.22), transparent 28%),
+      radial-gradient(circle at 85% 16%, rgba(98, 212, 255, 0.18), transparent 30%),
+      linear-gradient(135deg, #090a0d 0%, #11151b 46%, #15120e 100%);
+    color: var(--ink);
+    font-family: Inter, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+    letter-spacing: 0;
+  }
 
-        .blessing .en {
-            margin-top: 6px;
-            font-size: 12px;
-            letter-spacing: 2px;
-            color: rgba(255, 255, 255, 0.45);
-        }
-    </style>
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  img {
+    display: block;
+    max-width: 100%;
+  }
+
+  .site {
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 18px clamp(20px, 4vw, 56px);
+    background: rgba(9, 10, 13, 0.72);
+    border-bottom: 1px solid var(--line);
+    backdrop-filter: blur(18px);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .brand-mark {
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255,255,255,0.25);
+    background: linear-gradient(135deg, rgba(215,25,32,0.95), rgba(217,164,65,0.85));
+    font-weight: 800;
+    font-size: 15px;
+  }
+
+  .brand-name {
+    min-width: 0;
+  }
+
+  .brand-name strong {
+    display: block;
+    font-size: 14px;
+    line-height: 18px;
+  }
+
+  .brand-name span {
+    display: block;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 16px;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 18px;
+    color: #d8dde5;
+    font-size: 13px;
+  }
+
+  .nav-links a {
+    border-bottom: 1px solid transparent;
+  }
+
+  .nav-links a:hover {
+    border-color: var(--gold);
+    color: #fff;
+  }
+
+  .hero {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 0.95fr) minmax(360px, 1.05fr);
+    gap: clamp(28px, 5vw, 70px);
+    align-items: center;
+    padding: clamp(48px, 7vw, 92px) clamp(20px, 5vw, 72px) clamp(42px, 7vw, 92px);
+  }
+
+  .hero-copy {
+    max-width: 680px;
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 18px;
+    color: #f0d7a0;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+  }
+
+  .eyebrow::before {
+    content: "";
+    width: 32px;
+    height: 1px;
+    background: var(--gold);
+  }
+
+  h1 {
+    margin: 0;
+    max-width: 720px;
+    font-size: clamp(42px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: 0;
+  }
+
+  .hero-copy p {
+    margin: 24px 0 0;
+    max-width: 590px;
+    color: #d5dae0;
+    font-size: clamp(16px, 1.7vw, 20px);
+    line-height: 1.65;
+  }
+
+  .cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 30px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 12px 16px;
+    border: 1px solid rgba(255,255,255,0.22);
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    font-size: 14px;
+    transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+  }
+
+  .btn:hover {
+    transform: translateY(-2px);
+    border-color: rgba(217,164,65,0.75);
+    background: rgba(217,164,65,0.13);
+  }
+
+  .btn.primary {
+    border-color: rgba(215,25,32,0.95);
+    background: #d71920;
+  }
+
+  .hero-board {
+    position: relative;
+    min-height: 560px;
+  }
+
+  .feature-stack {
+    position: absolute;
+    inset: 0;
+  }
+
+  .feature-card {
+    position: absolute;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    background: #111;
+    box-shadow: 0 28px 80px rgba(0,0,0,0.36);
+  }
+
+  .feature-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .feature-card.large {
+    left: 4%;
+    right: 8%;
+    top: 10%;
+    height: 54%;
+  }
+
+  .feature-card.small-a {
+    left: 0;
+    bottom: 4%;
+    width: 42%;
+    height: 30%;
+  }
+
+  .feature-card.small-b {
+    right: 0;
+    bottom: 0;
+    width: 50%;
+    height: 36%;
+  }
+
+  .stat-strip {
+    position: absolute;
+    left: 10%;
+    right: 6%;
+    bottom: 32%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border: 1px solid var(--line);
+    background: rgba(10, 12, 16, 0.78);
+    backdrop-filter: blur(14px);
+  }
+
+  .stat {
+    padding: 16px;
+    border-right: 1px solid var(--line);
+  }
+
+  .stat:last-child {
+    border-right: 0;
+  }
+
+  .stat strong {
+    display: block;
+    font-size: 24px;
+    line-height: 28px;
+  }
+
+  .stat span {
+    display: block;
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 16px;
+  }
+
+  .section {
+    padding: clamp(36px, 6vw, 76px) clamp(20px, 5vw, 72px);
+    border-top: 1px solid var(--line);
+  }
+
+  .section-head {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+
+  .section h2 {
+    margin: 0;
+    font-size: clamp(28px, 4vw, 52px);
+    line-height: 1;
+    letter-spacing: 0;
+  }
+
+  .section-head p {
+    max-width: 460px;
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .project {
+    min-height: 390px;
+    display: grid;
+    grid-template-rows: 210px 1fr;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+  }
+
+  .project:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255,255,255,0.34);
+    background: rgba(255,255,255,0.11);
+  }
+
+  .project-media {
+    overflow: hidden;
+    background: #111;
+  }
+
+  .project-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scale(1.01);
+    transition: transform 260ms ease;
+  }
+
+  .project:hover .project-media img {
+    transform: scale(1.06);
+  }
+
+  .project-body {
+    display: grid;
+    align-content: space-between;
+    gap: 18px;
+    padding: 18px;
+  }
+
+  .tag {
+    display: inline-flex;
+    width: fit-content;
+    color: #0d0e10;
+    background: var(--gold);
+    padding: 5px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .project h3 {
+    margin: 12px 0 0;
+    font-size: 21px;
+    line-height: 1.15;
+  }
+
+  .project p {
+    margin: 10px 0 0;
+    color: #c7cdd5;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .open-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #fff;
+    font-size: 13px;
+  }
+
+  .open-link::after {
+    content: ">";
+    color: var(--gold);
+  }
+
+  .newsletter-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .newsletter {
+    min-height: 180px;
+    display: grid;
+    align-content: space-between;
+    padding: 16px;
+    border: 1px solid var(--line);
+    background:
+      linear-gradient(160deg, rgba(255,255,255,0.11), rgba(255,255,255,0.035)),
+      rgba(255,255,255,0.06);
+  }
+
+  .newsletter strong {
+    font-size: 18px;
+    line-height: 1.2;
+  }
+
+  .newsletter span {
+    display: block;
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .newsletter small {
+    color: var(--gold);
+    font-size: 11px;
+    text-transform: uppercase;
+  }
+
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 28px clamp(20px, 5vw, 72px);
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+    font-size: 13px;
+  }
+
+  @media (max-width: 1100px) {
+    .hero {
+      grid-template-columns: 1fr;
+    }
+
+    .hero-board {
+      min-height: 460px;
+    }
+
+    .grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .newsletter-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 720px) {
+    .nav {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .nav-links {
+      width: 100%;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .hero {
+      padding-top: 34px;
+    }
+
+    .hero-board {
+      min-height: 380px;
+    }
+
+    .feature-card.large {
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 58%;
+    }
+
+    .feature-card.small-a {
+      width: 45%;
+      bottom: 2%;
+    }
+
+    .feature-card.small-b {
+      width: 54%;
+      bottom: 0;
+    }
+
+    .stat-strip {
+      left: 0;
+      right: 0;
+      bottom: 32%;
+    }
+
+    .stat {
+      padding: 11px;
+    }
+
+    .stat strong {
+      font-size: 18px;
+    }
+
+    .section-head {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .grid,
+    .newsletter-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .project {
+      min-height: 340px;
+      grid-template-rows: 190px 1fr;
+    }
+
+    .footer {
+      flex-direction: column;
+    }
+  }
+</style>
 </head>
 <body>
-
-    <!-- 祝福文案 -->
-    <div class="blessing">
-        <div class="title">马到成功 · 奔赴新程</div>
-        <div class="sub">愿你步履如风，所向皆成</div>
-        <div class="en">Run Forward. Win Ahead.</div>
+<div class="site">
+  <nav class="nav">
+    <a class="brand" href="#top" aria-label="Back to top">
+      <span class="brand-mark">SW</span>
+      <span class="brand-name">
+        <strong>Shao Wentao</strong>
+        <span>GitHub Pages portfolio</span>
+      </span>
+    </a>
+    <div class="nav-links">
+      <a href="#projects">Projects</a>
+      <a href="#newsletter">Newsletter</a>
+      <a href="https://shaowt.com/">shaowt.com</a>
     </div>
+  </nav>
 
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-            }
-        }
-    </script>
+  <main id="top">
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow">Digital lighting portfolio</div>
+        <h1>Building sharper stories for light, brands and projects.</h1>
+        <p>
+          A personal gateway for CDN Lighting web pages, BACH product storytelling,
+          event newsletters, and case pages. Designed as a fast visual map of the
+          public work inside this GitHub Pages repository.
+        </p>
+        <div class="cta-row">
+          <a class="btn primary" href="#projects">Explore projects</a>
+          <a class="btn" href="cdn-newsletter/202606-hskc/">Latest newsletter</a>
+        </div>
+      </div>
 
-    <script type="module">
-        import * as THREE from 'three';
-        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+      <div class="hero-board" aria-label="Featured work images">
+        <div class="feature-stack">
+          <div class="feature-card large">
+            <img src="cdn-newsletter/202606-hskc/images/hskc-hero.jpg" alt="HSKC2026 Seoul event">
+          </div>
+          <div class="feature-card small-a">
+            <img src="bach-flash/images/01-hero-flash.jpg" alt="BACH Flash lighting product">
+          </div>
+          <div class="feature-card small-b">
+            <img src="aboutCDN/images/hero.jpg" alt="CDN Lighting project environment">
+          </div>
+          <div class="stat-strip" aria-label="Repository summary">
+            <div class="stat"><strong>10+</strong><span>live pages</span></div>
+            <div class="stat"><strong>5</strong><span>newsletters</span></div>
+            <div class="stat"><strong>3</strong><span>brand/product stories</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-        let scene, camera, renderer, mixer, clock;
+    <section class="section" id="projects">
+      <div class="section-head">
+        <h2>Featured Pages</h2>
+        <p>Brand introductions, product launches, and visual storytelling pages collected as public GitHub Pages routes.</p>
+      </div>
 
-        init();
+      <div class="grid">
+        <a class="project" href="aboutCDN/">
+          <div class="project-media"><img src="aboutCDN/images/tech-lab.jpg" alt="About CDN"></div>
+          <div class="project-body">
+            <div>
+              <span class="tag">Brand</span>
+              <h3>About CDN Lighting</h3>
+              <p>A company introduction page covering brand capability, product families, references and technology.</p>
+            </div>
+            <span class="open-link">Open page</span>
+          </div>
+        </a>
 
-        function init() {
-            scene = new THREE.Scene();
-            clock = new THREE.Clock();
+        <a class="project" href="aboutbach/">
+          <div class="project-media"><img src="aboutbach/images/hero-bg.jpg" alt="About BACH"></div>
+          <div class="project-body">
+            <div>
+              <span class="tag">Brand</span>
+              <h3>About BACH</h3>
+              <p>A cinematic brand story for architectural lighting, built around mood, material and spatial feeling.</p>
+            </div>
+            <span class="open-link">Open page</span>
+          </div>
+        </a>
 
-            camera = new THREE.PerspectiveCamera(
-                35, 
-                window.innerWidth / window.innerHeight, 
-                1, 
-                2000
-            );
-            camera.position.set(450, 0, 0);
-            camera.lookAt(0, 0, 0);
+        <a class="project" href="bach-flash/">
+          <div class="project-media"><img src="bach-flash/images/02-product-system.png" alt="BACH Flash product system"></div>
+          <div class="project-body">
+            <div>
+              <span class="tag">Product</span>
+              <h3>BACH Flash</h3>
+              <p>Architectural linear lighting product page with optics, control, accessories and project scenes.</p>
+            </div>
+            <span class="open-link">Open page</span>
+          </div>
+        </a>
 
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
-            document.body.appendChild(renderer.domElement);
+        <a class="project" href="bach-5s/">
+          <div class="project-media"><img src="bach-5s/hero_desktop.jpg" alt="BACH 5S product page"></div>
+          <div class="project-body">
+            <div>
+              <span class="tag">Product</span>
+              <h3>BACH 5S</h3>
+              <p>A product launch page for an outdoor lighting system, with sizing, structure and effect visuals.</p>
+            </div>
+            <span class="open-link">Open page</span>
+          </div>
+        </a>
 
-            const loader = new GLTFLoader();
-            loader.load(
-                'https://threejs.org/examples/models/gltf/Horse.glb',
-                (gltf) => {
-                    const mesh = gltf.scene.children[0];
+        <a class="project" href="cdn-newsletter/202606/">
+          <div class="project-media"><img src="cdn-newsletter/202606/images/mandiri-panorama-web.jpg" alt="Menara Mandiri newsletter"></div>
+          <div class="project-body">
+            <div>
+              <span class="tag">Case</span>
+              <h3>Menara Mandiri</h3>
+              <p>ARC case newsletter featuring facade lighting, project imagery and product application references.</p>
+            </div>
+            <span class="open-link">Open page</span>
+          </div>
+        </a>
 
-                    const pointMaterial = new THREE.PointsMaterial({
-                        color: 0xFF2400,
-                        size: 1.6,
-                        blending: THREE.AdditiveBlending,
-                        transparent: true,
-                        opacity: 0.9
-                    });
+        <a class="project" href="cdn-newsletter/202606-hskc/">
+          <div class="project-media"><img src="cdn-newsletter/202606-hskc/images/hskc-products.jpg" alt="HSKC2026 newsletter"></div>
+          <div class="project-body">
+            <div>
+              <span class="tag">Event</span>
+              <h3>HSKC2026 Seoul</h3>
+              <p>Event recap newsletter with booth conversations, project references and hospitality lighting notes.</p>
+            </div>
+            <span class="open-link">Open page</span>
+          </div>
+        </a>
+      </div>
+    </section>
 
-                    mesh.material = pointMaterial;
-                    mesh.drawMode = THREE.Points;
+    <section class="section" id="newsletter">
+      <div class="section-head">
+        <h2>Newsletter Archive</h2>
+        <p>Email-style pages made for partner updates, business recaps, events and project case storytelling.</p>
+      </div>
 
-                    // 居中对齐
-                    const box = new THREE.Box3().setFromObject(mesh);
-                    const center = box.getCenter(new THREE.Vector3());
-                    mesh.position.set(
-                        -center.x,
-                        -center.y,
-                        -center.z
-                    );
+      <div class="newsletter-grid">
+        <a class="newsletter" href="cdn-newsletter/202601/">
+          <div><small>January 2026</small><strong>Business Update & Notices</strong><span>Performance, organization, pricing and holiday notices.</span></div>
+          <span class="open-link">Open</span>
+        </a>
+        <a class="newsletter" href="cdn-newsletter/202602/">
+          <div><small>February 2026</small><strong>Operations & Market Updates</strong><span>Back-to-work, HIC Jakarta and regional event plans.</span></div>
+          <span class="open-link">Open</span>
+        </a>
+        <a class="newsletter" href="cdn-newsletter/202605/">
+          <div><small>May 2026</small><strong>Business & Brand Evolution</strong><span>Performance update, price adjustment and brand logo upgrade.</span></div>
+          <span class="open-link">Open</span>
+        </a>
+        <a class="newsletter" href="cdn-newsletter/202606/">
+          <div><small>June 2026</small><strong>Menara Mandiri Case</strong><span>Facade lighting as an urban beacon in Jakarta.</span></div>
+          <span class="open-link">Open</span>
+        </a>
+        <a class="newsletter" href="cdn-newsletter/202606-hskc/">
+          <div><small>June 2026</small><strong>HSKC2026 Seoul</strong><span>Hospitality South Korea Conference event recap.</span></div>
+          <span class="open-link">Open</span>
+        </a>
+      </div>
+    </section>
 
-                    mesh.rotation.y = 0;
-                    scene.add(mesh);
+  </main>
 
-                    mixer = new THREE.AnimationMixer(mesh);
-                    const action = mixer.clipAction(gltf.animations[0]);
-                    action.setDuration(0.7).play();
-
-                    animate();
-                }
-            );
-
-            window.addEventListener('resize', onWindowResize);
-        }
-
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-            const delta = clock.getDelta();
-            if (mixer) mixer.update(delta);
-            renderer.render(scene, camera);
-        }
-    </script>
+  <footer class="footer">
+    <span>© 2026 Shao Wentao. Built with GitHub Pages.</span>
+    <span>Lighting stories, product pages, and newsletter archives.</span>
+  </footer>
+</div>
 </body>
 </html>
