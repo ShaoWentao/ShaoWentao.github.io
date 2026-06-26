@@ -53,18 +53,10 @@
     style.id = 'ugr-report-style';
     style.textContent = `
       .ugr-table-box { width:100%; overflow:auto; -webkit-overflow-scrolling:touch; }
-      .ugr-standard-table { min-width:920px; width:100%; border-collapse:collapse; table-layout:fixed; font-family:Consolas, "Courier New", monospace; font-size:15px; line-height:1.18; color:#000; background:#fff; border:1.5px solid #000; }
-      .ugr-standard-table th, .ugr-standard-table td { border:0; padding:5px 7px; text-align:center; font-weight:400; white-space:nowrap; }
-      .ugr-standard-table .left-label { text-align:center; width:105px; }
-      .ugr-standard-table .y-label { width:70px; }
-      .ugr-standard-table .strong-line > th, .ugr-standard-table .strong-line > td { border-top:1.5px solid #000; }
-      .ugr-standard-table .mid-split { border-left:1.5px solid #000; }
-      .ugr-standard-table .section-title { border-top:1.5px solid #000; border-bottom:1.5px solid #000; }
-      .ugr-standard-table .variation-title td { text-align:left; border-top:1.5px solid #000; border-bottom:1.5px solid #000; }
-      .ugr-standard-table .variation-left { border-right:1.5px solid #000; }
-      .ugr-standard-table .variation-mid { border-right:1.5px solid #000; }
-      .ugr-standard-table .spacer td { height:18px; padding:2px; }
-      @media (max-width:700px) { .ugr-standard-table { font-size:13px; min-width:820px; } }
+      .ugr-status { border:1px solid #222; background:#fff; color:#000; padding:18px 20px; font-family:Consolas, "Courier New", monospace; font-size:13px; line-height:1.55; }
+      .ugr-status strong { display:block; margin-bottom:8px; font-size:14px; }
+      .ugr-status table { width:100%; border-collapse:collapse; margin-top:12px; font-family:Consolas, "Courier New", monospace; font-size:12px; }
+      .ugr-status th, .ugr-status td { border-top:1px solid #ddd; padding:6px 8px; text-align:left; }
     `;
     document.head.appendChild(style);
   }
@@ -85,26 +77,26 @@
 
   function maxCandela(data) {
     let max = 0;
-    data.candela.forEach((profile) => profile.forEach((value) => { max = Math.max(max, value || 0); }));
+    data.candela.forEach((profile) => profile.forEach((value) => { max = Math.max(max, Math.max(0, value || 0)); }));
     return max;
   }
 
-  function highAngleCandela(data) {
-    let sum = 0;
-    let weight = 0;
+  function offendingZoneCandela(data) {
     let max = 0;
+    let sum = 0;
+    let count = 0;
     data.candela.forEach((profile) => {
       profile.forEach((value, index) => {
         const angle = Math.abs(data.verticalAngles[index] || 0);
         if (angle >= 55 && angle <= 90) {
-          const w = Math.max(0.08, Math.sin(angle * Math.PI / 180));
-          sum += Math.max(0, value) * w;
-          weight += w;
-          max = Math.max(max, value || 0);
+          const c = Math.max(0, value || 0);
+          max = Math.max(max, c);
+          sum += c;
+          count += 1;
         }
       });
     });
-    return { avg: weight > 0 ? sum / weight : 0, max };
+    return { max, avg: count ? sum / count : 0 };
   }
 
   function luminousArea(data) {
@@ -113,96 +105,39 @@
       Math.abs((data.width || 0) * (data.height || 0)),
       Math.abs((data.length || 0) * (data.height || 0))
     ].filter((value) => value > 0);
-    return candidates.length ? Math.max(...candidates) : 0.01;
+    return candidates.length ? Math.max(...candidates) : 0;
   }
 
-  function beamEstimate(data) {
-    const firstPlane = data.candela[0] || [];
-    const peak = Math.max(...firstPlane, 0);
-    if (!peak) return 60;
-    const half = peak / 2;
-    for (let i = 0; i < firstPlane.length - 1; i += 1) {
-      if (firstPlane[i] >= half && firstPlane[i + 1] <= half) {
-        const a = Math.abs(data.verticalAngles[i] || 0);
-        const b = Math.abs(data.verticalAngles[i + 1] || a);
-        const v1 = firstPlane[i];
-        const v2 = firstPlane[i + 1];
-        const ratio = Math.abs(v2 - v1) > 0.0001 ? (half - v1) / (v2 - v1) : 0;
-        return Math.max(1, Math.abs((a + (b - a) * ratio) * 2));
-      }
+  function buildUGRStatus(data) {
+    const peak = maxCandela(data);
+    const offending = offendingZoneCandela(data);
+    const area = luminousArea(data);
+    const noOffendingCandela = offending.max <= Math.max(0.01, peak * 0.0005);
+
+    if (noOffendingCandela) {
+      return `
+        <div class="ugr-status">
+          <strong>Unable to calculate UGR - No candela in offending zones</strong>
+          <table>
+            <tr><th>Maximum Candela</th><td>${fmt(peak, 1)} cd</td></tr>
+            <tr><th>Offending-zone Candela</th><td>${fmt(offending.max, 3)} cd max / ${fmt(offending.avg, 3)} cd avg</td></tr>
+            <tr><th>Checked Vertical Zone</th><td>55° to 90°</td></tr>
+          </table>
+        </div>
+      `;
     }
-    return 60;
-  }
 
-  function glareBase(data) {
-    const peak = Math.max(1, maxCandela(data));
-    const high = highAngleCandela(data);
-    const area = Math.max(0.0001, luminousArea(data));
-    const beam = beamEstimate(data);
-    const highRatio = high.avg > 0 ? high.avg / peak : 0.006 + Math.min(0.08, beam / 1200);
-    const luminanceTerm = Math.log10(peak / Math.sqrt(area) + 10);
-    return Math.max(2, Math.min(24, 1.58 * luminanceTerm + 9.5 * highRatio - Math.max(0, 18 - beam) * 0.035));
-  }
-
-  const reflectanceSets = [
-    { ceil: '0.7', wall: '0.5', plane: '0.2', offset: 0.0 },
-    { ceil: '0.7', wall: '0.3', plane: '0.2', offset: 0.5 },
-    { ceil: '0.5', wall: '0.5', plane: '0.2', offset: 0.2 },
-    { ceil: '0.5', wall: '0.3', plane: '0.2', offset: 0.7 },
-    { ceil: '0.3', wall: '0.3', plane: '0.2', offset: 0.8 }
-  ];
-
-  const roomRows = [
-    { x: 'x = 2H', y: 'y = 2H', dx: 0.0 }, { x: '', y: '3H', dx: -0.1 }, { x: '', y: '4H', dx: -0.2 }, { x: '', y: '6H', dx: -0.3 }, { x: '', y: '8H', dx: -0.3 }, { x: '', y: '12H', dx: -0.3 },
-    { spacer: true },
-    { x: '4H', y: '2H', dx: -0.2 }, { x: '', y: '3H', dx: -0.3 }, { x: '', y: '4H', dx: -0.4 }, { x: '', y: '6H', dx: -0.5 }, { x: '', y: '8H', dx: -0.6 }, { x: '', y: '12H', dx: -0.7 },
-    { spacer: true },
-    { x: '8H', y: '4H', dx: -0.6 }, { x: '', y: '6H', dx: -0.7 }, { x: '', y: '8H', dx: -0.8 }, { x: '', y: '12H', dx: -0.9 },
-    { spacer: true },
-    { x: '12H', y: '4H', dx: -0.7 }, { x: '', y: '6H', dx: -0.8 }, { x: '', y: '8H', dx: -0.9 }
-  ];
-
-  function valueFor(data, row, set, endwise = false) {
-    const base = glareBase(data);
-    const orientationOffset = endwise ? -1.4 : 0;
-    const shapeTerm = endwise ? Math.max(-0.2, row.dx * 0.7) : row.dx;
-    return Math.max(0, base + set.offset + orientationOffset + shapeTerm);
-  }
-
-  function roomRowsHtml(data) {
-    return roomRows.map((row) => {
-      if (row.spacer) return `<tr class="spacer"><td></td><td></td><td colspan="10"></td></tr>`;
-      const cross = reflectanceSets.map((set) => `<td>${fmt(valueFor(data, row, set, false), 1)}</td>`).join('');
-      const end = reflectanceSets.map((set, index) => `<td${index === 0 ? ' class="mid-split"' : ''}>${fmt(valueFor(data, row, set, true), 1)}</td>`).join('');
-      return `<tr><td class="left-label">${row.x || ''}</td><td class="y-label">${row.y}</td>${cross}${end}</tr>`;
-    }).join('');
-  }
-
-  function variationValue(data, spacing, endwise = false) {
-    const base = glareBase(data);
-    const plus = base * (spacing === 1 ? 0.52 : spacing === 1.5 ? 0.84 : 1.40);
-    const minus = Math.max(0.8, base * 0.18);
-    return `+ ${fmt(plus, 1)} / - ${fmt(minus, 1)}`;
-  }
-
-  function buildStandardUGRTable(data) {
-    const ceilings = reflectanceSets.map((set) => `<td>${set.ceil}</td>`).join('');
-    const walls = reflectanceSets.map((set) => `<td>${set.wall}</td>`).join('');
-    const planes = reflectanceSets.map((set) => `<td>${set.plane}</td>`).join('');
     return `
-      <table class="ugr-standard-table">
-        <tbody>
-          <tr><th colspan="2">ceiling/cavity</th>${ceilings}${reflectanceSets.map((set, index) => `<td${index === 0 ? ' class="mid-split"' : ''}>${set.ceil}</td>`).join('')}</tr>
-          <tr><th colspan="2">walls</th>${walls}${reflectanceSets.map((set, index) => `<td${index === 0 ? ' class="mid-split"' : ''}>${set.wall}</td>`).join('')}</tr>
-          <tr><th colspan="2">working plane</th>${planes}${reflectanceSets.map((set, index) => `<td${index === 0 ? ' class="mid-split"' : ''}>${set.plane}</td>`).join('')}</tr>
-          <tr class="section-title"><th colspan="2">Room dimensions</th><th colspan="5">Viewed crosswise</th><th class="mid-split" colspan="5">Viewed endwise</th></tr>
-          ${roomRowsHtml(data)}
-          <tr class="variation-title"><td colspan="12">Variations with the observer position at spacings:</td></tr>
-          <tr><td class="variation-left" colspan="2">s = 1.0H</td><td class="variation-mid" colspan="5">${variationValue(data, 1, false)}</td><td colspan="5">${variationValue(data, 1, true)}</td></tr>
-          <tr><td class="variation-left" colspan="2">1.5H</td><td class="variation-mid" colspan="5">${variationValue(data, 1.5, false)}</td><td colspan="5">${variationValue(data, 1.5, true)}</td></tr>
-          <tr><td class="variation-left" colspan="2">2.0H</td><td class="variation-mid" colspan="5">${variationValue(data, 2, false)}</td><td colspan="5">${variationValue(data, 2, true)}</td></tr>
-        </tbody>
-      </table>
+      <div class="ugr-status">
+        <strong>UGR table withheld - standard calculation module required</strong>
+        <div>The previous table values were removed because they were generated by an estimated glare model, not by the standard UGR tabular method.</div>
+        <table>
+          <tr><th>Maximum Candela</th><td>${fmt(peak, 1)} cd</td></tr>
+          <tr><th>Offending-zone Candela</th><td>${fmt(offending.max, 3)} cd max / ${fmt(offending.avg, 3)} cd avg</td></tr>
+          <tr><th>Luminous Area</th><td>${area > 0 ? `${fmt(area, 6)} m²` : 'Not available'}</td></tr>
+          <tr><th>Required for valid UGR</th><td>Room dimensions, luminaire layout, observer direction, reflectance set, background luminance and Guth position index.</td></tr>
+        </table>
+      </div>
     `;
   }
 
@@ -216,18 +151,24 @@
     if (!text.trim()) return;
     try {
       const data = parseIES(text);
-      target.innerHTML = buildStandardUGRTable(data);
+      target.innerHTML = buildUGRStatus(data);
     } catch (error) {
-      target.textContent = `Unable to calculate UGR - ${error.message || error}`;
+      target.innerHTML = `<div class="ugr-status"><strong>Unable to calculate UGR</strong>${String(error.message || error)}</div>`;
     }
   }
 
-  document.addEventListener('click', (event) => {
-    if (event.target && event.target.id === 'reportBtn') setTimeout(refreshUGR, 100);
+  function observeReport() {
+    const report = $('report');
+    const preview = $('iesPreview');
+    if (!report || !preview) return;
+    const observer = new MutationObserver(() => setTimeout(refreshUGR, 0));
+    observer.observe(report, { attributes: true, childList: true, subtree: true, characterData: true });
+    observer.observe(preview, { childList: true, characterData: true, subtree: true });
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    injectStyle();
+    observeReport();
+    setTimeout(refreshUGR, 0);
   });
-  document.addEventListener('change', (event) => {
-    if (event.target && event.target.id === 'upload') setTimeout(refreshUGR, 200);
-  });
-  const report = $('report');
-  if (report) new MutationObserver(() => setTimeout(refreshUGR, 30)).observe(report, { attributes: true, childList: true, subtree: true });
 })();
