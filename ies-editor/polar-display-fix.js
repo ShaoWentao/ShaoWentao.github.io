@@ -3,12 +3,6 @@
   const BLUE = '#0047b3';
   const $ = (id) => document.getElementById(id);
 
-  function fmt(value, digits = 1) {
-    const parsed = Number(value);
-    if (!Number.isFinite(parsed)) return '-';
-    return String(Number(parsed.toFixed(digits)));
-  }
-
   function parseIES(text) {
     const normalized = text.replace(/\r/g, '');
     const lines = normalized.split('\n');
@@ -27,18 +21,13 @@
       nums = nums.slice(1 + tiltCount * 2);
     }
     let i = 0;
-    const lampCount = nums[i++];
-    const lumensPerLamp = nums[i++];
+    nums[i++];
+    nums[i++];
     const multiplier = nums[i++];
     const verticalCount = Math.round(nums[i++]);
     const horizontalCount = Math.round(nums[i++]);
     const photometricType = Math.round(nums[i++]);
-    const unitsType = Math.round(nums[i++]);
-    const width = nums[i++];
-    const length = nums[i++];
-    const height = nums[i++];
-    i += 2;
-    const power = nums[i++];
+    i += 6;
     const verticalAngles = nums.slice(i, i + verticalCount); i += verticalCount;
     const horizontalAngles = nums.slice(i, i + horizontalCount); i += horizontalCount;
     const candela = [];
@@ -46,7 +35,7 @@
       candela.push(nums.slice(i, i + verticalCount).map((value) => value * multiplier));
       i += verticalCount;
     }
-    return { lampCount, lumensPerLamp, multiplier, photometricType, unitsType, width, length, height, power, verticalAngles, horizontalAngles, candela };
+    return { photometricType, verticalAngles, horizontalAngles, candela };
   }
 
   function normalize(angle) {
@@ -85,14 +74,12 @@
     return nearest(values, mapped, true);
   }
 
-  function typeCCurve(data, a, b, label, color) {
-    const aIndex = planeIndex(data, a);
-    const bIndex = planeIndex(data, b);
-    const aProfile = data.candela[aIndex] || [];
-    const bProfile = data.candela[bIndex] || aProfile;
+  function typeCCurve(data, a, b, color) {
+    const aProfile = data.candela[planeIndex(data, a)] || [];
+    const bProfile = data.candela[planeIndex(data, b)] || aProfile;
     const forward = data.verticalAngles.map((angle, index) => ({ angle: Math.abs(angle), value: aProfile[index] || 0 }));
     const backward = data.verticalAngles.map((angle, index) => ({ angle: -Math.abs(angle), value: bProfile[index] || 0 })).reverse();
-    return { label, color, points: backward.concat(forward) };
+    return { color, points: backward.concat(forward) };
   }
 
   function typeBAngleForDisplay(angle, angles) {
@@ -107,72 +94,34 @@
     return min >= -0.001 && max <= 180.001 && angles.some((angle) => Math.abs(angle - 90) <= 0.001) ? 90 : 0;
   }
 
-  function typeBPlane(data, target, label, color) {
-    const hIndex = planeIndex(data, target);
-    const profile = data.candela[hIndex] || [];
-    return { label: `${label} H${fmt(data.horizontalAngles[hIndex], 1)}`, color, points: data.verticalAngles.map((angle, index) => ({ angle: typeBAngleForDisplay(angle, data.verticalAngles), value: profile[index] || 0 })) };
+  function typeBPlane(data, target, color) {
+    const profile = data.candela[planeIndex(data, target)] || [];
+    return { color, points: data.verticalAngles.map((angle, index) => ({ angle: typeBAngleForDisplay(angle, data.verticalAngles), value: profile[index] || 0 })) };
   }
 
-  function typeBAcross(data, target, label, color) {
+  function typeBAcross(data, target, color) {
     const vIndex = nearest(data.verticalAngles, target, false);
-    return { label: `${label} V${fmt(data.verticalAngles[vIndex], 1)}`, color, points: data.horizontalAngles.map((angle, index) => ({ angle: typeBAngleForDisplay(angle, data.horizontalAngles), value: (data.candela[index] || [])[vIndex] || 0 })) };
+    return { color, points: data.horizontalAngles.map((angle, index) => ({ angle: typeBAngleForDisplay(angle, data.horizontalAngles), value: (data.candela[index] || [])[vIndex] || 0 })) };
   }
 
   function curves(data) {
-    if (data.photometricType === 2) {
-      return [typeBPlane(data, typeBTarget(data.horizontalAngles), 'main vertical', RED), typeBAcross(data, typeBTarget(data.verticalAngles), 'main horizontal', BLUE)];
-    }
-    return [typeCCurve(data, 0, 180, 'C0/180', RED), typeCCurve(data, 90, 270, 'C90/270', BLUE)];
+    if (data.photometricType === 2) return [typeBPlane(data, typeBTarget(data.horizontalAngles), RED), typeBAcross(data, typeBTarget(data.verticalAngles), BLUE)];
+    return [typeCCurve(data, 0, 180, RED), typeCCurve(data, 90, 270, BLUE)];
   }
 
-  function beamAngle(points) {
-    const usable = points.filter((p) => Number.isFinite(p.angle) && Number.isFinite(p.value)).sort((a, b) => a.angle - b.angle);
-    if (usable.length < 2) return 0;
-    const peak = Math.max(...usable.map((p) => p.value), 0);
-    if (peak <= 0) return 0;
-    const half = peak / 2;
-    const peakIndex = usable.findIndex((p) => p.value === peak);
-    let left = usable[0].angle;
-    let right = usable[usable.length - 1].angle;
-    const interp = (a, b) => {
-      const delta = b.value - a.value;
-      if (Math.abs(delta) < 0.000001) return b.angle;
-      return a.angle + ((half - a.value) / delta) * (b.angle - a.angle);
-    };
-    for (let i = peakIndex; i > 0; i -= 1) {
-      if (usable[i - 1].value <= half) { left = interp(usable[i - 1], usable[i]); break; }
-    }
-    for (let i = peakIndex; i < usable.length - 1; i += 1) {
-      if (usable[i + 1].value <= half) { right = interp(usable[i], usable[i + 1]); break; }
-    }
-    return Math.abs(right - left);
+  function maxCandela(data, curveList) {
+    let max = 1;
+    data.candela.forEach((profile) => profile.forEach((value) => { max = Math.max(max, value || 0); }));
+    curveList.forEach((curve) => curve.points.forEach((point) => { max = Math.max(max, point.value || 0); }));
+    return max;
   }
 
-  function peak(data) {
-    let result = { value: 0, hAngle: 0, vAngle: 0 };
-    data.candela.forEach((profile, hIndex) => {
-      profile.forEach((value, vIndex) => {
-        if (value > result.value) result = { value, hAngle: data.horizontalAngles[hIndex] || 0, vAngle: data.verticalAngles[vIndex] || 0 };
-      });
-    });
-    return result;
-  }
-
-  function draw(canvas, data, dark = true) {
-    if (!canvas) return;
+  function overlayCurves(canvas, data) {
+    if (!canvas || !canvas.clientWidth) return;
     const ctx = canvas.getContext('2d');
     const cssSize = Math.max(320, Math.round(canvas.clientWidth || 560));
-    const ratio = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = Math.round(cssSize * ratio);
-    canvas.height = Math.round(cssSize * ratio);
-    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-    ctx.clearRect(0, 0, cssSize, cssSize);
-    ctx.fillStyle = dark ? '#0e1216' : '#fff';
-    ctx.fillRect(0, 0, cssSize, cssSize);
-
     const curveList = curves(data);
-    const pk = peak(data);
-    const max = Math.max(pk.value, ...curveList.flatMap((curve) => curve.points.map((p) => p.value)), 1);
+    const max = maxCandela(data, curveList);
     const top = 92;
     const bottom = 64;
     const available = cssSize - top - bottom;
@@ -180,84 +129,50 @@
     const cy = top + available / 2;
     const radius = Math.max(72, Math.min(cssSize * 0.34, available / 2 - 18));
 
-    ctx.strokeStyle = dark ? 'rgba(255,255,255,.13)' : '#222';
-    ctx.lineWidth = 1;
-    for (let ring = 1; ring <= 4; ring += 1) {
-      ctx.beginPath();
-      ctx.arc(cx, cy, radius * ring / 4, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-    for (let angle = -180; angle < 180; angle += 15) {
-      const rad = angle * Math.PI / 180;
-      ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      ctx.lineTo(cx + Math.sin(rad) * radius, cy + Math.cos(rad) * radius);
-      ctx.stroke();
-    }
-
-    ctx.fillStyle = dark ? '#aeb7c2' : '#111';
-    ctx.font = '12px Segoe UI, Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    [-150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150, 180].forEach((angle) => {
-      const rad = angle * Math.PI / 180;
-      ctx.fillText(String(angle), cx + Math.sin(rad) * (radius + 25), cy + Math.cos(rad) * (radius + 25));
-    });
-
-    // Draw blue first, then red. This keeps the red curve on the top layer when curves overlap.
+    // Draw blue first and red last. No canvas clearing here, so this always fixes the top-layer order after the original renderer runs.
     [curveList[1], curveList[0]].filter(Boolean).forEach((curve) => {
+      ctx.save();
       ctx.strokeStyle = curve.color;
-      ctx.lineWidth = curve.color === RED ? 3.2 : 2.8;
+      ctx.lineWidth = curve.color === RED ? 3.6 : 3.0;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
       ctx.beginPath();
       curve.points.forEach((point, index) => {
         const rad = point.angle * Math.PI / 180;
-        const r = radius * (point.value / max);
+        const r = radius * ((point.value || 0) / max);
         const x = cx + Math.sin(rad) * r;
         const y = cy + Math.cos(rad) * r;
-        if (index === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        if (index === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
       });
       ctx.stroke();
+      ctx.restore();
     });
-
-    const beam = beamAngle(curveList[0]?.points || []);
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'alphabetic';
-    ctx.fillStyle = dark ? '#dce4eb' : '#111';
-    ctx.font = '18px Segoe UI, Arial';
-    ctx.fillText(dark ? 'Photometric distribution curves' : 'POLAR GRAPH', 28, 34);
-    ctx.fillStyle = dark ? '#aeb7c2' : '#222';
-    ctx.font = '13px Segoe UI, Arial';
-    ctx.fillText(`Red: ${curveList[0]?.label || '-'} / Blue: ${curveList[1]?.label || '-'}`, 28, 56);
-    ctx.fillText(`Beam angle: ${fmt(beam, 2)}°`, 28, 76);
-    ctx.textAlign = 'right';
-    ctx.fillText(`Scale max ${fmt(max, 1)} cd`, cssSize - 28, 56);
-    ctx.textAlign = 'left';
-    ctx.fillText(`Global peak ${fmt(pk.value, 1)} cd @ H${fmt(pk.hAngle, 1)} / V${fmt(pk.vAngle, 1)}`, 28, cssSize - 26);
-
-    const beamLabel = $('beamLabel');
-    if (dark && beamLabel) beamLabel.textContent = `${data.photometricType === 2 ? 'Type B' : 'Type C'} / Red top layer / Blue bottom layer / Beam ${fmt(beam, 2)}°`;
-    const beamValue = $('beamValue');
-    if (dark && beamValue) beamValue.textContent = `${fmt(beam, 2)}°`;
   }
 
-  function refresh() {
+  function refreshOnce() {
     const text = $('iesPreview')?.textContent || '';
     if (!text.trim()) return;
     try {
       const data = parseIES(text);
-      draw($('curveCanvas'), data, true);
+      overlayCurves($('curveCanvas'), data);
       const report = $('report');
-      if (report && !report.classList.contains('hidden')) draw($('reportPolar'), data, false);
+      if (report && !report.classList.contains('hidden')) overlayCurves($('reportPolar'), data);
     } catch (error) {}
   }
 
+  function refreshRepeated() {
+    [0, 30, 80, 160, 320, 650, 1200].forEach((delay) => setTimeout(refreshOnce, delay));
+  }
+
   document.addEventListener('click', (event) => {
-    if (event.target && (event.target.id === 'reportBtn' || event.target.id === 'resetBtn')) setTimeout(refresh, 160);
+    if (event.target && ['reportBtn', 'resetBtn', 'downloadBtn'].includes(event.target.id)) refreshRepeated();
   });
   document.addEventListener('change', (event) => {
-    if (event.target && event.target.id === 'upload') setTimeout(refresh, 240);
+    if (event.target && event.target.id === 'upload') refreshRepeated();
   });
-  window.addEventListener('resize', () => setTimeout(refresh, 80));
-  new MutationObserver(() => setTimeout(refresh, 30)).observe($('iesPreview'), { childList: true, characterData: true, subtree: true });
-  setTimeout(refresh, 120);
+  window.addEventListener('resize', refreshRepeated);
+  const preview = $('iesPreview');
+  if (preview) new MutationObserver(refreshRepeated).observe(preview, { childList: true, characterData: true, subtree: true });
+  refreshRepeated();
 })();
