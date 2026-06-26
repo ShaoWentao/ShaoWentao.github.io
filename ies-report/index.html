@@ -450,8 +450,15 @@
   }
 
   @media print {
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
     body {
       background: #fff;
+      width: 210mm;
+      margin: 0;
     }
 
     .topbar,
@@ -462,16 +469,132 @@
     .layout,
     .paper-wrap {
       display: block;
+      width: 210mm;
       padding: 0;
+      margin: 0;
       border: 0;
       background: #fff;
+      overflow: visible;
     }
 
     .paper {
       width: 210mm;
-      min-height: 297mm;
-      padding: 18mm 18mm 16mm;
+      height: 297mm;
+      min-height: 0;
+      margin: 0;
+      padding: 12mm 14mm 10mm;
       box-shadow: none;
+      overflow: hidden;
+      break-after: page;
+      page-break-after: always;
+    }
+
+    .report-head {
+      padding-bottom: 6px;
+      gap: 10px;
+    }
+
+    .lab {
+      font-size: 16px;
+    }
+
+    .cdn-logo {
+      width: 118px;
+      height: 38px;
+    }
+
+    .report-logo {
+      max-width: 118px;
+      max-height: 38px;
+    }
+
+    .page-no {
+      font-size: 14px;
+    }
+
+    .report-title {
+      margin: 38px 0 14px;
+      font-size: 24px;
+      letter-spacing: 0.38em;
+      text-indent: 0.38em;
+    }
+
+    body.report-lang-en .report-title {
+      font-size: 21px;
+      letter-spacing: 0;
+      text-indent: 0;
+    }
+
+    .meta-table,
+    .data-table {
+      font-size: 11px;
+    }
+
+    .meta-table td,
+    .data-table td,
+    .data-table th {
+      padding: 4px 6px;
+    }
+
+    .data-table {
+      margin-top: 12px;
+    }
+
+    .data-table th {
+      font-size: 14px;
+      letter-spacing: 0.18em;
+      text-indent: 0.18em;
+    }
+
+    .charts {
+      margin-top: 12px;
+      gap: 5px;
+    }
+
+    .chart-box {
+      min-height: 276px;
+      padding: 8px 8px 6px;
+    }
+
+    .chart-title {
+      font-size: 13px;
+    }
+
+    .chart-note {
+      font-size: 10px;
+    }
+
+    .footer-data {
+      margin-top: 16px;
+      padding: 8px 20px 0;
+      gap: 18px;
+      font-size: 10.5px;
+      line-height: 1.25;
+    }
+
+    .page-title {
+      margin: 30px 0 14px;
+      font-size: 19px;
+    }
+
+    .page-section-title {
+      margin: 12px 0 8px;
+      font-size: 14px;
+    }
+
+    .simple-table {
+      font-size: 9.5px;
+    }
+
+    .simple-table th,
+    .simple-table td {
+      padding: 3px 4px;
+    }
+
+    .report-note {
+      margin-top: 10px;
+      font-size: 10.5px;
+      line-height: 1.4;
     }
 
     @page {
