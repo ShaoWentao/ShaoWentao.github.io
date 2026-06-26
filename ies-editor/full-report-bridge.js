@@ -38,6 +38,7 @@
     const style = document.createElement('style');
     style.id = 'full-report-bridge-style';
     style.textContent = `
+      #report.report { display:none !important; }
       .full-report-embed { padding:0 clamp(18px,5vw,64px) 72px; }
       .full-report-embed.hidden { display:none; }
       .full-report-card { border:1px solid var(--line); background:rgba(18,22,27,.82); }
