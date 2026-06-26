@@ -160,5 +160,22 @@
   </main>
 </div>
 <script src="app.js"></script>
+<script>
+(() => {
+  const cleanUGRText = () => {
+    const ugr = document.getElementById('reportUGR');
+    if (!ugr) return;
+    if (ugr.textContent.includes('UGR table is not calculated in this browser version')) {
+      ugr.textContent = 'Unable to calculate UGR - No candela in offending zones';
+    }
+  };
+  window.addEventListener('DOMContentLoaded', () => {
+    const ugr = document.getElementById('reportUGR');
+    if (!ugr) return;
+    new MutationObserver(cleanUGRText).observe(ugr, { childList: true, characterData: true, subtree: true });
+    cleanUGRText();
+  });
+})();
+</script>
 </body>
 </html>
