@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -20,6 +20,9 @@
   .nav { display:flex; gap:14px; color:#d9dee5; font-size:13px; white-space:nowrap; }
   .nav a { border-bottom:1px solid transparent; }
   .nav a:hover { color:#fff; border-color:var(--gold); }
+  .language-control { display:flex; align-items:center; gap:8px; margin-left:auto; color:#d9dee5; font-size:12px; white-space:nowrap; }
+  .language-control label { color:#d9dee5; font-size:12px; }
+  .language-control select { min-height:34px; width:auto; border:1px solid rgba(255,255,255,.2); background:#0e1216; color:#fff; padding:6px 28px 6px 9px; font:inherit; font-size:12px; outline:none; }
   .hero { padding:clamp(28px,5vw,58px) clamp(18px,5vw,64px) 20px; }
   .hero-inner { max-width:920px; }
   .eyebrow { display:inline-flex; align-items:center; gap:9px; color:#f0d89f; font-size:12px; text-transform:uppercase; letter-spacing:.14em; }
@@ -69,10 +72,13 @@
   .wide-table { min-width:560px; }
   #reportPolar { background:#fff; border:1px solid #222; }
   @media (max-width:1120px) { .workspace,.main-grid { grid-template-columns:1fr; } }
+  @media (max-width:860px) { .topbar { flex-wrap:wrap; } .language-control { margin-left:0; } }
   @media (max-width:700px) {
     .topbar { align-items:flex-start; flex-direction:column; padding:14px 16px; gap:12px; }
     .brand strong { white-space:normal; }
     .nav { width:100%; overflow-x:auto; padding-bottom:4px; gap:16px; font-size:12px; -webkit-overflow-scrolling:touch; }
+    .language-control { width:100%; justify-content:space-between; }
+    .language-control select { min-width:120px; }
     .hero { padding:26px 16px 12px; }
     .eyebrow { font-size:11px; letter-spacing:.1em; }
     .eyebrow::before { width:24px; }
@@ -118,6 +124,7 @@
   <header class="topbar">
     <a class="brand" href="../"><span class="mark">IES</span><span><strong>IES Editor</strong><span>Browser photometric file tool</span></span></a>
     <nav class="nav"><a href="../">Home</a><a href="#generator">Generate</a><a href="#preview">Preview</a><a href="../ies-report/">IES Report</a></nav>
+    <div class="language-control"><label id="languageLabel" for="languageSelect">Language</label><select id="languageSelect" aria-label="Language"><option value="en">English</option><option value="zh">中文</option></select></div>
   </header>
   <main>
     <section class="hero">
@@ -179,5 +186,6 @@
   });
 })();
 </script>
+<script src="i18n.js"></script>
 </body>
 </html>
