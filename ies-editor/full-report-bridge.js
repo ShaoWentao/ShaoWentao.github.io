@@ -1,6 +1,9 @@
 (() => {
   const REPORT_URL = '../ies-report/';
   let frameLoadToken = 0;
+  let lastFrameHeight = 0;
+  let lastScale = 0;
+  let lastPaperWidth = 0;
 
   function $(id) {
     return document.getElementById(id);
@@ -47,8 +50,9 @@
       .full-report-head p { margin:6px 0 0; color:var(--muted); font-size:12px; line-height:1.55; }
       .full-report-actions { display:flex; gap:10px; flex-wrap:wrap; }
       .full-report-status { padding:10px 18px; border-bottom:1px solid var(--line); color:#dbe3ea; font-size:12px; line-height:1.45; }
-      .full-report-frame-wrap { width:100%; height:auto; overflow:hidden; background:#fff; }
-      #fullReportFrame { width:100%; min-height:1180px; display:block; border:0; background:#fff; overflow:hidden; }
+      .full-report-frame-wrap { width:100%; height:auto; overflow:hidden; background:#fff; contain:layout paint; }
+      #fullReportFrame { width:100%; min-height:1180px; display:block; border:0; background:#fff; overflow:hidden; visibility:hidden; }
+      .full-report-embed.is-ready #fullReportFrame { visibility:visible; }
       @media (max-width:700px) {
         .full-report-embed { padding:0 12px 42px; }
         .full-report-head { display:block; padding:14px; }
@@ -148,12 +152,12 @@
         .topbar, .panel { display:none !important; }
         .layout { display:block !important; width:100% !important; max-width:100% !important; padding:0 !important; margin:0 !important; overflow:hidden !important; }
         .paper-wrap { display:block !important; width:100% !important; max-width:100% !important; padding:12px 0 !important; margin:0 !important; border:0 !important; background:#fff !important; overflow:hidden !important; }
-        .editor-report-scale-holder { width:calc(var(--editor-paper-width, 960px) * var(--editor-report-scale, 1)); height:calc(var(--editor-report-height, 1358px) * var(--editor-report-scale, 1)); margin:0 auto !important; overflow:visible !important; }
-        .editor-report-scale-shell { width:var(--editor-paper-width, 960px); transform:scale(var(--editor-report-scale, 1)); transform-origin:top left; overflow:visible !important; }
+        .editor-report-scale-holder { width:calc(var(--editor-paper-width, 960px) * var(--editor-report-scale, 1)); height:calc(var(--editor-report-height, 1358px) * var(--editor-report-scale, 1)); margin:0 auto !important; overflow:hidden !important; }
+        .editor-report-scale-shell { width:var(--editor-paper-width, 960px); transform:translateZ(0) scale(var(--editor-report-scale, 1)); transform-origin:top left; overflow:visible !important; will-change:transform; }
         .editor-report-scale-shell .paper { margin:0 0 24px !important; }
       }
       @media print {
-        .editor-report-scale-holder { width:auto !important; height:auto !important; margin:0 !important; }
+        .editor-report-scale-holder { width:auto !important; height:auto !important; margin:0 !important; overflow:visible !important; }
         .editor-report-scale-shell { width:auto !important; transform:none !important; }
       }
     `;
@@ -180,21 +184,29 @@
 
   function applyReportScale(frame) {
     const doc = frame.contentDocument;
-    if (!doc) return;
+    if (!doc) return false;
     const parts = ensureReportScaleWrapper(doc);
-    if (!parts) return;
+    if (!parts) return false;
     const { holder, shell } = parts;
     const paper = shell.querySelector('.paper');
-    const paperWidth = Math.max(1, Math.ceil((paper && paper.getBoundingClientRect().width) || paper?.offsetWidth || 960));
-    const available = Math.max(280, frame.clientWidth || frame.getBoundingClientRect().width || 360);
+    const paperWidth = Math.max(1, Math.ceil((paper && paper.offsetWidth) || 960));
+    const available = Math.max(280, Math.floor(frame.clientWidth || frame.getBoundingClientRect().width || 360));
     const scale = Math.min(1, Math.max(0.28, (available - 2) / paperWidth));
-    const contentHeight = Math.max(1000, Math.ceil(shell.scrollHeight || shell.getBoundingClientRect().height || 1358));
+    const contentHeight = Math.max(680, Math.ceil(shell.scrollHeight || 1358));
+    const holderWidth = Math.ceil(paperWidth * scale);
+    const holderHeight = Math.ceil(contentHeight * scale);
+
+    const changed = Math.abs(scale - lastScale) > 0.002 || Math.abs(paperWidth - lastPaperWidth) > 2 || Math.abs(holder.offsetHeight - holderHeight) > 10;
+    if (!changed) return false;
 
     doc.documentElement.style.setProperty('--editor-paper-width', `${paperWidth}px`);
     doc.documentElement.style.setProperty('--editor-report-scale', String(scale));
     doc.documentElement.style.setProperty('--editor-report-height', `${contentHeight}px`);
-    holder.style.width = `${Math.ceil(paperWidth * scale)}px`;
-    holder.style.height = `${Math.ceil(contentHeight * scale)}px`;
+    holder.style.width = `${holderWidth}px`;
+    holder.style.height = `${holderHeight}px`;
+    lastScale = scale;
+    lastPaperWidth = paperWidth;
+    return true;
   }
 
   function resizeFrame(frame) {
@@ -204,14 +216,23 @@
       injectEmbeddedStyle(doc);
       applyReportScale(frame);
       const holder = doc.querySelector('.editor-report-scale-holder');
-      const height = Math.max(
-        holder ? holder.offsetHeight : 0,
-        doc.body ? doc.body.scrollHeight : 0,
-        doc.documentElement ? doc.documentElement.scrollHeight : 0,
-        680
-      );
-      frame.style.height = `${height + 36}px`;
+      const targetHeight = Math.max(680, Math.ceil((holder ? holder.offsetHeight : 0) + 36));
+      if (Math.abs(targetHeight - lastFrameHeight) > 16) {
+        frame.style.height = `${targetHeight}px`;
+        lastFrameHeight = targetHeight;
+      }
+      const section = $('fullReportEmbed');
+      if (section) section.classList.add('is-ready');
     } catch (error) {}
+  }
+
+  function scheduleResize(frame, token, delays = [120, 320, 700, 1300, 2200]) {
+    delays.forEach((delay) => {
+      setTimeout(() => {
+        if (token !== frameLoadToken) return;
+        requestAnimationFrame(() => resizeFrame(frame));
+      }, delay);
+    });
   }
 
   function pushIESToReportFrame(frame, iesText, fileName, token) {
@@ -230,14 +251,7 @@
       input.files = dt.files;
       input.dispatchEvent(new win.Event('change', { bubbles: true }));
       setStatus('ready');
-      let count = 0;
-      const timer = setInterval(() => {
-        if (token !== frameLoadToken || count > 30) return clearInterval(timer);
-        syncReportLanguage(doc);
-        injectEmbeddedStyle(doc);
-        resizeFrame(frame);
-        count += 1;
-      }, 300);
+      scheduleResize(frame, token);
     } catch (error) {
       setStatus(label('failed') + ` ${error.message || error}`, true);
     }
@@ -253,9 +267,14 @@
       return;
     }
     section.classList.remove('hidden');
+    section.classList.remove('is-ready');
+    lastFrameHeight = 0;
+    lastScale = 0;
+    lastPaperWidth = 0;
     setStatus('loading');
     const frame = $('fullReportFrame');
     const token = ++frameLoadToken;
+    frame.style.height = '';
     frame.onload = () => {
       if (token !== frameLoadToken) return;
       setTimeout(() => pushIESToReportFrame(frame, iesText, getIESFileName(), token), 120);
@@ -288,12 +307,12 @@
       const frame = $('fullReportFrame');
       if (frame && frame.contentDocument) {
         syncReportLanguage(frame.contentDocument);
-        resizeFrame(frame);
+        scheduleResize(frame, frameLoadToken, [80, 300, 700]);
       }
     });
     window.addEventListener('resize', () => {
       const frame = $('fullReportFrame');
-      if (frame && frame.contentDocument) resizeFrame(frame);
+      if (frame && frame.contentDocument) scheduleResize(frame, frameLoadToken, [120, 380]);
     });
   });
 })();
