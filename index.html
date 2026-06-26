@@ -335,6 +335,38 @@
     transition: transform 260ms ease;
   }
 
+  .project-media.tool-visual {
+    position: relative;
+    display: grid;
+    place-items: center;
+    background:
+      linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px),
+      linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
+      radial-gradient(circle at 50% 58%, rgba(98,212,255,0.22), transparent 40%),
+      #10151b;
+    background-size: 28px 28px, 28px 28px, auto, auto;
+  }
+
+  .ies-orbit {
+    width: 148px;
+    height: 148px;
+    border: 1px solid rgba(98,212,255,0.48);
+    border-radius: 50%;
+    background:
+      radial-gradient(circle, rgba(244,241,234,0.95) 0 7%, rgba(217,164,65,0.72) 13%, rgba(215,25,32,0.32) 38%, transparent 66%);
+    box-shadow: 0 0 70px rgba(98,212,255,0.16);
+  }
+
+  .ies-code {
+    position: absolute;
+    left: 18px;
+    bottom: 16px;
+    color: #dce4eb;
+    font-family: Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
   .project:hover .project-media img {
     transform: scale(1.06);
   }
@@ -532,6 +564,8 @@
     <div class="nav-links">
       <a href="#projects">Projects</a>
       <a href="#newsletter">Newsletter</a>
+      <a href="ies-editor/">IES Tool</a>
+      <a href="ies-report/">IES Report</a>
       <a href="https://shaowt.com/">shaowt.com</a>
     </div>
   </nav>
@@ -564,9 +598,9 @@
             <img src="aboutCDN/images/hero.jpg" alt="CDN Lighting project environment">
           </div>
           <div class="stat-strip" aria-label="Repository summary">
-            <div class="stat"><strong>10+</strong><span>live pages</span></div>
+            <div class="stat"><strong>12+</strong><span>live pages</span></div>
             <div class="stat"><strong>5</strong><span>newsletters</span></div>
-            <div class="stat"><strong>3</strong><span>brand/product stories</span></div>
+            <div class="stat"><strong>1</strong><span>browser tool</span></div>
           </div>
         </div>
       </div>
@@ -650,6 +684,36 @@
             <span class="open-link">Open page</span>
           </div>
         </a>
+
+        <a class="project" href="ies-editor/">
+          <div class="project-media tool-visual">
+            <div class="ies-orbit" aria-hidden="true"></div>
+            <div class="ies-code">IESNA:LM-63-2002<br>TILT=NONE<br>0 5 10 15 20...</div>
+          </div>
+          <div class="project-body">
+            <div>
+              <span class="tag">Tool</span>
+              <h3>IES Editor</h3>
+              <p>A browser tool for creating, previewing, opening and exporting IES photometric files.</p>
+            </div>
+            <span class="open-link">Open tool</span>
+          </div>
+        </a>
+
+        <a class="project" href="ies-report/">
+          <div class="project-media tool-visual">
+            <div class="ies-orbit" aria-hidden="true"></div>
+            <div class="ies-code">室内灯具光度数据<br>光源数据 / 光度数据<br>Print / Save PDF</div>
+          </div>
+          <div class="project-body">
+            <div>
+              <span class="tag">Tool</span>
+              <h3>IES Report</h3>
+              <p>A browser report builder for reading IES files, editing key fields and printing photometric reports.</p>
+            </div>
+            <span class="open-link">Open report</span>
+          </div>
+        </a>
       </div>
     </section>
 
@@ -686,8 +750,8 @@
   </main>
 
   <footer class="footer">
-    <span>© 2026 Shao Wentao. Built with GitHub Pages.</span>
-    <span>Lighting stories, product pages, and newsletter archives.</span>
+    <span>&copy; 2026 Shao Wentao. Built with GitHub Pages.</span>
+    <span>Lighting stories, product pages, browser tools, and newsletter archives.</span>
   </footer>
 </div>
 </body>

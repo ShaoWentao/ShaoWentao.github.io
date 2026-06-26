@@ -1,0 +1,1213 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IES Editor | Shao Wentao</title>
+<meta name="description" content="View, edit and generate IES photometric files in the browser.">
+<style>
+  :root {
+    --bg: #0a0c0f;
+    --panel: #12161b;
+    --panel-2: #171d23;
+    --ink: #f5f2ea;
+    --muted: #aeb7c2;
+    --line: rgba(255,255,255,0.14);
+    --red: #d71920;
+    --gold: #dca642;
+    --cyan: #58d7ff;
+    --green: #87d37c;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background:
+      radial-gradient(circle at 18% 8%, rgba(215,25,32,0.24), transparent 26%),
+      radial-gradient(circle at 88% 20%, rgba(88,215,255,0.16), transparent 28%),
+      linear-gradient(135deg, #08090b 0%, #10151b 52%, #15120d 100%);
+    color: var(--ink);
+    font-family: Inter, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+    letter-spacing: 0;
+  }
+
+  a { color: inherit; text-decoration: none; }
+
+  .app { min-height: 100vh; }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 16px clamp(18px, 4vw, 48px);
+    border-bottom: 1px solid var(--line);
+    background: rgba(8, 10, 13, 0.78);
+    backdrop-filter: blur(18px);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .mark {
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255,255,255,0.22);
+    background: linear-gradient(135deg, var(--red), var(--gold));
+    font-weight: 800;
+    font-size: 14px;
+  }
+
+  .brand strong,
+  .brand span {
+    display: block;
+  }
+
+  .brand strong { font-size: 14px; line-height: 18px; }
+  .brand span { color: var(--muted); font-size: 12px; line-height: 16px; }
+
+  .nav {
+    display: flex;
+    gap: 14px;
+    color: #d9dee5;
+    font-size: 13px;
+  }
+
+  .nav a { border-bottom: 1px solid transparent; }
+  .nav a:hover { color: #fff; border-color: var(--gold); }
+
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(340px, 1.1fr);
+    gap: clamp(24px, 4vw, 54px);
+    align-items: center;
+    padding: clamp(34px, 6vw, 72px) clamp(18px, 5vw, 64px) 28px;
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    color: #f0d89f;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+  }
+
+  .eyebrow::before {
+    content: "";
+    width: 32px;
+    height: 1px;
+    background: var(--gold);
+  }
+
+  h1 {
+    margin: 18px 0 0;
+    max-width: 760px;
+    font-size: clamp(36px, 6vw, 74px);
+    line-height: 0.98;
+    letter-spacing: 0;
+  }
+
+  .hero p {
+    margin: 22px 0 0;
+    max-width: 620px;
+    color: #d5dbe3;
+    font-size: clamp(15px, 1.5vw, 18px);
+    line-height: 1.7;
+  }
+
+  .hero-visual {
+    min-height: 340px;
+    position: relative;
+    border: 1px solid var(--line);
+    background:
+      linear-gradient(90deg, rgba(255,255,255,0.07) 1px, transparent 1px),
+      linear-gradient(rgba(255,255,255,0.07) 1px, transparent 1px),
+      linear-gradient(150deg, rgba(255,255,255,0.09), rgba(255,255,255,0.03));
+    background-size: 34px 34px, 34px 34px, auto;
+    overflow: hidden;
+  }
+
+  .beam {
+    position: absolute;
+    left: 50%;
+    top: 48%;
+    width: min(58vw, 520px);
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    border: 1px solid rgba(88,215,255,0.44);
+    border-radius: 50%;
+    background:
+      radial-gradient(circle, rgba(255,255,255,0.92) 0 4%, rgba(220,166,66,0.84) 8%, rgba(215,25,32,0.36) 29%, rgba(88,215,255,0.10) 52%, transparent 66%);
+    box-shadow: 0 0 80px rgba(88,215,255,0.12);
+  }
+
+  .beam::before,
+  .beam::after {
+    content: "";
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: 50%;
+    height: 1px;
+    background: rgba(255,255,255,0.35);
+    transform-origin: left center;
+  }
+
+  .beam::before { transform: rotate(28deg); }
+  .beam::after { transform: rotate(152deg); }
+
+  .visual-label {
+    position: absolute;
+    left: 18px;
+    bottom: 16px;
+    color: #d9e1ea;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .workspace {
+    display: grid;
+    grid-template-columns: minmax(280px, 420px) minmax(0, 1fr);
+    gap: 16px;
+    padding: 16px clamp(18px, 5vw, 64px) clamp(38px, 6vw, 72px);
+  }
+
+  .panel {
+    border: 1px solid var(--line);
+    background: rgba(18, 22, 27, 0.82);
+  }
+
+  .panel-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: center;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .panel-head h2 {
+    margin: 0;
+    font-size: 18px;
+    line-height: 1.2;
+  }
+
+  .panel-head span {
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .form {
+    display: grid;
+    gap: 14px;
+    padding: 18px;
+  }
+
+  .field {
+    display: grid;
+    gap: 7px;
+  }
+
+  label {
+    color: #d8dee6;
+    font-size: 13px;
+  }
+
+  input,
+  textarea,
+  select {
+    width: 100%;
+    min-height: 40px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: #0e1216;
+    color: var(--ink);
+    padding: 10px 11px;
+    font: inherit;
+    font-size: 14px;
+    outline: none;
+  }
+
+  textarea {
+    min-height: 92px;
+    resize: vertical;
+    line-height: 1.5;
+  }
+
+  input:focus,
+  textarea:focus,
+  select:focus {
+    border-color: rgba(220,166,66,0.72);
+  }
+
+  .fields-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-top: 4px;
+  }
+
+  button,
+  .button {
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    padding: 10px 14px;
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  button.primary,
+  .button.primary {
+    border-color: var(--red);
+    background: var(--red);
+  }
+
+  button:hover,
+  .button:hover {
+    border-color: rgba(220,166,66,0.72);
+  }
+
+  .main-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.95fr) minmax(320px, 1.05fr);
+    gap: 16px;
+  }
+
+  .chart-wrap {
+    padding: 18px;
+  }
+
+  canvas {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    display: block;
+    background: #0e1216;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-top: 1px solid var(--line);
+  }
+
+  .stat {
+    min-height: 86px;
+    padding: 14px;
+    border-right: 1px solid var(--line);
+  }
+
+  .stat:last-child { border-right: 0; }
+
+  .stat strong {
+    display: block;
+    font-size: 22px;
+    line-height: 1.15;
+  }
+
+  .stat span {
+    display: block;
+    margin-top: 5px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .preview {
+    height: 596px;
+    margin: 0;
+    padding: 16px;
+    overflow: auto;
+    color: #dbe3ea;
+    background: #080a0d;
+    border: 0;
+    font-family: "Cascadia Mono", Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.55;
+    white-space: pre;
+  }
+
+  .upload {
+    padding: 18px;
+    border-top: 1px solid var(--line);
+  }
+
+  .upload input {
+    min-height: auto;
+    padding: 11px;
+  }
+
+  .notes {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.55;
+    padding: 0 18px 18px;
+  }
+
+  @media (max-width: 1120px) {
+    .hero,
+    .workspace,
+    .main-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 700px) {
+    .topbar {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .nav {
+      width: 100%;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .hero-visual {
+      min-height: 260px;
+    }
+
+    .fields-2,
+    .stats {
+      grid-template-columns: 1fr;
+    }
+
+    .stat {
+      border-right: 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .stat:last-child { border-bottom: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <a class="brand" href="../">
+      <span class="mark">IES</span>
+      <span>
+        <strong>IES Editor</strong>
+        <span>Browser photometric file tool</span>
+      </span>
+    </a>
+    <nav class="nav">
+      <a href="../">Home</a>
+      <a href="#generator">Generate</a>
+      <a href="#preview">Preview</a>
+      <a href="../ies-report/">IES Report</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <div class="eyebrow">Photometric file generator</div>
+        <h1>Generate, inspect and export IES files.</h1>
+        <p>
+          Input luminaire parameters, build a symmetric photometric distribution,
+          preview the curve, and download an IESNA LM-63 file directly from the browser.
+        </p>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <div class="beam"></div>
+        <div class="visual-label">IESNA LM-63 / Symmetric distribution / Download ready</div>
+      </div>
+    </section>
+
+    <section class="workspace" id="generator">
+      <aside class="panel">
+        <div class="panel-head">
+          <h2>Generator Inputs</h2>
+          <span>CDN default</span>
+        </div>
+        <form class="form" id="iesForm">
+          <div class="field">
+            <label for="manufacturer">Luminaire manufacturer</label>
+            <input id="manufacturer" value="CDN" autocomplete="organization">
+          </div>
+          <div class="field">
+            <label for="serial">Luminaire serial number</label>
+            <input id="serial" value="spot01">
+          </div>
+          <div class="field">
+            <label for="iesType">IES type</label>
+            <input id="iesType" value="Generated Type C / symmetric" readonly>
+          </div>
+          <div class="fields-2">
+            <div class="field">
+              <label for="date">Date</label>
+              <input id="date" value="20260626" inputmode="numeric">
+            </div>
+            <div class="field">
+              <label for="ledCount">LED number</label>
+              <input id="ledCount" type="number" min="1" step="1" value="1">
+            </div>
+          </div>
+          <div class="fields-2">
+            <div class="field">
+              <label for="singleFlux">Flux for single LED</label>
+              <input id="singleFlux" type="number" min="0.01" step="0.01" value="1000">
+            </div>
+            <div class="field">
+              <label for="efficiency">Luminaire efficiency</label>
+              <input id="efficiency" type="number" min="0.01" max="1" step="0.01" value="1">
+            </div>
+          </div>
+          <div class="fields-2">
+            <div class="field">
+              <label for="beamAngle">Beam angle</label>
+              <input id="beamAngle" type="number" min="0.01" max="120" step="0.01" value="120">
+            </div>
+            <div class="field">
+              <label for="power">Power of luminaire (W)</label>
+              <input id="power" type="number" min="0.01" step="0.01" value="10">
+            </div>
+          </div>
+          <div class="fields-2">
+            <div class="field">
+              <label for="length">Length of luminous surface (m)</label>
+              <input id="length" type="number" min="0" step="0.001" value="0.1">
+            </div>
+            <div class="field">
+              <label for="width">Width of luminous surface (m)</label>
+              <input id="width" type="number" min="0" step="0.001" value="0.1">
+            </div>
+          </div>
+          <div class="field">
+            <label for="height">Height of luminous surface (m)</label>
+            <input id="height" type="number" min="0" step="0.001" value="0.1">
+          </div>
+          <div class="field">
+            <label for="notes">Description / keywords</label>
+            <textarea id="notes">Generated by CDN IES Editor.</textarea>
+          </div>
+          <div class="actions">
+            <button class="primary" type="button" id="downloadBtn">Download IES</button>
+            <button type="button" id="copyBtn">Copy text</button>
+            <button type="button" id="resetBtn">Reset</button>
+          </div>
+        </form>
+        <div class="upload">
+          <div class="field">
+            <label for="upload">Open existing IES file</label>
+            <input id="upload" type="file" accept=".ies,.ldt,.txt">
+          </div>
+        </div>
+        <p class="notes">
+          Uploaded asymmetric or Type B files are shown as original photometric data.
+          Beam-angle editing is locked to avoid changing the original distribution.
+        </p>
+      </aside>
+
+      <div class="main-grid">
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Distribution Preview</h2>
+            <span id="beamLabel">120 deg</span>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="curveCanvas" width="720" height="720" aria-label="Photometric distribution curve"></canvas>
+          </div>
+          <div class="stats">
+            <div class="stat"><strong id="totalFlux">1000 lm</strong><span>Total luminaire flux</span></div>
+            <div class="stat"><strong id="maxCd">0 cd</strong><span>Peak candela</span></div>
+            <div class="stat"><strong id="efficacy">100 lm/W</strong><span>Estimated efficacy</span></div>
+          </div>
+        </section>
+
+        <section class="panel" id="preview">
+          <div class="panel-head">
+            <h2>IES Preview</h2>
+            <span id="fileName">CDN-spot01.ies</span>
+          </div>
+          <pre class="preview" id="iesPreview"></pre>
+        </section>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+(() => {
+  const form = document.getElementById("iesForm");
+  const preview = document.getElementById("iesPreview");
+  const canvas = document.getElementById("curveCanvas");
+  const ctx = canvas.getContext("2d");
+  const fields = {
+    manufacturer: document.getElementById("manufacturer"),
+    serial: document.getElementById("serial"),
+    date: document.getElementById("date"),
+    ledCount: document.getElementById("ledCount"),
+    singleFlux: document.getElementById("singleFlux"),
+    beamAngle: document.getElementById("beamAngle"),
+    efficiency: document.getElementById("efficiency"),
+    length: document.getElementById("length"),
+    width: document.getElementById("width"),
+    height: document.getElementById("height"),
+    power: document.getElementById("power"),
+    notes: document.getElementById("notes"),
+    iesType: document.getElementById("iesType")
+  };
+
+  const verticalAngles = Array.from({ length: 37 }, (_, index) => index * 5);
+  const horizontalAngles = [0];
+  let uploadedIES = null;
+
+  function num(value, fallback) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  }
+
+  function getData() {
+    return {
+      manufacturer: fields.manufacturer.value.trim() || "CDN",
+      serial: fields.serial.value.trim() || "spot01",
+      date: fields.date.value.trim() || new Date().toISOString().slice(0, 10).replaceAll("-", ""),
+      ledCount: Math.max(1, Math.round(num(fields.ledCount.value, 1))),
+      singleFlux: Math.max(0.01, num(fields.singleFlux.value, 1000)),
+      beamAngle: Math.min(120, Math.max(0.01, num(fields.beamAngle.value, 120))),
+      efficiency: Math.min(1, Math.max(0.01, num(fields.efficiency.value, 1))),
+      length: Math.max(0, num(fields.length.value, 0.1)),
+      width: Math.max(0, num(fields.width.value, 0.1)),
+      height: Math.max(0, num(fields.height.value, 0.1)),
+      power: Math.max(0.01, num(fields.power.value, 10)),
+      notes: fields.notes.value.trim()
+    };
+  }
+
+  function rawIntensity(angle, beamAngle) {
+    const halfBeam = Math.max(0.005, beamAngle / 2);
+    const gaussian = Math.exp(-Math.LN2 * Math.pow(angle / halfBeam, 2));
+    const rearFade = angle > 90 ? Math.max(0, 1 - (angle - 90) / 90) : 1;
+    return gaussian * rearFade;
+  }
+
+  function buildCandela(data) {
+    const raw = verticalAngles.map((angle) => rawIntensity(angle, data.beamAngle));
+    let integral = 0;
+    for (let i = 0; i < verticalAngles.length - 1; i += 1) {
+      const a1 = verticalAngles[i] * Math.PI / 180;
+      const a2 = verticalAngles[i + 1] * Math.PI / 180;
+      const y1 = raw[i] * Math.sin(a1);
+      const y2 = raw[i + 1] * Math.sin(a2);
+      integral += ((y1 + y2) / 2) * (a2 - a1);
+    }
+    const totalFlux = data.ledCount * data.singleFlux * data.efficiency;
+    const scale = totalFlux / Math.max(0.0001, 2 * Math.PI * integral);
+    return raw.map((value) => value * scale);
+  }
+
+  function formatNumber(value, digits = 4) {
+    const rounded = Number(value.toFixed(digits));
+    return String(rounded);
+  }
+
+  function wrapNumbers(values, perLine = 10) {
+    const lines = [];
+    for (let i = 0; i < values.length; i += perLine) {
+      lines.push(values.slice(i, i + perLine).join(" "));
+    }
+    return lines.join("\n");
+  }
+
+  function safeName(value) {
+    return value.replace(/[^a-z0-9_-]+/gi, "-").replace(/^-+|-+$/g, "") || "luminaire";
+  }
+
+  function decodeIESBuffer(buffer) {
+    const decoders = [
+      () => new TextDecoder("utf-8", { fatal: true }).decode(buffer),
+      () => new TextDecoder("gb18030").decode(buffer),
+      () => new TextDecoder("gbk").decode(buffer),
+      () => new TextDecoder("utf-8").decode(buffer)
+    ];
+    for (const decode of decoders) {
+      try {
+        const text = decode();
+        if ((text.match(/\uFFFD/g) || []).length < 3) return text;
+      } catch (error) {
+        // Try the next decoder.
+      }
+    }
+    return new TextDecoder("utf-8").decode(buffer);
+  }
+
+  function parseKeywords(text) {
+    const read = (pattern) => {
+      const match = text.match(pattern);
+      return match ? match[1].trim() : "";
+    };
+    return {
+      manufacturer: read(/\[MANUFAC\]\s*(.+)/i),
+      serial: read(/\[(?:LUMINAIRE|LUMCAT|TEST)\]\s*(.+)/i),
+      date: read(/\[(?:ISSUEDATE|TESTDATE)\]\s*(.+)/i)
+    };
+  }
+
+  function tokenizePhotometricBody(text) {
+    const tilt = text.match(/TILT\s*=\s*([^\r\n]+)/i);
+    if (!tilt) throw new Error("TILT line not found.");
+    const tiltValue = tilt[1].trim().toUpperCase();
+    let nums = text.slice(tilt.index + tilt[0].length)
+      .replace(/\[[^\]]+\][^\r\n]*/g, " ")
+      .replace(/,/g, " ")
+      .split(/\s+/)
+      .filter((token) => token.length > 0)
+      .map(Number)
+      .filter(Number.isFinite);
+    if (tiltValue === "INCLUDE") {
+      const tiltCount = Math.max(0, Math.round(nums[0] || 0));
+      nums = nums.slice(1 + tiltCount * 2);
+    }
+    return nums;
+  }
+
+  function parseIES(text) {
+    const nums = tokenizePhotometricBody(text);
+    if (nums.length < 13) throw new Error("IES photometric data is incomplete.");
+    let i = 0;
+    const lampCount = nums[i++];
+    const lumensPerLamp = nums[i++];
+    const multiplier = nums[i++];
+    const verticalCount = Math.round(nums[i++]);
+    const horizontalCount = Math.round(nums[i++]);
+    const photometricType = Math.round(nums[i++]);
+    const unitsType = Math.round(nums[i++]);
+    const width = nums[i++];
+    const length = nums[i++];
+    const height = nums[i++];
+    i += 2;
+    const power = nums[i++];
+    const verticalAnglesParsed = nums.slice(i, i + verticalCount); i += verticalCount;
+    const horizontalAnglesParsed = nums.slice(i, i + horizontalCount); i += horizontalCount;
+    const expected = verticalCount * horizontalCount;
+    if (verticalCount <= 0 || horizontalCount <= 0 || nums.length - i < expected) {
+      throw new Error(`IES candela matrix is incomplete. Expected ${expected}, got ${nums.length - i}.`);
+    }
+    const candela = [];
+    for (let h = 0; h < horizontalCount; h += 1) {
+      candela.push(nums.slice(i, i + verticalCount).map((value) => value * multiplier));
+      i += verticalCount;
+    }
+    return {
+      text,
+      keywords: parseKeywords(text),
+      lampCount,
+      lumensPerLamp,
+      multiplier,
+      verticalAngles: verticalAnglesParsed,
+      horizontalAngles: horizontalAnglesParsed,
+      photometricType,
+      unitsType,
+      width,
+      length,
+      height,
+      power,
+      candela
+    };
+  }
+
+  function profilePeak(profile) {
+    return Math.max(...profile, 0);
+  }
+
+  function strongestPlaneIndex(data) {
+    let bestIndex = 0;
+    let bestPeak = -Infinity;
+    data.candela.forEach((profile, index) => {
+      const peak = profilePeak(profile);
+      if (peak > bestPeak) {
+        bestPeak = peak;
+        bestIndex = index;
+      }
+    });
+    return bestIndex;
+  }
+
+  function isAsymmetric(data) {
+    if (data.photometricType !== 1) return true;
+    if (data.verticalAngles.some((angle) => angle < 0)) return true;
+    if (data.horizontalAngles.length > 1) {
+      const first = data.candela[0] || [];
+      return data.candela.some((profile) => {
+        const max = Math.max(profilePeak(first), profilePeak(profile), 1);
+        const diff = profile.reduce((sum, value, index) => sum + Math.abs(value - (first[index] || 0)), 0) / profile.length;
+        return diff / max > 0.03;
+      });
+    }
+    return false;
+  }
+
+  function integrateFlux(data) {
+    const angles = data.verticalAngles;
+    if (!angles.length || !data.candela.length) return Math.max(0, data.lampCount * data.lumensPerLamp);
+    const avg = angles.map((_, index) => data.candela.reduce((sum, profile) => sum + (profile[index] || 0), 0) / data.candela.length);
+    let flux = 0;
+    for (let i = 0; i < angles.length - 1; i += 1) {
+      const a1 = Math.abs(angles[i]) * Math.PI / 180;
+      const a2 = Math.abs(angles[i + 1]) * Math.PI / 180;
+      const y1 = avg[i] * Math.sin(a1);
+      const y2 = avg[i + 1] * Math.sin(a2);
+      flux += 2 * Math.PI * Math.abs(((y1 + y2) / 2) * (a2 - a1));
+    }
+    return flux;
+  }
+
+  function setBeamLocked(locked) {
+    fields.beamAngle.disabled = locked;
+    fields.beamAngle.title = locked ? "Uploaded asymmetric/Type B IES keeps original photometric data; beam angle editing is disabled." : "";
+  }
+
+  function buildIES(data, candela) {
+    const totalFlux = data.ledCount * data.singleFlux * data.efficiency;
+    const lines = [
+      "IESNA:LM-63-2002",
+      `[TEST] ${data.serial}`,
+      `[TESTLAB] CDN Lighting`,
+      `[ISSUEDATE] ${data.date}`,
+      `[MANUFAC] ${data.manufacturer}`,
+      `[LUMCAT] ${data.serial}`,
+      `[LUMINAIRE] ${data.serial}`,
+      `[LAMPCAT] LED`,
+      `[LAMP] ${data.ledCount} LED, ${formatNumber(data.singleFlux, 2)} lm each`,
+      `[MORE] ${data.notes || "Generated by CDN IES Editor."}`,
+      "TILT=NONE",
+      [
+        data.ledCount,
+        formatNumber(data.singleFlux * data.efficiency, 4),
+        1,
+        verticalAngles.length,
+        horizontalAngles.length,
+        1,
+        2,
+        formatNumber(data.width, 4),
+        formatNumber(data.length, 4),
+        formatNumber(data.height, 4)
+      ].join(" "),
+      `1 1 ${formatNumber(data.power, 4)}`,
+      wrapNumbers(verticalAngles.map((angle) => formatNumber(angle, 2))),
+      wrapNumbers(horizontalAngles.map((angle) => formatNumber(angle, 2))),
+      wrapNumbers(candela.map((value) => formatNumber(value, 4)), 8),
+      ""
+    ];
+    return { text: lines.join("\n"), totalFlux };
+  }
+
+  function drawChart(data, candela) {
+    const cssSize = Math.max(320, Math.round(canvas.clientWidth || 560));
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(cssSize * pixelRatio);
+    canvas.height = Math.round(cssSize * pixelRatio);
+    ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    const width = cssSize;
+    const height = cssSize;
+    ctx.clearRect(0, 0, width, height);
+    ctx.fillStyle = "#0e1216";
+    ctx.fillRect(0, 0, width, height);
+
+    const cx = width / 2;
+    const cy = height / 2;
+    const radius = Math.min(width, height) * 0.4;
+    const max = Math.max(...candela, 1);
+
+    ctx.strokeStyle = "rgba(255,255,255,0.12)";
+    ctx.lineWidth = 1;
+    for (let ring = 1; ring <= 4; ring += 1) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius * ring / 4, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    for (let angle = 0; angle < 360; angle += 30) {
+      const rad = angle * Math.PI / 180;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(rad) * radius, cy + Math.sin(rad) * radius);
+      ctx.stroke();
+    }
+
+    ctx.strokeStyle = "rgba(255,255,255,0.28)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - radius - 12);
+    ctx.lineTo(cx, cy + radius + 12);
+    ctx.moveTo(cx - radius - 12, cy);
+    ctx.lineTo(cx + radius + 12, cy);
+    ctx.stroke();
+
+    function pointFor(angle, side, value) {
+      const theta = (90 - side * angle) * Math.PI / 180;
+      const r = radius * (value / max);
+      return {
+        x: cx + Math.cos(theta) * r,
+        y: cy + Math.sin(theta) * r
+      };
+    }
+
+    const rightSide = verticalAngles.map((angle, index) => pointFor(angle, 1, candela[index]));
+    const leftSide = verticalAngles
+      .slice()
+      .reverse()
+      .map((angle) => {
+        const index = verticalAngles.indexOf(angle);
+        return pointFor(angle, -1, candela[index]);
+      });
+    const outline = rightSide.concat(leftSide);
+
+    const gradient = ctx.createLinearGradient(cx - radius, cy - radius, cx + radius, cy + radius);
+    gradient.addColorStop(0, "#58d7ff");
+    gradient.addColorStop(0.5, "#f5f2ea");
+    gradient.addColorStop(1, "#d71920");
+
+    ctx.fillStyle = "rgba(88,215,255,0.08)";
+    ctx.strokeStyle = gradient;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    outline.forEach((point, index) => {
+      if (index === 0) ctx.moveTo(point.x, point.y);
+      else ctx.lineTo(point.x, point.y);
+    });
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = "#aeb7c2";
+    ctx.font = "12px Segoe UI, Arial";
+    ctx.fillText("0°", cx + 8, cy + radius + 18);
+    ctx.fillText("90°", cx + radius + 12, cy + 4);
+    ctx.fillText("180°", cx + 8, cy - radius - 10);
+
+    ctx.fillStyle = "#dce4eb";
+    ctx.font = "18px Segoe UI, Arial";
+    ctx.fillText(`Beam ${formatNumber(data.beamAngle, 2)} deg`, 28, 38);
+    ctx.fillStyle = "#aeb7c2";
+    ctx.font = "13px Segoe UI, Arial";
+    ctx.fillText(`Peak ${formatNumber(max, 1)} cd / Total ${formatNumber(data.ledCount * data.singleFlux * data.efficiency, 1)} lm`, 28, 62);
+  }
+
+  function update() {
+    if (uploadedIES) {
+      updateUploadedPreview();
+      return;
+    }
+    const data = getData();
+    const candela = buildCandela(data);
+    const ies = buildIES(data, candela);
+    preview.textContent = ies.text;
+    document.getElementById("beamLabel").textContent = `${formatNumber(data.beamAngle, 2)} deg`;
+    document.getElementById("totalFlux").textContent = `${formatNumber(ies.totalFlux, 1)} lm`;
+    document.getElementById("maxCd").textContent = `${formatNumber(Math.max(...candela), 1)} cd`;
+    document.getElementById("efficacy").textContent = `${formatNumber(ies.totalFlux / data.power, 1)} lm/W`;
+    document.getElementById("fileName").textContent = `${safeName(data.manufacturer)}-${safeName(data.serial)}.ies`;
+    drawChart(data, candela);
+  }
+
+  function downloadIES() {
+    if (uploadedIES) {
+      const blob = new Blob([uploadedIES.text], { type: "text/plain;charset=utf-8" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `${safeName(fields.serial.value || "uploaded")}.ies`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(link.href);
+      return;
+    }
+    const data = getData();
+    const candela = buildCandela(data);
+    const ies = buildIES(data, candela).text;
+    const blob = new Blob([ies], { type: "text/plain;charset=utf-8" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `${safeName(data.manufacturer)}-${safeName(data.serial)}.ies`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(link.href);
+  }
+
+  function copyText() {
+    navigator.clipboard.writeText(preview.textContent);
+  }
+
+  function resetFields() {
+    uploadedIES = null;
+    setBeamLocked(false);
+    fields.manufacturer.value = "CDN";
+    fields.serial.value = "spot01";
+    fields.date.value = "20260626";
+    fields.ledCount.value = "1";
+    fields.singleFlux.value = "1000";
+    fields.beamAngle.value = "120";
+    fields.efficiency.value = "1";
+    fields.length.value = "0.1";
+    fields.width.value = "0.1";
+    fields.height.value = "0.1";
+    fields.power.value = "10";
+    fields.notes.value = "Generated by CDN IES Editor.";
+    fields.iesType.value = "Generated Type C / symmetric";
+    update();
+  }
+
+  function beamAngleFromProfile(profile, angles) {
+    const peak = Math.max(...profile, 0);
+    const half = peak / 2;
+    for (let i = 1; i < profile.length; i += 1) {
+      if (profile[i] <= half) {
+        return Math.abs((angles[i] || 0) * 2);
+      }
+    }
+    return Math.abs((angles[angles.length - 1] || 0) * 2);
+  }
+
+  function applyUploadedFields(data) {
+    const keywords = data.keywords || {};
+    fields.manufacturer.value = keywords.manufacturer || "CDN";
+    fields.serial.value = keywords.serial || "uploaded-ies";
+    fields.date.value = keywords.date || "";
+    fields.ledCount.value = String(Math.max(1, Math.round(data.lampCount || 1)));
+    const totalFlux = data.lumensPerLamp > 0 ? data.lampCount * data.lumensPerLamp : integrateFlux(data);
+    fields.singleFlux.value = formatNumber(totalFlux / Math.max(1, data.lampCount || 1), 3);
+    fields.efficiency.value = data.lumensPerLamp > 0 ? "1" : "1";
+    fields.length.value = formatNumber(data.length || 0, 4);
+    fields.width.value = formatNumber(data.width || 0, 4);
+    fields.height.value = formatNumber(data.height || 0, 4);
+    fields.power.value = formatNumber(data.power || 0, 4);
+    const mainProfile = data.candela[strongestPlaneIndex(data)] || [];
+    fields.beamAngle.value = formatNumber(beamAngleFromProfile(mainProfile, data.verticalAngles), 2);
+    const asymmetric = isAsymmetric(data);
+    const typeName = data.photometricType === 1 ? "Type C" : data.photometricType === 2 ? "Type B" : `Type ${data.photometricType}`;
+    const hRange = `${formatNumber(data.horizontalAngles[0], 1)} to ${formatNumber(data.horizontalAngles[data.horizontalAngles.length - 1], 1)}`;
+    const vRange = `${formatNumber(data.verticalAngles[0], 1)} to ${formatNumber(data.verticalAngles[data.verticalAngles.length - 1], 1)}`;
+    fields.iesType.value = `${typeName} / ${asymmetric ? "asymmetric or multi-plane" : "symmetric"} / H ${hRange} / V ${vRange} / ${data.horizontalAngles.length} x ${data.verticalAngles.length}`;
+    fields.notes.value = "Uploaded IES file. Original photometric data is preserved.";
+    setBeamLocked(asymmetric);
+  }
+
+  function updateUploadedPreview() {
+    const data = uploadedIES;
+    preview.textContent = data.text;
+    const totalFlux = data.lumensPerLamp > 0 ? data.lampCount * data.lumensPerLamp : integrateFlux(data);
+    const peak = Math.max(...data.candela.flat(), 0);
+    document.getElementById("beamLabel").textContent = fields.iesType.value;
+    document.getElementById("totalFlux").textContent = `${formatNumber(totalFlux, 1)} lm`;
+    document.getElementById("maxCd").textContent = `${formatNumber(peak, 1)} cd`;
+    document.getElementById("efficacy").textContent = data.power > 0 ? `${formatNumber(totalFlux / data.power, 1)} lm/W` : "-";
+    document.getElementById("fileName").textContent = `${safeName(fields.serial.value || "uploaded")}.ies`;
+    drawUploadedChart(data);
+  }
+
+  function angularDistance(a, b) {
+    return Math.abs((((a - b) % 360) + 540) % 360 - 180);
+  }
+
+  function nearestIndex(values, target) {
+    let best = 0;
+    let distance = Infinity;
+    values.forEach((value, index) => {
+      const current = Math.abs(value - target);
+      if (current < distance) {
+        distance = current;
+        best = index;
+      }
+    });
+    return best;
+  }
+
+  function nearestPlaneIndex(data, target) {
+    let best = 0;
+    let distance = Infinity;
+    data.horizontalAngles.forEach((value, index) => {
+      const current = data.photometricType === 1 ? angularDistance(value, target) : Math.abs(value - target);
+      if (current < distance) {
+        distance = current;
+        best = index;
+      }
+    });
+    return best;
+  }
+
+  function typeCCurve(data, a, b, label, color) {
+    const aIndex = nearestPlaneIndex(data, a);
+    const bIndex = nearestPlaneIndex(data, b);
+    const aProfile = data.candela[aIndex] || [];
+    const bProfile = data.candela[bIndex] || aProfile;
+    const forward = data.verticalAngles.map((angle, index) => ({
+      angle: Math.abs(angle),
+      value: aProfile[index] || 0
+    }));
+    const backward = data.verticalAngles.slice().reverse().map((angle) => {
+      const index = data.verticalAngles.indexOf(angle);
+      return {
+        angle: -Math.abs(angle),
+        value: bProfile[index] || 0
+      };
+    });
+    return { label, color, points: backward.concat(forward) };
+  }
+
+  function typeBCurveFromPlane(data, planeTarget, label, color) {
+    const hIndex = nearestPlaneIndex(data, planeTarget);
+    const profile = data.candela[hIndex] || [];
+    return {
+      label: `${label} H${formatNumber(data.horizontalAngles[hIndex], 1)}`,
+      color,
+      points: data.verticalAngles.map((angle, index) => ({
+        angle,
+        value: profile[index] || 0
+      }))
+    };
+  }
+
+  function typeBCurveAcrossPlanes(data, verticalTarget, label, color) {
+    const vIndex = nearestIndex(data.verticalAngles, verticalTarget);
+    return {
+      label: `${label} V${formatNumber(data.verticalAngles[vIndex], 1)}`,
+      color,
+      points: data.horizontalAngles.map((angle, index) => ({
+        angle,
+        value: (data.candela[index] || [])[vIndex] || 0
+      }))
+    };
+  }
+
+  function buildUploadedCurves(data) {
+    if (data.photometricType === 2) {
+      return [
+        typeBCurveFromPlane(data, 0, "main vertical", "#ff2b2b"),
+        typeBCurveAcrossPlanes(data, 0, "main horizontal", "#58d7ff")
+      ];
+    }
+    return [
+      typeCCurve(data, 0, 180, "C0/180", "#ff2b2b"),
+      typeCCurve(data, 90, 270, "C90/270", "#58d7ff")
+    ];
+  }
+
+  function drawUploadedChart(data) {
+    const cssSize = Math.max(320, Math.round(canvas.clientWidth || 560));
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(cssSize * pixelRatio);
+    canvas.height = Math.round(cssSize * pixelRatio);
+    ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    ctx.clearRect(0, 0, cssSize, cssSize);
+    ctx.fillStyle = "#0e1216";
+    ctx.fillRect(0, 0, cssSize, cssSize);
+    const curves = buildUploadedCurves(data);
+    const max = Math.max(...curves.flatMap((curve) => curve.points.map((point) => point.value)), 1);
+    let peak = { value: -Infinity, angle: 0, label: "" };
+    curves.forEach((curve) => {
+      curve.points.forEach((point) => {
+        if (point.value > peak.value) peak = { value: point.value, angle: point.angle, label: curve.label };
+      });
+    });
+
+    const cx = cssSize / 2;
+    const cy = cssSize / 2;
+    const radius = cssSize * 0.38;
+    ctx.strokeStyle = "rgba(255,255,255,0.12)";
+    ctx.lineWidth = 1;
+    for (let ring = 1; ring <= 5; ring += 1) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius * ring / 5, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = "#8090a0";
+      ctx.font = "11px Segoe UI, Arial";
+      ctx.fillText(formatNumber(max * ring / 5, 0), cx + 4, cy + radius * ring / 5 - 4);
+    }
+    for (let angle = -180; angle < 180; angle += 30) {
+      const rad = angle * Math.PI / 180;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.sin(rad) * radius, cy + Math.cos(rad) * radius);
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = "#aeb7c2";
+    ctx.font = "12px Segoe UI, Arial";
+    [-150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150, 180].forEach((label) => {
+      const rad = label * Math.PI / 180;
+      const x = cx + Math.sin(rad) * (radius + 22);
+      const y = cy + Math.cos(rad) * (radius + 22);
+      ctx.fillText(String(label), x - 12, y + 4);
+    });
+
+    curves.forEach((curve) => {
+      ctx.strokeStyle = curve.color;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      curve.points.forEach((point, index) => {
+        const rad = point.angle * Math.PI / 180;
+        const r = radius * (point.value / max);
+        const x = cx + Math.sin(rad) * r;
+        const y = cy + Math.cos(rad) * r;
+        if (index === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+    });
+
+    ctx.fillStyle = "#dce4eb";
+    ctx.font = "18px Segoe UI, Arial";
+    ctx.fillText(`Uploaded ${data.photometricType === 2 ? "Type B" : "Type C"} IES curves`, 28, 38);
+    ctx.fillStyle = "#aeb7c2";
+    ctx.font = "13px Segoe UI, Arial";
+    ctx.fillText(`Red: ${curves[0].label} / Blue: ${curves[1].label}`, 28, 62);
+    ctx.fillText(`Peak ${formatNumber(peak.value, 1)} cd @ ${peak.label}, angle ${formatNumber(peak.angle, 1)}`, 28, cssSize - 28);
+  }
+
+  function parseExistingIES(text) {
+    uploadedIES = parseIES(text);
+    applyUploadedFields(uploadedIES);
+    updateUploadedPreview();
+  }
+
+  form.addEventListener("input", update);
+  document.getElementById("downloadBtn").addEventListener("click", downloadIES);
+  document.getElementById("copyBtn").addEventListener("click", copyText);
+  document.getElementById("resetBtn").addEventListener("click", resetFields);
+  document.getElementById("upload").addEventListener("change", (event) => {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        parseExistingIES(decodeIESBuffer(reader.result));
+      } catch (error) {
+        fields.iesType.value = `Read failed: ${error.message || error}`;
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  });
+  window.addEventListener("resize", update);
+
+  update();
+})();
+</script>
+</body>
+</html>

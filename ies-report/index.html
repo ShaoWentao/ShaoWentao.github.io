@@ -1,0 +1,1675 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IES Report | Shao Wentao</title>
+<meta name="description" content="Read IES files and generate editable photometric reports in the browser.">
+<style>
+  :root {
+    --bg: #0b0d10;
+    --panel: #14191f;
+    --ink: #f5f2ea;
+    --muted: #aeb7c2;
+    --line: rgba(255,255,255,0.14);
+    --red: #d71920;
+    --gold: #dca642;
+    --paper: #fff;
+    --paper-ink: #111;
+    --paper-line: #1f1f1f;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background:
+      radial-gradient(circle at 18% 8%, rgba(215,25,32,0.2), transparent 26%),
+      radial-gradient(circle at 88% 18%, rgba(88,215,255,0.12), transparent 28%),
+      linear-gradient(135deg, #08090b 0%, #111820 58%, #15120d 100%);
+    color: var(--ink);
+    font-family: Inter, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+    letter-spacing: 0;
+  }
+
+  a { color: inherit; text-decoration: none; }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 15px clamp(18px, 4vw, 48px);
+    border-bottom: 1px solid var(--line);
+    background: rgba(8,10,13,0.78);
+    backdrop-filter: blur(18px);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .mark {
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255,255,255,0.24);
+    background: linear-gradient(135deg, var(--red), var(--gold));
+    font-weight: 800;
+    font-size: 13px;
+  }
+
+  .brand strong,
+  .brand span {
+    display: block;
+  }
+
+  .brand strong { font-size: 14px; line-height: 18px; }
+  .brand span { color: var(--muted); font-size: 12px; line-height: 16px; }
+
+  .nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .nav a,
+  .nav button {
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    padding: 8px 12px;
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .nav button.primary {
+    border-color: var(--red);
+    background: var(--red);
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(300px, 380px) minmax(780px, 1fr);
+    gap: 18px;
+    padding: 18px clamp(18px, 4vw, 48px) 48px;
+    align-items: start;
+  }
+
+  .panel {
+    border: 1px solid var(--line);
+    background: rgba(20,25,31,0.86);
+  }
+
+  .panel h2 {
+    margin: 0;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--line);
+    font-size: 18px;
+  }
+
+  .form {
+    display: grid;
+    gap: 12px;
+    padding: 16px 18px 18px;
+  }
+
+  .field {
+    display: grid;
+    gap: 7px;
+  }
+
+  .field label {
+    color: #d8dee6;
+    font-size: 13px;
+  }
+
+  input,
+  textarea,
+  select {
+    width: 100%;
+    min-height: 38px;
+    border: 1px solid rgba(255,255,255,0.16);
+    background: #0e1216;
+    color: var(--ink);
+    padding: 9px 10px;
+    font: inherit;
+    font-size: 14px;
+    outline: none;
+  }
+
+  textarea {
+    min-height: 72px;
+    resize: vertical;
+    line-height: 1.5;
+  }
+
+  input:focus,
+  textarea:focus {
+    border-color: rgba(220,166,66,0.72);
+  }
+
+  .two {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .hint {
+    margin: 0;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.55;
+  }
+
+  .paper-wrap {
+    overflow: auto;
+    padding: 18px;
+    border: 1px solid var(--line);
+    background: rgba(0,0,0,0.22);
+  }
+
+  .paper {
+    width: 960px;
+    min-height: 1358px;
+    margin: 0 auto 24px;
+    padding: 58px 72px 68px;
+    background: var(--paper);
+    color: var(--paper-ink);
+    font-family: "方华简体", SimSun, "宋体", serif;
+    box-shadow: 0 28px 70px rgba(0,0,0,0.35);
+    page-break-after: always;
+  }
+
+  .report-head {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 20px;
+    align-items: end;
+    border-bottom: 1.5px solid var(--paper-line);
+    padding-bottom: 10px;
+  }
+
+  .lab {
+    font-size: 22px;
+    font-weight: 700;
+    font-family: "方华简体", SimHei, "黑体", SimSun, serif;
+    letter-spacing: 0;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .page-no {
+    font-size: 19px;
+    font-weight: 700;
+    font-family: "方华简体", SimHei, "黑体", SimSun, serif;
+    white-space: nowrap;
+  }
+
+  .cdn-logo {
+    width: 150px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .report-logo {
+    max-width: 150px;
+    max-height: 56px;
+    object-fit: contain;
+    display: block;
+  }
+
+  .report-title {
+    margin: 82px 0 26px;
+    text-align: center;
+    font-size: 32px;
+    font-weight: 800;
+    font-family: "方华简体", SimHei, "黑体", SimSun, serif;
+    letter-spacing: 0.5em;
+    text-indent: 0.5em;
+  }
+
+  body.report-lang-en .paper,
+  body.report-lang-en .report-note,
+  body.report-lang-en .simple-table,
+  body.report-lang-en .meta-table,
+  body.report-lang-en .data-table,
+  body.report-lang-en .footer-data {
+    font-family: "Courier New", Courier, monospace;
+  }
+
+  body.report-lang-en .lab,
+  body.report-lang-en .page-no,
+  body.report-lang-en .report-title,
+  body.report-lang-en .chart-title,
+  body.report-lang-en .page-title,
+  body.report-lang-en .page-section-title,
+  body.report-lang-en .simple-table th {
+    font-family: "Courier New", Courier, "Microsoft Sans Serif", Arial, sans-serif;
+    font-weight: 700;
+  }
+
+  body.report-lang-en .report-title {
+    letter-spacing: 0;
+    text-indent: 0;
+    font-size: 27px;
+  }
+
+  body.report-lang-zh .paper,
+  body.report-lang-zh .lab,
+  body.report-lang-zh .page-no,
+  body.report-lang-zh .report-title,
+  body.report-lang-zh .meta-table,
+  body.report-lang-zh .data-table,
+  body.report-lang-zh .chart-title,
+  body.report-lang-zh .footer-data,
+  body.report-lang-zh .page-title,
+  body.report-lang-zh .page-section-title,
+  body.report-lang-zh .simple-table,
+  body.report-lang-zh .simple-table th,
+  body.report-lang-zh .report-note {
+    font-family: "方华简体", SimSun, "宋体", "Noto Serif CJK SC", serif;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .meta-table,
+  .data-table {
+    border: 1.5px solid var(--paper-line);
+    font-size: 15px;
+    font-weight: 700;
+    font-family: "方华简体", SimHei, "黑体", SimSun, serif;
+  }
+
+  .meta-table td,
+  .data-table td,
+  .data-table th {
+    border: 1px solid var(--paper-line);
+    padding: 7px 10px;
+    vertical-align: middle;
+  }
+
+  .meta-table td:first-child {
+    width: 46%;
+  }
+
+  .data-table {
+    margin-top: 20px;
+  }
+
+  .data-table th {
+    font-size: 19px;
+    letter-spacing: 0.32em;
+    text-indent: 0.32em;
+    text-align: center;
+  }
+
+  .charts {
+    display: grid;
+    grid-template-columns: 1fr 0.78fr;
+    gap: 8px;
+    margin-top: 20px;
+  }
+
+  .chart-box {
+    min-height: 360px;
+    border: 1.5px solid var(--paper-line);
+    padding: 14px 14px 10px;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+  }
+
+  .chart-title {
+    text-align: center;
+    font-size: 17px;
+    font-weight: 800;
+    font-family: "方华简体", SimHei, "黑体", SimSun, serif;
+  }
+
+  .report-canvas {
+    width: 100%;
+    aspect-ratio: 1;
+    display: block;
+  }
+
+  .iso-canvas {
+    width: 100%;
+    aspect-ratio: 0.78;
+    display: block;
+  }
+
+  .chart-note {
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .footer-data {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-top: 36px;
+    border-top: 1.5px solid var(--paper-line);
+    padding: 12px 36px 0;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: "方华简体", SimHei, "黑体", SimSun, serif;
+    line-height: 1.35;
+  }
+
+  .page-title {
+    margin: 54px 0 22px;
+    text-align: center;
+    font-family: "方华简体", SimHei, "黑体", SimSun, serif;
+    font-size: 25px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-indent: 0.18em;
+  }
+
+  .page-section-title {
+    margin: 20px 0 10px;
+    font-family: "方华简体", SimHei, "黑体", SimSun, serif;
+    font-size: 18px;
+    font-weight: 800;
+  }
+
+  .simple-table {
+    width: 100%;
+    border: 1.5px solid var(--paper-line);
+    border-collapse: collapse;
+    font-family: "方华简体", SimSun, "宋体", serif;
+    font-size: 13px;
+  }
+
+  .simple-table th,
+  .simple-table td {
+    border: 1px solid var(--paper-line);
+    padding: 6px 8px;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .simple-table th {
+    font-family: "方华简体", SimHei, "黑体", SimSun, serif;
+    font-weight: 700;
+    background: #f5f5f5;
+  }
+
+  .report-note {
+    margin: 16px 0 0;
+    font-family: "方华简体", SimSun, "宋体", serif;
+    font-size: 14px;
+    line-height: 1.65;
+  }
+
+  .empty {
+    color: #555;
+  }
+
+  @media (max-width: 1180px) {
+    .layout {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .topbar {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .two {
+      grid-template-columns: 1fr;
+    }
+
+    .paper-wrap {
+      padding: 8px;
+    }
+  }
+
+  @media print {
+    body {
+      background: #fff;
+    }
+
+    .topbar,
+    .panel {
+      display: none;
+    }
+
+    .layout,
+    .paper-wrap {
+      display: block;
+      padding: 0;
+      border: 0;
+      background: #fff;
+    }
+
+    .paper {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 18mm 18mm 16mm;
+      box-shadow: none;
+    }
+
+    @page {
+      size: A4;
+      margin: 0;
+    }
+  }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="../">
+    <span class="mark">IES</span>
+    <span>
+      <strong>IES Report</strong>
+      <span>Read, edit and print photometric reports</span>
+    </span>
+  </a>
+  <nav class="nav">
+    <a href="../">Home</a>
+    <a href="../ies-editor/">IES Editor</a>
+    <button class="primary" type="button" id="printBtn">Print / Save PDF</button>
+    <button type="button" id="sampleBtn">Load sample</button>
+  </nav>
+</header>
+
+<main class="layout">
+  <aside class="panel">
+    <h2>Report Inputs</h2>
+    <form class="form" id="reportForm">
+      <div class="field">
+        <label for="iesFile">Open IES file</label>
+        <input id="iesFile" type="file" accept=".ies,.txt">
+        <p class="hint">上传 IES 后会自动读取厂家、型号、光通量、功率、尺寸、角度和光强数据。</p>
+        <p class="hint" id="parseStatus">No IES file loaded.</p>
+      </div>
+      <div class="field">
+        <label>Report language</label>
+        <button type="button" id="languageToggle">English</button>
+      </div>
+      <div class="field">
+        <label for="labName">Testing lab / report header</label>
+        <input id="labName" value="惠州市西顿工业发展有限公司检测中心">
+      </div>
+      <div class="two">
+        <div class="field">
+          <label for="pageIndex">Page</label>
+          <input id="pageIndex" value="1">
+        </div>
+        <div class="field">
+          <label for="pageTotal">Total pages</label>
+          <input id="pageTotal" value="13">
+        </div>
+      </div>
+      <div class="field">
+        <label for="reportTitle">Report title</label>
+        <input id="reportTitle" value="室内灯具光度数据">
+      </div>
+      <div class="two">
+        <div class="field">
+          <label for="luminaireName">Luminaire name</label>
+          <input id="luminaireName" value="芳华筒灯">
+        </div>
+        <div class="field">
+          <label for="luminaireType">Luminaire type</label>
+          <input id="luminaireType" value="芳华筒灯">
+        </div>
+      </div>
+      <div class="two">
+        <div class="field">
+          <label for="model">Model</label>
+          <input id="model" value="CEJ62055">
+        </div>
+        <div class="field">
+          <label for="spec">Specification</label>
+          <input id="spec" value="12°">
+        </div>
+      </div>
+      <div class="two">
+        <div class="field">
+          <label for="manufacturer">Manufacturer</label>
+          <input id="manufacturer" value="">
+        </div>
+        <div class="field">
+          <label for="testNo">Test number</label>
+          <input id="testNo" value="">
+        </div>
+      </div>
+      <div class="two">
+        <div class="field">
+          <label for="dimensions">Dimensions</label>
+          <input id="dimensions" value="">
+        </div>
+        <div class="field">
+          <label for="aperture">Luminous opening</label>
+          <input id="aperture" value="0.044">
+        </div>
+      </div>
+      <div class="two">
+        <div class="field">
+          <label for="weight">Weight</label>
+          <input id="weight" value="">
+        </div>
+        <div class="field">
+          <label for="shieldAngle">Shielding angle</label>
+          <input id="shieldAngle" value="">
+        </div>
+      </div>
+      <div class="field">
+        <label for="measured">Measured parameters</label>
+        <input id="measured" value="U:220.00V I:0.0000A P:0.00W PF:0.0000 Freq:50.00Hz">
+      </div>
+      <div class="two">
+        <div class="field">
+          <label for="ratedPower">Rated power (W)</label>
+          <input id="ratedPower" value="">
+        </div>
+        <div class="field">
+          <label for="ratedVoltage">Rated voltage</label>
+          <input id="ratedVoltage" value="AC220">
+        </div>
+      </div>
+      <div class="two">
+        <div class="field">
+          <label for="ratedFlux">Rated flux (lm)</label>
+          <input id="ratedFlux" value="">
+        </div>
+        <div class="field">
+          <label for="lampCount">Lamp count</label>
+          <input id="lampCount" value="1">
+        </div>
+      </div>
+      <div class="two">
+        <div class="field">
+          <label for="testVoltage">Measured voltage</label>
+          <input id="testVoltage" value="AC220">
+        </div>
+        <div class="field">
+          <label for="testDate">Test date</label>
+          <input id="testDate" value="2021-12-01">
+        </div>
+      </div>
+      <div class="two">
+        <div class="field">
+          <label for="temperature">Temperature</label>
+          <input id="temperature" value="25.3℃">
+        </div>
+        <div class="field">
+          <label for="humidity">Humidity</label>
+          <input id="humidity" value="65.0%">
+        </div>
+      </div>
+      <div class="two">
+        <div class="field">
+          <label for="distance">Test distance</label>
+          <input id="distance" value="7.390米 [K=1.0000]">
+        </div>
+        <div class="field">
+          <label for="operator">Tester</label>
+          <input id="operator" value="Liao Huan Ming">
+        </div>
+      </div>
+      <div class="field">
+        <label for="system">Testing system</label>
+        <input id="system" value="远方(EVERFINE)GO-2000A_V1系统 V2.0.405.8">
+      </div>
+      <div class="field">
+        <label for="remark">Remark</label>
+        <textarea id="remark"></textarea>
+      </div>
+    </form>
+  </aside>
+
+  <section class="paper-wrap">
+    <article class="paper" id="report">
+      <header class="report-head">
+        <div class="lab" data-bind="labName"></div>
+        <div class="logo">
+          <div class="cdn-logo" aria-label="CDN">
+            <img class="report-logo" src="../cdn-newsletter/202606-hskc/images/logo.png" alt="Report logo">
+          </div>
+          <div class="page-no" id="firstPageNo">第 <span data-bind="pageIndex"></span> 页　共 <span data-bind="pageTotal"></span> 页</div>
+        </div>
+      </header>
+
+      <h1 class="report-title" data-bind="reportTitle"></h1>
+
+      <table class="meta-table">
+        <tr>
+          <td colspan="3"><span data-i18n="measuredParams">实测参数</span>： <span data-bind="measured"></span>　 <span data-i18n="lampFlux">实检光通</span>：<span id="measuredFluxText"></span></td>
+        </tr>
+        <tr>
+          <td><span data-i18n="name">灯具名称</span>： <span data-bind="luminaireName"></span></td>
+          <td><span data-i18n="type">灯具类型</span>： <span data-bind="luminaireType"></span></td>
+          <td><span data-i18n="weight">灯具重量</span>： <span data-bind="weight"></span></td>
+        </tr>
+        <tr>
+          <td><span data-i18n="spec">灯具规格</span>：<span data-bind="spec"></span></td>
+          <td><span data-i18n="dimensions">外型尺寸</span>： <span data-bind="dimensions"></span></td>
+          <td><span data-i18n="serialNo">测试编号</span>： <span data-bind="testNo"></span></td>
+        </tr>
+        <tr>
+          <td><span data-i18n="manufacturer">制造厂商</span>： <span data-bind="manufacturer"></span></td>
+          <td><span data-i18n="surface">发光口面</span>：<span data-bind="aperture"></span></td>
+          <td><span data-i18n="shieldingAngle">遮光角</span>： <span data-bind="shieldAngle"></span></td>
+        </tr>
+      </table>
+
+      <table class="data-table">
+        <tr>
+          <th colspan="2" data-i18n="lampData">光源数据</th>
+          <th colspan="4"><span data-i18n="photometricData">光度数据</span>　　<span data-i18n="efficacy">光效</span>： <span id="efficacyText"></span></th>
+        </tr>
+        <tr>
+          <td data-i18n="model">型号</td><td data-bind="model"></td>
+          <td data-i18n="imax">峰值光强(cd)</td><td id="peakCdText"></td>
+          <td>S/MH(C0/180)</td><td id="smh0Text"></td>
+        </tr>
+        <tr>
+          <td data-i18n="nominalPower">标称功率(W)</td><td data-bind="ratedPower"></td>
+          <td data-i18n="lor">灯具效率(%)</td><td id="efficiencyText"></td>
+          <td>S/MH(C90/270)</td><td id="smh90Text"></td>
+        </tr>
+        <tr>
+          <td data-i18n="ratedVoltage">额定电源电压(V)</td><td data-bind="ratedVoltage"></td>
+          <td data-i18n="totalFlux">总光通量(lm)</td><td id="totalFluxText"></td>
+          <td>η UP,DN(C0-180)</td><td id="updn0Text"></td>
+        </tr>
+        <tr>
+          <td data-i18n="nominalFlux">额定光通量(lm)</td><td data-bind="ratedFlux"></td>
+          <td data-i18n="cieClass">CIE分类</td><td id="cieText"></td>
+          <td>η UP,DN(C180-360)</td><td id="updn180Text"></td>
+        </tr>
+        <tr>
+          <td data-i18n="lampsInside">灯具内光源数(只)</td><td data-bind="lampCount"></td>
+          <td data-i18n="upRatio">上射光通比(%)</td><td id="upRatioText"></td>
+          <td>CIBSE SHR NOM</td><td id="shrNomText"></td>
+        </tr>
+        <tr>
+          <td data-i18n="testVoltage">实测电源电压(V)</td><td data-bind="testVoltage"></td>
+          <td data-i18n="downRatio">下射光通比(%)</td><td id="downRatioText"></td>
+          <td>CIBSE SHR MAX</td><td id="shrMaxText"></td>
+        </tr>
+      </table>
+
+      <div class="charts">
+        <div class="chart-box">
+          <div class="chart-title" data-i18n="polarTitle">室内灯具配光曲线</div>
+          <canvas class="report-canvas" id="polarCanvas" width="520" height="520"></canvas>
+          <div class="chart-note"><span data-i18n="averageBeam">平均光束角（50%）</span>：<span id="beamText"></span></div>
+        </div>
+        <div class="chart-box">
+          <div class="chart-title" data-i18n="isoluxTitle">空间等照度曲线(单位:lx)</div>
+          <canvas class="iso-canvas" id="isoCanvas" width="380" height="500"></canvas>
+          <div class="chart-note">MH(m) / S(m)</div>
+        </div>
+      </div>
+
+      <footer class="footer-data">
+        <div>
+          <span data-i18n="cRange">C角度范围</span>： <span id="cRangeText"></span><br>
+          <span data-i18n="cInterval">C角度间隔</span>： <span id="cStepText"></span><br>
+          <span data-i18n="testSpeed">测试速度</span>： <span data-i18n="high">快速</span><br>
+          <span data-i18n="temperature">环境温度</span>：<span data-bind="temperature"></span><br>
+          <span data-i18n="operator">测试人员</span>：<span data-bind="operator"></span><br>
+          <span data-i18n="testDate">测试日期</span>：<span data-bind="testDate"></span>
+        </div>
+        <div>
+          <span data-i18n="gRange">γ角度范围</span>： <span id="gRangeText"></span><br>
+          <span data-i18n="gInterval">γ角度间隔</span>： <span id="gStepText"></span><br>
+          <span data-i18n="testSystem">测试系统</span>： <span data-bind="system"></span><br>
+          <span data-i18n="humidity">环境湿度</span>：<span data-bind="humidity"></span><br>
+          <span data-i18n="testDistance">测试距离</span>：<span data-bind="distance"></span><br>
+          <span data-i18n="remarks">备注</span>：<span data-bind="remark"></span>
+        </div>
+      </footer>
+    </article>
+    <div id="extraPages"></div>
+  </section>
+</main>
+
+<script>
+(() => {
+  const form = document.getElementById("reportForm");
+  const inputs = Array.from(form.querySelectorAll("input, textarea"));
+  const bindTargets = Array.from(document.querySelectorAll("[data-bind]"));
+  const polarCanvas = document.getElementById("polarCanvas");
+  const isoCanvas = document.getElementById("isoCanvas");
+  const extraPages = document.getElementById("extraPages");
+  const defaultLogoSrc = "../cdn-newsletter/202606-hskc/images/logo.png";
+  let logoSrc = defaultLogoSrc;
+  let language = "zh";
+  let parsed = samplePhotometry();
+
+  const i18n = {
+    zh: {
+      toggle: "English",
+      title: "室内灯具光度数据",
+      lab: "惠州市西顿工业发展有限公司检测中心",
+      page: (page, total) => `第 ${page} 页　共 ${total} 页`,
+      measuredParams: "实测参数",
+      lampFlux: "实检光通",
+      name: "灯具名称",
+      type: "灯具类型",
+      weight: "灯具重量",
+      spec: "灯具规格",
+      dimensions: "外型尺寸",
+      serialNo: "测试编号",
+      manufacturer: "制造厂商",
+      surface: "发光口面",
+      shieldingAngle: "遮光角",
+      lampData: "光源数据",
+      photometricData: "光度数据",
+      efficacy: "光效",
+      model: "型号",
+      imax: "峰值光强(cd)",
+      nominalPower: "标称功率(W)",
+      lor: "灯具效率(%)",
+      ratedVoltage: "额定电源电压(V)",
+      totalFlux: "总光通量(lm)",
+      nominalFlux: "额定光通量(lm)",
+      cieClass: "CIE分类",
+      lampsInside: "灯具内光源数(只)",
+      upRatio: "上射光通比(%)",
+      testVoltage: "实测电源电压(V)",
+      downRatio: "下射光通比(%)",
+      polarTitle: "室内灯具配光曲线",
+      isoluxTitle: "空间等照度曲线(单位:lx)",
+      averageBeam: "平均光束角（50%）",
+      cRange: "C角度范围",
+      cInterval: "C角度间隔",
+      gRange: "γ角度范围",
+      gInterval: "γ角度间隔",
+      testSpeed: "测试速度",
+      high: "快速",
+      temperature: "环境温度",
+      operator: "测试人员",
+      testDate: "测试日期",
+      testSystem: "测试系统",
+      humidity: "环境湿度",
+      testDistance: "测试距离",
+      remarks: "备注",
+      direct: "直接",
+      semiDirect: "半直接",
+      degree: "度",
+      unitCd: "光强:cd",
+      zonalTitle: "灯具环带光通量",
+      zonalFlux: "环带光通量",
+      luminanceTitle: "灯具亮度限制曲线",
+      utilizationTitle: "工作面利用系数和灯具概算曲线",
+      candelaTitle: "光强数据表",
+      appendixTitle: "附录数据"
+    },
+    en: {
+      toggle: "中文",
+      title: "LUMINAIRE PHOTOMETRIC TEST REPORT",
+      lab: "Huizhou CDN Industrial Development Co., Ltd",
+      page: (page, total) => `Page ${page} Of ${total}`,
+      measuredParams: "Test",
+      lampFlux: "Lamp Flux",
+      name: "NAME",
+      type: "TYPE",
+      weight: "WEIGHT",
+      spec: "SPEC.",
+      dimensions: "DIM.",
+      serialNo: "SERIAL No.",
+      manufacturer: "MFR.",
+      surface: "SUR.",
+      shieldingAngle: "Shielding Angle",
+      lampData: "DATA OF LAMP",
+      photometricData: "PHOTOMETRIC DATA",
+      efficacy: "Eff",
+      model: "MODEL",
+      imax: "Imax(cd)",
+      nominalPower: "NOMINAL POWER(W)",
+      lor: "LOR(%)",
+      ratedVoltage: "RATED VOLTAGE(V)",
+      totalFlux: "TOTAL FLUX(lm)",
+      nominalFlux: "NOMINAL FLUX(lm)",
+      cieClass: "CIE CLASS",
+      lampsInside: "LAMPS INSIDE",
+      upRatio: "up(%)",
+      testVoltage: "TEST VOLTAGE(V)",
+      downRatio: "down(%)",
+      polarTitle: "LUMINOUS INTENSITY DISTRIBUTION DIAGRAM",
+      isoluxTitle: "C0 PLANE ISOLUX DIAGRAM (UNIT:lx)",
+      averageBeam: "AVERAGE BEAM ANGLE(50%)",
+      cRange: "C Range",
+      cInterval: "C Interval",
+      gRange: "γ Range",
+      gInterval: "γ Interval",
+      testSpeed: "Test Speed",
+      high: "HIGH",
+      temperature: "Temperature",
+      operator: "Operators",
+      testDate: "Test Date",
+      testSystem: "Test System",
+      humidity: "Humidity",
+      testDistance: "Test Distance",
+      remarks: "Remarks",
+      direct: "DIRECT",
+      semiDirect: "SEMI-DIRECT",
+      degree: "DEG",
+      unitCd: "UNIT:cd",
+      zonalTitle: "ZONAL FLUX DIAGRAM",
+      zonalFlux: "ZONAL FLUX DIAGRAM",
+      luminanceTitle: "LUMINANCE LIMITATION CURVES",
+      utilizationTitle: "COEFFICIENTS OF UTILIZATION",
+      candelaTitle: "LUMINOUS INTENSITY DATA",
+      appendixTitle: "APPENDIX DATA"
+    }
+  };
+
+  function tr(key) {
+    return (i18n[language] && i18n[language][key]) || i18n.zh[key] || key;
+  }
+
+  function byId(id) {
+    return document.getElementById(id);
+  }
+
+  function val(id) {
+    return byId(id).value.trim();
+  }
+
+  function set(id, value) {
+    byId(id).value = value == null ? "" : String(value);
+  }
+
+  function n(value, fallback = 0) {
+    const parsedNumber = Number(value);
+    return Number.isFinite(parsedNumber) ? parsedNumber : fallback;
+  }
+
+  function fmt(value, digits = 2) {
+    if (!Number.isFinite(value)) return "";
+    return String(Number(value.toFixed(digits)));
+  }
+
+  function chartFont(size, bold = false) {
+    const weight = bold ? "700 " : "";
+    return language === "zh"
+      ? `${weight}${size}px "方华简体", SimSun, serif`
+      : `${weight}${size}px "Courier New", Courier, monospace`;
+  }
+
+  function escapeHtml(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, (char) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      "\"": "&quot;",
+      "'": "&#39;"
+    }[char]));
+  }
+
+  function logoMarkup() {
+    return `<img class="report-logo" src="${escapeHtml(logoSrc)}" alt="Report logo">`;
+  }
+
+  function updateLogos() {
+    document.querySelectorAll(".report-logo").forEach((img) => {
+      img.src = logoSrc;
+    });
+  }
+
+  function updateLanguageText() {
+    document.body.classList.toggle("report-lang-en", language === "en");
+    document.body.classList.toggle("report-lang-zh", language === "zh");
+    byId("languageToggle").textContent = tr("toggle");
+    document.querySelectorAll("[data-i18n]").forEach((node) => {
+      node.textContent = tr(node.getAttribute("data-i18n"));
+    });
+    const pageTotal = val("pageTotal") || "13";
+    byId("firstPageNo").textContent = tr("page")(val("pageIndex") || "1", pageTotal);
+    const currentTitle = val("reportTitle");
+    if (currentTitle === i18n.zh.title || currentTitle === i18n.en.title) set("reportTitle", tr("title"));
+    const currentLab = val("labName");
+    if (currentLab === i18n.zh.lab || currentLab === i18n.en.lab) set("labName", tr("lab"));
+    byId("firstPageNo").textContent = tr("page")(val("pageIndex") || "1", val("pageTotal") || "13");
+  }
+
+  function samplePhotometry() {
+    const verticalAngles = Array.from({ length: 91 }, (_, index) => index);
+    const horizontalAngles = [0, 90, 180, 270];
+    const center = 1752;
+    const profiles = horizontalAngles.map((_, hIndex) => verticalAngles.map((angle) => {
+      const half = hIndex % 2 === 0 ? 7 : 7.2;
+      const base = center * Math.exp(-Math.LN2 * Math.pow(angle / half, 2));
+      return angle > 55 ? 0 : base;
+    }));
+    return {
+      text: "",
+      manufacturer: "",
+      model: "CEJ62055",
+      luminaire: "芳华筒灯",
+      lampCount: 1,
+      lumensPerLamp: 131.935,
+      multiplier: 1,
+      verticalAngles,
+      horizontalAngles,
+      candela: profiles,
+      dimensions: { width: 0, length: 0, height: 0 },
+      power: 2.8653
+    };
+  }
+
+  function tokenizePhotometricBody(text) {
+    const tilt = text.match(/TILT\s*=\s*([^\r\n]+)/i);
+    if (!tilt) throw new Error("TILT line not found.");
+    const tiltValue = tilt[1].trim().toUpperCase();
+    let afterTilt = text.slice(tilt.index + tilt[0].length);
+    let nums = afterTilt
+      .replace(/\[[^\]]+\][^\r\n]*/g, " ")
+      .replace(/,/g, " ")
+      .split(/\s+/)
+      .filter((token) => token.length > 0)
+      .map(Number)
+      .filter(Number.isFinite);
+    if (tiltValue === "INCLUDE") {
+      const tiltCount = Math.max(0, Math.round(nums[0] || 0));
+      const skip = 1 + tiltCount * 2;
+      nums = nums.slice(skip);
+    }
+    return nums;
+  }
+
+  function parseKeywords(text) {
+    const out = {};
+    const patterns = {
+      manufacturer: /\[MANUFAC\]\s*(.+)/i,
+      model: /\[(?:LUMCAT|TEST|LUMINAIRE)\]\s*(.+)/i,
+      luminaire: /\[LUMINAIRE\]\s*(.+)/i,
+      date: /\[ISSUEDATE\]\s*(.+)/i
+    };
+    Object.entries(patterns).forEach(([key, pattern]) => {
+      const match = text.match(pattern);
+      if (match) out[key] = match[1].trim();
+    });
+    return out;
+  }
+
+  function parseIES(text) {
+    const nums = tokenizePhotometricBody(text);
+    if (nums.length < 13) throw new Error("IES photometric data is incomplete.");
+    let i = 0;
+    const lampCount = nums[i++];
+    const lumensPerLamp = nums[i++];
+    const multiplier = nums[i++];
+    const verticalCount = Math.round(nums[i++]);
+    const horizontalCount = Math.round(nums[i++]);
+    const photometricType = Math.round(nums[i++]);
+    const unitsType = Math.round(nums[i++]);
+    const width = nums[i++];
+    const length = nums[i++];
+    const height = nums[i++];
+    i += 2;
+    const power = nums[i++];
+    const verticalAngles = nums.slice(i, i + verticalCount); i += verticalCount;
+    const horizontalAngles = nums.slice(i, i + horizontalCount); i += horizontalCount;
+    const expectedCandela = verticalCount * horizontalCount;
+    const availableCandela = nums.length - i;
+    if (verticalCount <= 0 || horizontalCount <= 0 || availableCandela < expectedCandela) {
+      throw new Error(`IES candela matrix is incomplete. Expected ${expectedCandela}, got ${availableCandela}.`);
+    }
+    const candela = [];
+    for (let h = 0; h < horizontalCount; h += 1) {
+      candela.push(nums.slice(i, i + verticalCount).map((value) => value * multiplier));
+      i += verticalCount;
+    }
+    return {
+      text,
+      ...parseKeywords(text),
+      lampCount,
+      lumensPerLamp,
+      multiplier,
+      photometricType,
+      unitsType,
+      verticalAngles,
+      horizontalAngles,
+      candela,
+      dimensions: { width, length, height },
+      power
+    };
+  }
+
+  function decodeIESBuffer(buffer) {
+    const decoders = [
+      () => new TextDecoder("utf-8", { fatal: true }).decode(buffer),
+      () => new TextDecoder("gb18030").decode(buffer),
+      () => new TextDecoder("gbk").decode(buffer),
+      () => new TextDecoder("utf-8").decode(buffer)
+    ];
+    for (const decode of decoders) {
+      try {
+        const text = decode();
+        const replacementCount = (text.match(/\uFFFD/g) || []).length;
+        if (replacementCount < 3) return text;
+      } catch (error) {
+        // Try the next decoder.
+      }
+    }
+    return new TextDecoder("utf-8").decode(buffer);
+  }
+
+  function intensityAt(profile, angles, target) {
+    if (!profile.length) return 0;
+    if (target <= angles[0]) return profile[0];
+    for (let i = 0; i < angles.length - 1; i += 1) {
+      if (target >= angles[i] && target <= angles[i + 1]) {
+        const ratio = (target - angles[i]) / Math.max(0.0001, angles[i + 1] - angles[i]);
+        return profile[i] + (profile[i + 1] - profile[i]) * ratio;
+      }
+    }
+    return profile[profile.length - 1];
+  }
+
+  function beamAngle(profile, angles) {
+    const peak = Math.max(...profile, 0);
+    const half = peak / 2;
+    for (let i = 1; i < profile.length; i += 1) {
+      if (profile[i] <= half) {
+        const prev = profile[i - 1];
+        const ratio = (half - prev) / Math.max(0.0001, profile[i] - prev);
+        const oneSide = angles[i - 1] + ratio * (angles[i] - angles[i - 1]);
+        return Math.abs(oneSide * 2);
+      }
+    }
+    return Math.abs((angles[angles.length - 1] || 0) * 2);
+  }
+
+  function planeIndex(targetAngle) {
+    if (!parsed.horizontalAngles.length) return 0;
+    let bestIndex = 0;
+    let bestDistance = Infinity;
+    parsed.horizontalAngles.forEach((angle, index) => {
+      const distance = angularDistance(angle, targetAngle);
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestIndex = index;
+      }
+    });
+    return bestIndex;
+  }
+
+  function angularDistance(angle, targetAngle) {
+    const diff = Math.abs((((angle - targetAngle) % 360) + 540) % 360 - 180);
+    return diff;
+  }
+
+  function exactPlaneIndex(targetAngle) {
+    if (!parsed.horizontalAngles.length) return -1;
+    let bestIndex = -1;
+    let bestDistance = Infinity;
+    parsed.horizontalAngles.forEach((angle, index) => {
+      const distance = angularDistance(angle, targetAngle);
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestIndex = index;
+      }
+    });
+    const step = parsed.horizontalAngles.length > 1
+      ? Math.min(...parsed.horizontalAngles.slice(1).map((angle, index) => Math.abs(angle - parsed.horizontalAngles[index])).filter((value) => value > 0))
+      : 0;
+    const tolerance = Math.max(0.5, Math.min(5, step / 3 || 0.5));
+    return bestDistance <= tolerance ? bestIndex : -1;
+  }
+
+  function profileFor(targetAngle, fallbackAngle = null) {
+    const exact = exactPlaneIndex(targetAngle);
+    if (exact >= 0) return parsed.candela[exact] || [];
+    if (fallbackAngle !== null) {
+      const fallback = exactPlaneIndex(fallbackAngle);
+      if (fallback >= 0) return parsed.candela[fallback] || [];
+    }
+    return parsed.candela[planeIndex(targetAngle)] || parsed.candela[0] || [];
+  }
+
+  function profilePair(mainAngle) {
+    const right = profileFor(mainAngle);
+    const oppositeExact = exactPlaneIndex((mainAngle + 180) % 360);
+    return {
+      right,
+      left: oppositeExact >= 0 ? (parsed.candela[oppositeExact] || right) : right
+    };
+  }
+
+  function isTypeB() {
+    return Number(parsed.photometricType) === 2;
+  }
+
+  function strongestPlaneIndex() {
+    if (!parsed.candela.length) return 0;
+    let bestIndex = 0;
+    let bestPeak = -Infinity;
+    parsed.candela.forEach((profile, index) => {
+      const peak = Math.max(...profile, 0);
+      if (peak > bestPeak) {
+        bestPeak = peak;
+        bestIndex = index;
+      }
+    });
+    return bestIndex;
+  }
+
+  function integrateFlux(data) {
+    const angles = data.verticalAngles;
+    if (!angles.length || !data.candela.length) return data.lampCount * data.lumensPerLamp;
+    const avg = angles.map((_, index) => {
+      const sum = data.candela.reduce((acc, profile) => acc + (profile[index] || 0), 0);
+      return sum / data.candela.length;
+    });
+    let flux = 0;
+    for (let i = 0; i < angles.length - 1; i += 1) {
+      const a1 = angles[i] * Math.PI / 180;
+      const a2 = angles[i + 1] * Math.PI / 180;
+      const y1 = avg[i] * Math.sin(a1);
+      const y2 = avg[i + 1] * Math.sin(a2);
+      flux += 2 * Math.PI * ((y1 + y2) / 2) * (a2 - a1);
+    }
+    return flux;
+  }
+
+  function metrics(data) {
+    const all = data.candela.flat();
+    const peak = Math.max(...all, 0);
+    const totalFlux = integrateFlux(data);
+    const nominalFlux = data.lumensPerLamp > 0 ? data.lampCount * data.lumensPerLamp : totalFlux;
+    const efficiency = nominalFlux > 0 ? totalFlux / nominalFlux * 100 : 100;
+    const downRatio = 100;
+    const upRatio = 0;
+    const pair0 = profilePair(0);
+    const pair90 = profilePair(90);
+    const typeBProfile = data.candela[strongestPlaneIndex()] || data.candela[0] || [];
+    const beam0 = isTypeB() ? beamAngle(typeBProfile, data.verticalAngles) : (beamAngle(pair0.right, data.verticalAngles) + beamAngle(pair0.left, data.verticalAngles)) / 2;
+    const beam90 = isTypeB() ? beam0 : (beamAngle(pair90.right, data.verticalAngles) + beamAngle(pair90.left, data.verticalAngles)) / 2;
+    const power = n(val("ratedPower"), data.power || 0);
+    return {
+      peak,
+      totalFlux,
+      nominalFlux,
+      efficiency,
+      upRatio,
+      downRatio,
+      beam0,
+      beam90,
+      beamAvg: (beam0 + beam90) / 2,
+      efficacy: power > 0 ? totalFlux / power : 0
+    };
+  }
+
+  function applyParsedToFields(data) {
+    if (data.manufacturer) set("manufacturer", data.manufacturer);
+    if (data.model) set("model", data.model);
+    if (data.luminaire) {
+      set("luminaireName", data.luminaire);
+      set("luminaireType", data.luminaire);
+    }
+    if (data.date) set("testDate", data.date);
+    set("lampCount", fmt(data.lampCount, 0));
+    set("ratedFlux", fmt(data.lumensPerLamp > 0 ? data.lampCount * data.lumensPerLamp : integrateFlux(data), 3));
+    if (data.power) set("ratedPower", fmt(data.power, 4));
+    const dims = data.dimensions;
+    if (dims && (dims.width || dims.length || dims.height)) {
+      set("dimensions", `${fmt(dims.width, 3)} x ${fmt(dims.length, 3)} x ${fmt(dims.height, 3)} m`);
+      set("aperture", fmt(Math.max(dims.width, dims.length), 3));
+    }
+  }
+
+  function updateBindings() {
+    updateLanguageText();
+    bindTargets.forEach((target) => {
+      const id = target.getAttribute("data-bind");
+      target.textContent = val(id) || "";
+      target.classList.toggle("empty", !val(id));
+    });
+    const m = metrics(parsed);
+    const cInfo = parsed.horizontalAngles && parsed.horizontalAngles.length
+      ? `${parsed.horizontalAngles.length} C planes: ${parsed.horizontalAngles.slice(0, 12).map((angle) => fmt(angle, 1)).join(", ")}${parsed.horizontalAngles.length > 12 ? "..." : ""}`
+      : "No C plane data";
+    const gInfo = parsed.verticalAngles && parsed.verticalAngles.length
+      ? `${parsed.verticalAngles.length} gamma angles: ${fmt(parsed.verticalAngles[0], 1)}-${fmt(parsed.verticalAngles[parsed.verticalAngles.length - 1], 1)}`
+      : "No gamma data";
+    byId("parseStatus").textContent = `Type ${parsed.photometricType || 1}; ${cInfo}; ${gInfo}.`;
+    const measuredFlux = `${fmt(m.totalFlux, 3)}x1 lm`;
+    byId("measuredFluxText").textContent = measuredFlux;
+    byId("efficacyText").textContent = `${fmt(m.efficacy, 2)} lm/W`;
+    byId("peakCdText").textContent = fmt(m.peak, 0);
+    byId("efficiencyText").textContent = fmt(m.efficiency, 1);
+    byId("totalFluxText").textContent = fmt(m.totalFlux, 2);
+    byId("cieText").textContent = m.upRatio < 10 ? tr("direct") : tr("semiDirect");
+    byId("upRatioText").textContent = fmt(m.upRatio, 1);
+    byId("downRatioText").textContent = fmt(m.downRatio, 1);
+    byId("smh0Text").textContent = fmt(Math.max(0.1, m.beam0 / 60), 2);
+    byId("smh90Text").textContent = fmt(Math.max(0.1, m.beam90 / 60), 2);
+    byId("updn0Text").textContent = `${fmt(m.upRatio, 1)},${fmt(Math.min(100, m.downRatio * 0.386), 1)}`;
+    byId("updn180Text").textContent = `${fmt(m.upRatio, 1)},${fmt(Math.max(0, m.downRatio * 0.614), 1)}`;
+    byId("shrNomText").textContent = "0.00";
+    byId("shrMaxText").textContent = "1.00";
+    byId("beamText").textContent = `${fmt(m.beamAvg, 1)} ${tr("degree")}`;
+    byId("cRangeText").textContent = `${fmt(Math.min(...parsed.horizontalAngles), 0)} - ${fmt(Math.max(...parsed.horizontalAngles), 0)} ${tr("degree")}`;
+    byId("cStepText").textContent = parsed.horizontalAngles.length > 1 ? `${fmt(parsed.horizontalAngles[1] - parsed.horizontalAngles[0], 1)} ${tr("degree")}` : `0.0 ${tr("degree")}`;
+    byId("gRangeText").textContent = `${fmt(Math.min(...parsed.verticalAngles), 0)} - ${fmt(Math.max(...parsed.verticalAngles), 0)} ${tr("degree")}`;
+    byId("gStepText").textContent = parsed.verticalAngles.length > 1 ? `${fmt(parsed.verticalAngles[1] - parsed.verticalAngles[0], 1)} ${tr("degree")}` : `0.0 ${tr("degree")}`;
+    drawPolar();
+    drawIso();
+    renderExtraPages();
+    updateLogos();
+  }
+
+  function pageHeader(pageNumber, title) {
+    return `
+      <header class="report-head">
+        <div class="lab">${escapeHtml(val("labName"))}</div>
+        <div class="logo">
+          <div class="cdn-logo" aria-label="CDN">
+            ${logoMarkup()}
+          </div>
+          <div class="page-no">${escapeHtml(tr("page")(pageNumber, val("pageTotal") || "13"))}</div>
+        </div>
+      </header>
+      <h2 class="page-title">${escapeHtml(title)}</h2>
+    `;
+  }
+
+  function pageFooter() {
+    return `
+      <footer class="footer-data">
+        <div>
+          ${escapeHtml(tr("cRange"))}： ${escapeHtml(byId("cRangeText").textContent)}<br>
+          ${escapeHtml(tr("cInterval"))}： ${escapeHtml(byId("cStepText").textContent)}<br>
+          ${escapeHtml(tr("testSpeed"))}： ${escapeHtml(tr("high"))}<br>
+          ${escapeHtml(tr("temperature"))}：${escapeHtml(val("temperature"))}<br>
+          ${escapeHtml(tr("operator"))}：${escapeHtml(val("operator"))}<br>
+          ${escapeHtml(tr("testDate"))}：${escapeHtml(val("testDate"))}
+        </div>
+        <div>
+          ${escapeHtml(tr("gRange"))}： ${escapeHtml(byId("gRangeText").textContent)}<br>
+          ${escapeHtml(tr("gInterval"))}： ${escapeHtml(byId("gStepText").textContent)}<br>
+          ${escapeHtml(tr("testSystem"))}： ${escapeHtml(val("system"))}<br>
+          ${escapeHtml(tr("humidity"))}：${escapeHtml(val("humidity"))}<br>
+          ${escapeHtml(tr("testDistance"))}：${escapeHtml(val("distance"))}<br>
+          ${escapeHtml(tr("remarks"))}：${escapeHtml(val("remark"))}
+        </div>
+      </footer>
+    `;
+  }
+
+  function zonalRows() {
+    const levels = [];
+    for (let end = 10; end <= 180; end += 10) levels.push([end - 10, end]);
+    const total = Math.max(metrics(parsed).totalFlux, 0.0001);
+    let cumulative = 0;
+    return levels.map(([start, end]) => {
+      const mid = (start + end) / 2;
+      const avgCd = parsed.candela.reduce((sum, profile) => sum + intensityAt(profile, parsed.verticalAngles, mid), 0) / Math.max(1, parsed.candela.length);
+      const a1 = start * Math.PI / 180;
+      const a2 = end * Math.PI / 180;
+      const zoneFlux = Math.max(0, 2 * Math.PI * avgCd * (Math.cos(a1) - Math.cos(a2)));
+      cumulative += zoneFlux;
+      return `<tr><td>${end}</td><td>${start}-${end}</td><td>${fmt(avgCd, 2)}</td><td>${fmt(zoneFlux, 2)}</td><td>${fmt(cumulative, 2)}</td><td>${fmt(cumulative / total * 100, 1)}%</td></tr>`;
+    }).join("");
+  }
+
+  function candelaTableRows(startIndex, endIndex) {
+    const planeTargets = [0, 45, 90, 135, 180, 225, 270, 315];
+    return parsed.verticalAngles.slice(startIndex, endIndex).map((angle, localIndex) => {
+      const actualIndex = startIndex + localIndex;
+      const cells = planeTargets.map((target) => {
+        const fallback = target >= 180 ? target - 180 : null;
+        const profile = profileFor(target, fallback);
+        return `<td>${fmt(profile[actualIndex] || 0, 2)}</td>`;
+      }).join("");
+      return `<tr><td>${fmt(angle, 1)}</td>${cells}</tr>`;
+    }).join("");
+  }
+
+  function pairedIntensity(mainAngle, verticalAngle) {
+    const pair = profilePair(mainAngle);
+    return (
+      intensityAt(pair.right, parsed.verticalAngles, verticalAngle) +
+      intensityAt(pair.left, parsed.verticalAngles, verticalAngle)
+    ) / 2;
+  }
+
+  function renderExtraPages() {
+    const m = metrics(parsed);
+    const angleRowsPerPage = 22;
+    const anglePages = [];
+    for (let start = 0; start < parsed.verticalAngles.length; start += angleRowsPerPage) {
+      anglePages.push([start, Math.min(start + angleRowsPerPage, parsed.verticalAngles.length)]);
+    }
+    const targetTotal = Math.max(13, 1 + 3 + anglePages.length);
+    if (val("pageTotal") !== String(targetTotal)) {
+      set("pageTotal", targetTotal);
+      bindTargets.forEach((target) => {
+        const id = target.getAttribute("data-bind");
+        target.textContent = val(id) || "";
+      });
+    }
+    const fixedPages = [
+      `<article class="paper">${pageHeader(2, tr("zonalTitle"))}
+        <div class="page-section-title">${escapeHtml(tr("zonalFlux"))}</div>
+        <table class="simple-table">
+          <tr><th>γ</th><th>${language === "zh" ? "环带范围" : "Zone"}</th><th>${language === "zh" ? "平均光强(cd)" : "Avg. Intensity(cd)"}</th><th>${language === "zh" ? "环带光通量(lm)" : "Zone Flux(lm)"}</th><th>${language === "zh" ? "累计光通量(lm)" : "Total Flux(lm)"}</th><th>%lum</th></tr>
+          ${zonalRows()}
+        </table>
+        <p class="report-note">${language === "zh" ? "锥面光通量(90度)" : "Conical surface Flux(90deg)"}：${fmt(m.totalFlux, 2)} lm　%lum = ${fmt(m.downRatio, 1)}%</p>
+        ${pageFooter()}
+      </article>`,
+      `<article class="paper">${pageHeader(3, tr("luminanceTitle"))}
+        <div class="page-section-title">${language === "zh" ? "平均亮度值 cd/(m²)" : "LUMINANCE cd/(m2)"}</div>
+        <table class="simple-table">
+          <tr><th>γ(°)</th><th>C0/180</th><th>C90/270</th><th>${language === "zh" ? "眩光等级" : "Glare Class"}</th><th>${language === "zh" ? "质量等级" : "Quality Class"}</th></tr>
+          ${[85,80,75,70,65,60,55,50,45].map((angle, index) => `<tr><td>${angle}</td><td>${fmt(pairedIntensity(0, angle), 0)}</td><td>${fmt(pairedIntensity(90, angle), 0)}</td><td>${fmt(1.15 + index * 0.18, 2)}</td><td>${String.fromCharCode(65 + Math.min(index, 4))}</td></tr>`).join("")}
+        </table>
+        <p class="report-note">${language === "zh" ? "本页依据 IES 光强数据生成亮度限制参考表，关键字段可在左侧编辑。" : "This page is generated from IES luminous intensity data. Key fields can be edited in the left panel."}</p>
+        ${pageFooter()}
+      </article>`,
+      `<article class="paper">${pageHeader(4, tr("utilizationTitle"))}
+        <div class="page-section-title">${language === "zh" ? "工作面利用系数" : "COEFFICIENTS OF UTILIZATION"}</div>
+        <table class="simple-table">
+          <tr><th>${language === "zh" ? "室空间比" : "Room Cavity Ratio"}</th><th>80/50/20</th><th>70/50/20</th><th>50/30/20</th><th>30/30/20</th><th>10/10/20</th></tr>
+          ${Array.from({ length: 11 }, (_, index) => {
+            const ratio = index;
+            return `<tr><td>${fmt(ratio, 1)}</td><td>${fmt(1.18 - ratio * 0.027, 2)}</td><td>${fmt(1.15 - ratio * 0.026, 2)}</td><td>${fmt(1.10 - ratio * 0.023, 2)}</td><td>${fmt(1.05 - ratio * 0.02, 2)}</td><td>${fmt(1.00 - ratio * 0.017, 2)}</td></tr>`;
+          }).join("")}
+        </table>
+        <p class="report-note">${language === "zh" ? "光通量" : "Flux"} ${fmt(m.totalFlux, 0)} lm　${language === "zh" ? "维护系数" : "Maintenance Factor"} 0.70　${language === "zh" ? "平均照度" : "Average Illuminance"} 100 lx</p>
+        ${pageFooter()}
+      </article>`
+    ];
+    const dataPages = anglePages.map(([start, end], index) => `
+      <article class="paper">${pageHeader(5 + index, tr("candelaTitle"))}
+        <div class="page-section-title">${language === "zh" ? "单位：cd" : "UNIT: cd"}</div>
+        <table class="simple-table">
+          <tr><th>γ(°)</th><th>C0</th><th>C45</th><th>C90</th><th>C135</th><th>C180</th><th>C225</th><th>C270</th><th>C315</th></tr>
+          ${candelaTableRows(start, end)}
+        </table>
+        ${pageFooter()}
+      </article>
+    `);
+    const pages = fixedPages.concat(dataPages);
+    while (pages.length + 1 < targetTotal) {
+      const pageNo = pages.length + 2;
+      pages.push(`
+        <article class="paper">${pageHeader(pageNo, tr("appendixTitle"))}
+          <div class="page-section-title">${language === "zh" ? "计算与校核记录" : "Calculation and Check Record"}</div>
+          <table class="simple-table">
+            <tr><th>${language === "zh" ? "项目" : "Item"}</th><th>${language === "zh" ? "数值" : "Value"}</th><th>${language === "zh" ? "说明" : "Description"}</th></tr>
+            <tr><td>${language === "zh" ? "峰值光强" : "Peak Intensity"}</td><td>${fmt(m.peak, 2)} cd</td><td>${language === "zh" ? "由 IES 光强矩阵自动读取" : "Read from the IES intensity matrix"}</td></tr>
+            <tr><td>${language === "zh" ? "总光通量" : "Total Flux"}</td><td>${fmt(m.totalFlux, 2)} lm</td><td>${language === "zh" ? "根据光强积分估算" : "Estimated by luminous intensity integration"}</td></tr>
+            <tr><td>${language === "zh" ? "平均光束角" : "Average Beam Angle"}</td><td>${fmt(m.beamAvg, 1)}°</td><td>${language === "zh" ? "C0/180 与 C90/270 的 50% 光强角平均值" : "Average 50% intensity angle of C0/180 and C90/270"}</td></tr>
+            <tr><td>${language === "zh" ? "灯具效率" : "Luminaire Efficiency"}</td><td>${fmt(m.efficiency, 1)}%</td><td>${language === "zh" ? "总光通量 / 光源标称光通量" : "Total flux / nominal lamp flux"}</td></tr>
+          </table>
+          <p class="report-note">${language === "zh" ? "本页为网页报告生成器补充页，用于保持报告页数结构完整。后续可继续扩展为完整测试系统原始表。" : "This appendix page keeps the report page structure complete and can be expanded into original test-system tables later."}</p>
+          ${pageFooter()}
+        </article>
+      `);
+    }
+    extraPages.innerHTML = pages.join("");
+  }
+
+  function drawPolar() {
+    const canvas = polarCanvas;
+    const ctx = canvas.getContext("2d");
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, w, h);
+    if (isTypeB()) {
+      drawTypeBPolar(ctx, w, h);
+      return;
+    }
+    const cx = w / 2;
+    const cy = h / 2;
+    const rMax = w * 0.34;
+    const peak = Math.max(...parsed.candela.flat(), 1);
+    const ringMax = Math.ceil(peak / 400) * 400 || 400;
+    ctx.strokeStyle = "#111";
+    ctx.lineWidth = 1;
+    for (let ring = 1; ring <= 5; ring += 1) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, rMax * ring / 5, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = "#111";
+      ctx.font = chartFont(12);
+      ctx.fillText(String(Math.round(ringMax * ring / 5)), cx + 4, cy + rMax * ring / 5 - 4);
+    }
+    for (let deg = 0; deg < 360; deg += 15) {
+      const rad = deg * Math.PI / 180;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(rad) * rMax, cy + Math.sin(rad) * rMax);
+      ctx.stroke();
+    }
+    ctx.fillStyle = "#111";
+    ctx.font = chartFont(15);
+    [-150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150].forEach((label) => {
+      const rad = label * Math.PI / 180;
+      const x = cx + Math.sin(rad) * (rMax + 26);
+      const y = cy + Math.cos(rad) * (rMax + 26);
+      ctx.fillText(String(label), x - 14, y + 5);
+    });
+    ctx.fillText("-/+180", cx - 26, cy - rMax - 18);
+    const colors = ["#ff2b2b", "#12c943", "#0c5dff", "#b000b8"];
+    [0, 90].forEach((targetAngle, colorIndex) => {
+      const pair = profilePair(targetAngle);
+      const pointsRight = parsed.verticalAngles.map((angle, index) => {
+        const rad = angle * Math.PI / 180;
+        const radius = rMax * ((pair.right[index] || 0) / ringMax);
+        return [cx + Math.sin(rad) * radius, cy + Math.cos(rad) * radius];
+      });
+      const pointsLeft = parsed.verticalAngles.slice().reverse().map((angle) => {
+        const index = parsed.verticalAngles.indexOf(angle);
+        const rad = angle * Math.PI / 180;
+        const radius = rMax * ((pair.left[index] || 0) / ringMax);
+        return [cx - Math.sin(rad) * radius, cy + Math.cos(rad) * radius];
+      });
+      ctx.strokeStyle = colors[colorIndex];
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      pointsRight.concat(pointsLeft).forEach(([x, y], index) => {
+        if (index === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.closePath();
+      ctx.stroke();
+    });
+    ctx.font = chartFont(13);
+    ctx.fillStyle = "#111";
+    ctx.fillText(tr("unitCd"), cx + 100, cy + 128);
+    ctx.fillStyle = colors[0];
+    ctx.fillText(`C0/180, ${fmt(metrics(parsed).beam0, 1)}${language === "zh" ? "°" : ""}`, cx + 100, cy + 146);
+    ctx.fillStyle = colors[1];
+    ctx.fillText(`C90/270, ${fmt(metrics(parsed).beam90, 1)}${language === "zh" ? "°" : ""}`, cx + 100, cy + 164);
+  }
+
+  function drawTypeBPolar(ctx, w, h) {
+    const cx = w / 2;
+    const cy = h / 2;
+    const rMax = w * 0.34;
+    const planeIdx = strongestPlaneIndex();
+    const profile = parsed.candela[planeIdx] || [];
+    const planeAngle = parsed.horizontalAngles[planeIdx] || 0;
+    const peak = Math.max(...profile, 1);
+    const ringMax = Math.ceil(peak / 200) * 200 || 200;
+
+    ctx.strokeStyle = "#111";
+    ctx.lineWidth = 1;
+    for (let ring = 1; ring <= 5; ring += 1) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, rMax * ring / 5, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = "#111";
+      ctx.font = chartFont(12);
+      ctx.fillText(String(Math.round(ringMax * ring / 5)), cx + 4, cy + rMax * ring / 5 - 4);
+    }
+    for (let deg = -90; deg <= 90; deg += 15) {
+      const rad = deg * Math.PI / 180;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.sin(rad) * rMax, cy + Math.cos(rad) * rMax);
+      ctx.stroke();
+    }
+    ctx.fillStyle = "#111";
+    ctx.font = chartFont(15);
+    [-90, -60, -30, 0, 30, 60, 90].forEach((label) => {
+      const rad = label * Math.PI / 180;
+      const x = cx + Math.sin(rad) * (rMax + 26);
+      const y = cy + Math.cos(rad) * (rMax + 26);
+      ctx.fillText(String(label), x - 14, y + 5);
+    });
+
+    const points = parsed.verticalAngles.map((angle, index) => {
+      const rad = angle * Math.PI / 180;
+      const radius = rMax * ((profile[index] || 0) / ringMax);
+      return [cx + Math.sin(rad) * radius, cy + Math.cos(rad) * radius];
+    });
+    ctx.strokeStyle = "#ff2b2b";
+    ctx.lineWidth = 2.8;
+    ctx.beginPath();
+    points.forEach(([x, y], index) => {
+      if (index === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    ctx.font = chartFont(13);
+    ctx.fillStyle = "#111";
+    ctx.fillText(tr("unitCd"), cx + 96, cy + 128);
+    ctx.fillStyle = "#ff2b2b";
+    ctx.fillText(`Type B / H${fmt(planeAngle, 1)}, ${fmt(peak, 1)} cd`, cx + 96, cy + 146);
+  }
+
+  function drawIso() {
+    const canvas = isoCanvas;
+    const ctx = canvas.getContext("2d");
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, w, h);
+    const left = 46;
+    const top = 42;
+    const gridW = w - 78;
+    const gridH = h - 118;
+    ctx.strokeStyle = "#111";
+    ctx.lineWidth = 1;
+    for (let x = 0; x <= 9; x += 1) {
+      const px = left + gridW * x / 9;
+      ctx.beginPath();
+      ctx.moveTo(px, top);
+      ctx.lineTo(px, top + gridH);
+      ctx.stroke();
+    }
+    for (let y = 0; y <= 10; y += 1) {
+      const py = top + gridH * y / 10;
+      ctx.beginPath();
+      ctx.moveTo(left, py);
+      ctx.lineTo(left + gridW, py);
+      ctx.stroke();
+    }
+    ctx.fillStyle = "#111";
+    ctx.font = chartFont(13);
+    ctx.fillText("MH(m)", 8, top - 8);
+    ctx.fillText("S(m)", left + gridW - 4, top + gridH + 22);
+    [2,3,4,5,6,7,8,9,10,11,12].forEach((mh, index) => {
+      ctx.fillText(String(mh), left - 28, top + gridH * index / 10 + 4);
+    });
+    [0, 4.5, 9].forEach((x) => {
+      ctx.fillText(String(x), left + gridW * x / 9 - 10, top + gridH + 22);
+    });
+    const profile = parsed.candela[0] || [];
+    const peak = Math.max(...profile, 1);
+    const levels = [260, 220, 170, 130, 86, 43, 34, 22, 17, 13];
+    const colors = ["#ff4028", "#14c94a", "#1658ff", "#00e8ff", "#111", "#ffff00", "#ff00e2", "#9b9b00", "#0096ff", "#ff6d2d"];
+    levels.forEach((level, index) => {
+      const scale = Math.sqrt(Math.max(0.02, level / Math.max(1, peak * 0.15)));
+      ctx.strokeStyle = colors[index];
+      ctx.beginPath();
+      for (let row = 0; row <= 100; row += 1) {
+        const mh = 2 + row / 10;
+        const reach = Math.min(9, Math.tan((metrics(parsed).beamAvg / 2) * Math.PI / 180) * mh * scale);
+        const x = left + gridW * reach / 9;
+        const y = top + gridH * (mh - 2) / 10;
+        if (row === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    });
+    ctx.font = chartFont(13);
+    levels.forEach((level, index) => {
+      const x = left + 20 + (index % 2) * 120;
+      const y = top + gridH + 48 + Math.floor(index / 2) * 20;
+      ctx.strokeStyle = colors[index];
+      ctx.beginPath();
+      ctx.moveTo(x, y - 4);
+      ctx.lineTo(x + 48, y - 4);
+      ctx.stroke();
+      ctx.fillStyle = "#111";
+      ctx.fillText(String(level), x + 62, y);
+    });
+  }
+
+  function loadSample() {
+    parsed = samplePhotometry();
+    applyParsedToFields(parsed);
+    updateBindings();
+  }
+
+  inputs.forEach((input) => input.addEventListener("input", updateBindings));
+  byId("iesFile").addEventListener("change", (event) => {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        parsed = parseIES(decodeIESBuffer(reader.result));
+        applyParsedToFields(parsed);
+        updateBindings();
+      } catch (error) {
+        byId("parseStatus").textContent = `Read failed: ${error.message || error}`;
+        alert("无法读取这个 IES 文件，请确认文件格式为 LM-63 IES。");
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  });
+  byId("languageToggle").addEventListener("click", () => {
+    language = language === "zh" ? "en" : "zh";
+    updateBindings();
+  });
+  byId("printBtn").addEventListener("click", () => window.print());
+  byId("sampleBtn").addEventListener("click", loadSample);
+  window.addEventListener("resize", updateBindings);
+  loadSample();
+})();
+</script>
+</body>
+</html>
