@@ -763,19 +763,76 @@
     return false;
   }
 
-  function integrateFlux(data) {
-    const angles = data.verticalAngles;
-    if (!angles.length || !data.candela.length) return Math.max(0, data.lampCount * data.lumensPerLamp);
-    const avg = angles.map((_, index) => data.candela.reduce((sum, profile) => sum + (profile[index] || 0), 0) / data.candela.length);
-    let flux = 0;
-    for (let i = 0; i < angles.length - 1; i += 1) {
-      const a1 = Math.abs(angles[i]) * Math.PI / 180;
-      const a2 = Math.abs(angles[i + 1]) * Math.PI / 180;
-      const y1 = avg[i] * Math.sin(a1);
-      const y2 = avg[i + 1] * Math.sin(a2);
-      flux += 2 * Math.PI * Math.abs(((y1 + y2) / 2) * (a2 - a1));
+  function normalizeDegrees(angle) {
+    return ((angle % 360) + 360) % 360;
+  }
+
+  function nearlyEqual(a, b, tolerance = 0.001) {
+    return Math.abs(a - b) <= tolerance;
+  }
+
+  function integrateProfileByVerticalAngle(verticalAnglesData, profile) {
+    if (!verticalAnglesData.length || !profile.length) return 0;
+    const pairs = verticalAnglesData
+      .map((angle, index) => ({ angle, value: Math.max(0, profile[index] || 0) }))
+      .sort((a, b) => a.angle - b.angle);
+    let integral = 0;
+    for (let i = 0; i < pairs.length - 1; i += 1) {
+      const a1 = Math.abs(pairs[i].angle) * Math.PI / 180;
+      const a2 = Math.abs(pairs[i + 1].angle) * Math.PI / 180;
+      const y1 = pairs[i].value * Math.sin(a1);
+      const y2 = pairs[i + 1].value * Math.sin(a2);
+      integral += Math.abs(((y1 + y2) / 2) * (a2 - a1));
     }
-    return flux;
+    return integral;
+  }
+
+  function integrateAngularSeries(pairs, closeCircle = false) {
+    if (pairs.length < 2) return 0;
+    let integral = 0;
+    for (let i = 0; i < pairs.length - 1; i += 1) {
+      const delta = Math.abs(pairs[i + 1].angle - pairs[i].angle) * Math.PI / 180;
+      integral += ((pairs[i].value + pairs[i + 1].value) / 2) * delta;
+    }
+    if (closeCircle) {
+      const delta = Math.abs((pairs[0].angle + 360) - pairs[pairs.length - 1].angle) * Math.PI / 180;
+      integral += ((pairs[pairs.length - 1].value + pairs[0].value) / 2) * delta;
+    }
+    return integral;
+  }
+
+  function integrateFlux(data) {
+    if (!data.verticalAngles.length || !data.candela.length) {
+      return Math.max(0, data.lampCount * data.lumensPerLamp);
+    }
+
+    const planeIntegrals = data.candela.map((profile) => integrateProfileByVerticalAngle(data.verticalAngles, profile));
+    if (data.horizontalAngles.length <= 1) return 2 * Math.PI * (planeIntegrals[0] || 0);
+
+    const pairs = data.horizontalAngles
+      .map((angle, index) => ({
+        angle: data.photometricType === 1 ? normalizeDegrees(angle) : angle,
+        value: planeIntegrals[index] || 0
+      }))
+      .sort((a, b) => a.angle - b.angle)
+      .filter((item, index, array) => index === 0 || !nearlyEqual(item.angle, array[index - 1].angle));
+
+    if (pairs.length <= 1) return 2 * Math.PI * (pairs[0]?.value || 0);
+
+    const first = pairs[0].angle;
+    const last = pairs[pairs.length - 1].angle;
+    const span = Math.max(0.001, Math.abs(last - first));
+    const openIntegral = integrateAngularSeries(pairs, false);
+
+    if (data.photometricType === 1) {
+      if (span >= 359.999) return openIntegral;
+      if (nearlyEqual(first, 0) && last >= 270) return integrateAngularSeries(pairs, true);
+      if (nearlyEqual(first, 0) && nearlyEqual(last, 90)) return openIntegral * 4;
+      if (nearlyEqual(first, 0) && nearlyEqual(last, 180)) return openIntegral * 2;
+      return openIntegral * (360 / span);
+    }
+
+    return openIntegral * (360 / span);
   }
 
   function setBeamLocked(locked) {
@@ -974,15 +1031,42 @@
     update();
   }
 
-  function beamAngleFromProfile(profile, angles) {
-    const peak = Math.max(...profile, 0);
-    const half = peak / 2;
-    for (let i = 1; i < profile.length; i += 1) {
-      if (profile[i] <= half) {
-        return Math.abs((angles[i] || 0) * 2);
+  function interpolateHalfAngle(p1, p2, half) {
+    const delta = p2.value - p1.value;
+    if (Math.abs(delta) < 0.000001) return p2.angle;
+    const ratio = (half - p1.value) / delta;
+    return p1.angle + (p2.angle - p1.angle) * ratio;
+  }
+
+  function beamAngleFromCurvePoints(points) {
+    const usable = points
+      .filter((point) => Number.isFinite(point.angle) && Number.isFinite(point.value))
+      .sort((a, b) => a.angle - b.angle);
+    if (usable.length < 2) return 0;
+    const peakValue = Math.max(...usable.map((point) => point.value), 0);
+    if (peakValue <= 0) return 0;
+    const peakIndex = usable.findIndex((point) => point.value === peakValue);
+    const half = peakValue / 2;
+    let leftAngle = usable[0].angle;
+    let rightAngle = usable[usable.length - 1].angle;
+
+    for (let i = peakIndex; i > 0; i -= 1) {
+      if (usable[i - 1].value <= half) {
+        leftAngle = interpolateHalfAngle(usable[i - 1], usable[i], half);
+        break;
       }
     }
-    return Math.abs((angles[angles.length - 1] || 0) * 2);
+    for (let i = peakIndex; i < usable.length - 1; i += 1) {
+      if (usable[i + 1].value <= half) {
+        rightAngle = interpolateHalfAngle(usable[i], usable[i + 1], half);
+        break;
+      }
+    }
+    return Math.max(0, Math.abs(rightAngle - leftAngle));
+  }
+
+  function beamAngleFromProfile(profile, angles) {
+    return beamAngleFromCurvePoints(angles.map((angle, index) => ({ angle, value: profile[index] || 0 })));
   }
 
   function applyUploadedFields(data) {
@@ -998,8 +1082,8 @@
     fields.width.value = formatNumber(data.width || 0, 4);
     fields.height.value = formatNumber(data.height || 0, 4);
     fields.power.value = formatNumber(data.power || 0, 4);
-    const mainProfile = data.candela[strongestPlaneIndex(data)] || [];
-    fields.beamAngle.value = formatNumber(beamAngleFromProfile(mainProfile, data.verticalAngles), 2);
+    const beamCurve = buildUploadedCurves(data)[0] || { points: [] };
+    fields.beamAngle.value = formatNumber(beamAngleFromCurvePoints(beamCurve.points), 2);
     const asymmetric = isAsymmetric(data);
     const typeName = data.photometricType === 1 ? "Type C" : data.photometricType === 2 ? "Type B" : `Type ${data.photometricType}`;
     const hRange = `${formatNumber(data.horizontalAngles[0], 1)} to ${formatNumber(data.horizontalAngles[data.horizontalAngles.length - 1], 1)}`;
@@ -1061,14 +1145,35 @@
       angle: Math.abs(angle),
       value: aProfile[index] || 0
     }));
-    const backward = data.verticalAngles.slice().reverse().map((angle) => {
-      const index = data.verticalAngles.indexOf(angle);
-      return {
+    const backward = data.verticalAngles
+      .map((angle, index) => ({
         angle: -Math.abs(angle),
         value: bProfile[index] || 0
-      };
-    });
+      }))
+      .reverse();
     return { label, color, points: backward.concat(forward) };
+  }
+
+  function typeBAngleForDisplay(angle, angles) {
+    if (!angles.length) return angle;
+    const min = Math.min(...angles);
+    const max = Math.max(...angles);
+    if (min >= -0.001 && max <= 180.001 && (max - min) > 120) return angle - 90;
+    return angle;
+  }
+
+  function typeBPlaneTarget(data) {
+    const min = Math.min(...data.horizontalAngles);
+    const max = Math.max(...data.horizontalAngles);
+    if (min >= -0.001 && max <= 180.001 && data.horizontalAngles.some((angle) => nearlyEqual(angle, 90))) return 90;
+    return 0;
+  }
+
+  function typeBVerticalTarget(data) {
+    const min = Math.min(...data.verticalAngles);
+    const max = Math.max(...data.verticalAngles);
+    if (min >= -0.001 && max <= 180.001 && data.verticalAngles.some((angle) => nearlyEqual(angle, 90))) return 90;
+    return 0;
   }
 
   function typeBCurveFromPlane(data, planeTarget, label, color) {
@@ -1078,7 +1183,7 @@
       label: `${label} H${formatNumber(data.horizontalAngles[hIndex], 1)}`,
       color,
       points: data.verticalAngles.map((angle, index) => ({
-        angle,
+        angle: typeBAngleForDisplay(angle, data.verticalAngles),
         value: profile[index] || 0
       }))
     };
@@ -1090,7 +1195,7 @@
       label: `${label} V${formatNumber(data.verticalAngles[vIndex], 1)}`,
       color,
       points: data.horizontalAngles.map((angle, index) => ({
-        angle,
+        angle: typeBAngleForDisplay(angle, data.horizontalAngles),
         value: (data.candela[index] || [])[vIndex] || 0
       }))
     };
@@ -1099,14 +1204,32 @@
   function buildUploadedCurves(data) {
     if (data.photometricType === 2) {
       return [
-        typeBCurveFromPlane(data, 0, "main vertical", "#ff2b2b"),
-        typeBCurveAcrossPlanes(data, 0, "main horizontal", "#58d7ff")
+        typeBCurveFromPlane(data, typeBPlaneTarget(data), "main vertical", "#ff2b2b"),
+        typeBCurveAcrossPlanes(data, typeBVerticalTarget(data), "main horizontal", "#58d7ff")
       ];
     }
     return [
       typeCCurve(data, 0, 180, "C0/180", "#ff2b2b"),
       typeCCurve(data, 90, 270, "C90/270", "#58d7ff")
     ];
+  }
+
+  function globalPeakPoint(data) {
+    let peak = { value: -Infinity, hIndex: 0, vIndex: 0, hAngle: 0, vAngle: 0 };
+    data.candela.forEach((profile, hIndex) => {
+      profile.forEach((value, vIndex) => {
+        if (value > peak.value) {
+          peak = {
+            value,
+            hIndex,
+            vIndex,
+            hAngle: data.horizontalAngles[hIndex] || 0,
+            vAngle: data.verticalAngles[vIndex] || 0
+          };
+        }
+      });
+    });
+    return peak;
   }
 
   function drawUploadedChart(data) {
@@ -1119,13 +1242,8 @@
     ctx.fillStyle = "#0e1216";
     ctx.fillRect(0, 0, cssSize, cssSize);
     const curves = buildUploadedCurves(data);
-    const max = Math.max(...curves.flatMap((curve) => curve.points.map((point) => point.value)), 1);
-    let peak = { value: -Infinity, angle: 0, label: "" };
-    curves.forEach((curve) => {
-      curve.points.forEach((point) => {
-        if (point.value > peak.value) peak = { value: point.value, angle: point.angle, label: curve.label };
-      });
-    });
+    const globalPeak = globalPeakPoint(data);
+    const max = Math.max(globalPeak.value, ...curves.flatMap((curve) => curve.points.map((point) => point.value)), 1);
 
     const cx = cssSize / 2;
     const cy = cssSize / 2;
@@ -1178,7 +1296,7 @@
     ctx.fillStyle = "#aeb7c2";
     ctx.font = "13px Segoe UI, Arial";
     ctx.fillText(`Red: ${curves[0].label} / Blue: ${curves[1].label}`, 28, 62);
-    ctx.fillText(`Peak ${formatNumber(peak.value, 1)} cd @ ${peak.label}, angle ${formatNumber(peak.angle, 1)}`, 28, cssSize - 28);
+    ctx.fillText(`Global peak ${formatNumber(globalPeak.value, 1)} cd @ H${formatNumber(globalPeak.hAngle, 1)} / V${formatNumber(globalPeak.vAngle, 1)}`, 28, cssSize - 28);
   }
 
   function parseExistingIES(text) {
