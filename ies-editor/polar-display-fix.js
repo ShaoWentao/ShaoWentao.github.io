@@ -27,7 +27,8 @@
     const verticalCount = Math.round(nums[i++]);
     const horizontalCount = Math.round(nums[i++]);
     const photometricType = Math.round(nums[i++]);
-    i += 6;
+    // Skip: units, width, length, height, ballast factor, future use, input watts.
+    i += 7;
     const verticalAngles = nums.slice(i, i + verticalCount); i += verticalCount;
     const horizontalAngles = nums.slice(i, i + horizontalCount); i += horizontalCount;
     const candela = [];
@@ -129,11 +130,11 @@
     const cy = top + available / 2;
     const radius = Math.max(72, Math.min(cssSize * 0.34, available / 2 - 18));
 
-    // Draw blue first and red last. No canvas clearing here, so this always fixes the top-layer order after the original renderer runs.
+    // Blue is drawn first, red is drawn last. This changes layer order only.
     [curveList[1], curveList[0]].filter(Boolean).forEach((curve) => {
       ctx.save();
       ctx.strokeStyle = curve.color;
-      ctx.lineWidth = curve.color === RED ? 3.6 : 3.0;
+      ctx.lineWidth = curve.color === RED ? 3.2 : 2.8;
       ctx.lineJoin = 'round';
       ctx.lineCap = 'round';
       ctx.beginPath();
