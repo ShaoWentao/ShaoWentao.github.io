@@ -1,5 +1,6 @@
 (() => {
   const $ = (id) => document.getElementById(id);
+  const UGR_BASE_FLUX = 1000;
 
   function fmt(value, digits = 1) {
     const parsed = Number(value);
@@ -90,6 +91,10 @@
     return ((angle % 360) + 360) % 360;
   }
 
+  function nearlyEqual(a, b, tolerance = 0.001) {
+    return Math.abs(a - b) <= tolerance;
+  }
+
   function interp1(x0, y0, x1, y1, x) {
     if (Math.abs(x1 - x0) < 0.000001) return y0;
     const t = (x - x0) / (x1 - x0);
@@ -140,7 +145,8 @@
 
   function candelaAt(data, gamma, cAngle) {
     const g = Math.abs(gamma);
-    const planeValues = data.candela.map((profile) => interpolateByAngle(data.verticalAngles.map(Math.abs), profile, g, false));
+    const vAngles = data.verticalAngles.map(Math.abs);
+    const planeValues = data.candela.map((profile) => interpolateByAngle(vAngles, profile, g, false));
     if (data.horizontalAngles.length === 1) return Math.max(0, planeValues[0] || 0);
     if (data.photometricType === 1) {
       const c = mapTypeCAngle(data, cAngle);
@@ -150,8 +156,77 @@
     return Math.max(0, interpolateByAngle(data.horizontalAngles, planeValues, cAngle, false));
   }
 
-  function luminousFlux(data) {
+  function integrateProfile(data, profile) {
+    const pairs = data.verticalAngles.map((angle, index) => ({ angle: Math.abs(angle), value: Math.max(0, profile[index] || 0) }))
+      .sort((a, b) => a.angle - b.angle);
+    let integral = 0;
+    for (let i = 0; i < pairs.length - 1; i += 1) {
+      const a1 = pairs[i].angle * Math.PI / 180;
+      const a2 = pairs[i + 1].angle * Math.PI / 180;
+      const y1 = pairs[i].value * Math.sin(a1);
+      const y2 = pairs[i + 1].value * Math.sin(a2);
+      integral += Math.abs(((y1 + y2) / 2) * (a2 - a1));
+    }
+    return integral;
+  }
+
+  function integrateAngularSeries(pairs, closeCircle = false) {
+    if (pairs.length < 2) return 0;
+    let integral = 0;
+    for (let i = 0; i < pairs.length - 1; i += 1) {
+      integral += ((pairs[i].value + pairs[i + 1].value) / 2) * Math.abs(pairs[i + 1].angle - pairs[i].angle) * Math.PI / 180;
+    }
+    if (closeCircle) {
+      integral += ((pairs[pairs.length - 1].value + pairs[0].value) / 2) * Math.abs((pairs[0].angle + 360) - pairs[pairs.length - 1].angle) * Math.PI / 180;
+    }
+    return integral;
+  }
+
+  function measuredLuminaireFlux(data) {
+    const verticalIntegrals = data.candela.map((profile) => integrateProfile(data, profile));
+    if (data.horizontalAngles.length <= 1) return 2 * Math.PI * (verticalIntegrals[0] || 0);
+    const pairs = data.horizontalAngles.map((angle, index) => ({ angle: data.photometricType === 1 ? normalizeDegrees(angle) : angle, value: verticalIntegrals[index] || 0 }))
+      .sort((a, b) => a.angle - b.angle)
+      .filter((item, index, array) => index === 0 || !nearlyEqual(item.angle, array[index - 1].angle));
+    if (pairs.length <= 1) return 2 * Math.PI * (pairs[0]?.value || 0);
+    const first = pairs[0].angle;
+    const last = pairs[pairs.length - 1].angle;
+    const span = Math.max(0.001, Math.abs(last - first));
+    const openIntegral = integrateAngularSeries(pairs, false);
+    if (data.photometricType === 1) {
+      if (span >= 359.999) return openIntegral;
+      if (nearlyEqual(first, 0) && last >= 270) return integrateAngularSeries(pairs, true);
+      if (nearlyEqual(first, 0) && nearlyEqual(last, 90)) return openIntegral * 4;
+      if (nearlyEqual(first, 0) && nearlyEqual(last, 180)) return openIntegral * 2;
+      return openIntegral * (360 / span);
+    }
+    return openIntegral * (360 / span);
+  }
+
+  function headerLampFlux(data) {
     return Math.max(0, (data.lampCount || 1) * (data.lumensPerLamp || 0));
+  }
+
+  function fluxForUGR(data) {
+    const integrated = measuredLuminaireFlux(data);
+    if (Number.isFinite(integrated) && integrated > 0.001) return integrated;
+    const header = headerLampFlux(data);
+    if (header > 0.001) return header;
+    return 0;
+  }
+
+  function normalizeDataToBaseFlux(data) {
+    const actualFlux = fluxForUGR(data);
+    if (actualFlux <= 0) throw new Error('valid luminous flux is not available.');
+    const scale = UGR_BASE_FLUX / actualFlux;
+    return {
+      ...data,
+      candela: data.candela.map((profile) => profile.map((value) => value * scale)),
+      ugrActualFlux: actualFlux,
+      ugrBaseFlux: UGR_BASE_FLUX,
+      ugrScale: scale,
+      ugrFluxCorrection: 8 * Math.log10(actualFlux / UGR_BASE_FLUX)
+    };
   }
 
   function luminousArea(data) {
@@ -248,20 +323,25 @@
     return luminance * luminance * omega / (p * p);
   }
 
-  function calculateUGR(data, roomX, roomY, reflectanceSet, endwise = false, spacing = 1.0, observerX = 0) {
-    const area = luminousArea(data);
+  function calculateUGR1000(normalizedData, roomX, roomY, reflectanceSet, endwise = false, spacing = 1.0, observerX = 0) {
+    const area = luminousArea(normalizedData);
     if (area <= 0) return null;
     const positions = buildLuminairePositions(roomX, roomY, spacing);
-    const fluxPerLuminaire = Math.max(0, luminousFlux(data));
-    const lb = roomSurfaceBackgroundLuminance(roomX, roomY, reflectanceSet, positions.length, fluxPerLuminaire);
+    const lb = roomSurfaceBackgroundLuminance(roomX, roomY, reflectanceSet, positions.length, UGR_BASE_FLUX);
     const orientationDeg = endwise ? 90 : 0;
     let sum = 0;
     positions.forEach((source) => {
-      sum += luminaireContribution(data, source, observerX, orientationDeg, area);
+      sum += luminaireContribution(normalizedData, source, observerX, orientationDeg, area);
     });
     if (sum <= 0 || lb <= 0) return null;
-    const ugr = 8 * Math.log10((0.25 / lb) * sum);
-    return Number.isFinite(ugr) ? Math.max(0, ugr) : null;
+    const ugr1000 = 8 * Math.log10((0.25 / lb) * sum);
+    return Number.isFinite(ugr1000) ? Math.max(0, ugr1000) : null;
+  }
+
+  function calculateCorrectedUGR(normalizedData, roomX, roomY, reflectanceSet, endwise = false, spacing = 1.0, observerX = 0) {
+    const ugr1000 = calculateUGR1000(normalizedData, roomX, roomY, reflectanceSet, endwise, spacing, observerX);
+    if (ugr1000 === null) return null;
+    return Math.max(0, ugr1000 + normalizedData.ugrFluxCorrection);
   }
 
   const reflectanceSets = [
@@ -297,28 +377,28 @@
     { x: '', xValue: 12, y: '8H', yValue: 8 }
   ];
 
-  function valueCell(data, row, set, endwise = false) {
-    const value = calculateUGR(data, row.xValue, row.yValue, set, endwise, 1.0, 0);
+  function valueCell(normalizedData, row, set, endwise = false) {
+    const value = calculateCorrectedUGR(normalizedData, row.xValue, row.yValue, set, endwise, 1.0, 0);
     return value === null ? '-' : fmt(value, 1);
   }
 
-  function roomRowsHtml(data) {
+  function roomRowsHtml(normalizedData) {
     return roomRows.map((row) => {
       if (row.spacer) return '<tr class="spacer"><td></td><td></td><td colspan="10"></td></tr>';
-      const cross = reflectanceSets.map((set) => `<td>${valueCell(data, row, set, false)}</td>`).join('');
-      const end = reflectanceSets.map((set, index) => `<td${index === 0 ? ' class="mid-split"' : ''}>${valueCell(data, row, set, true)}</td>`).join('');
+      const cross = reflectanceSets.map((set) => `<td>${valueCell(normalizedData, row, set, false)}</td>`).join('');
+      const end = reflectanceSets.map((set, index) => `<td${index === 0 ? ' class="mid-split"' : ''}>${valueCell(normalizedData, row, set, true)}</td>`).join('');
       return `<tr><td class="left-label">${row.x || ''}</td><td class="y-label">${row.y}</td>${cross}${end}</tr>`;
     }).join('');
   }
 
-  function variationValue(data, spacing, endwise = false) {
+  function variationValue(normalizedData, spacing, endwise = false) {
     const set = reflectanceSets[0];
     const roomX = 4;
     const roomY = 8;
-    const center = calculateUGR(data, roomX, roomY, set, endwise, spacing, 0);
+    const center = calculateCorrectedUGR(normalizedData, roomX, roomY, set, endwise, spacing, 0);
     if (center === null) return '-';
     const offsets = [spacing * 0.25, spacing * 0.5, -spacing * 0.25, -spacing * 0.5];
-    const values = offsets.map((offset) => calculateUGR(data, roomX, roomY, set, endwise, spacing, offset)).filter((value) => value !== null);
+    const values = offsets.map((offset) => calculateCorrectedUGR(normalizedData, roomX, roomY, set, endwise, spacing, offset)).filter((value) => value !== null);
     if (!values.length) return '-';
     const plus = Math.max(...values) - center;
     const minus = center - Math.min(...values);
@@ -335,6 +415,12 @@
     if (offending.max <= Math.max(0.001, peak * 0.00001)) {
       return `<div class="ugr-note">Unable to calculate UGR - No candela in offending zones<br>Checked vertical zone: 55° to 90°. Maximum candela in this zone: ${fmt(offending.max, 3)} cd.</div>`;
     }
+
+    const normalizedData = normalizeDataToBaseFlux(data);
+    const fluxCorrection = normalizedData.ugrFluxCorrection;
+    const fluxLine = `CIE Pub.117 flux correction: UGR = UGR1000 + 8log10(F/F0), F = ${fmt(normalizedData.ugrActualFlux, 2)} lm, F0 = ${fmt(normalizedData.ugrBaseFlux, 0)} lm, 8log10(F/F0) = ${fmt(fluxCorrection, 2)}. The same F is used for this note and for every table value.`;
+    const normalizedLine = `Candela data are first normalized by ${fmt(normalizedData.ugrScale, 6)} so that the IES distribution is calculated at ${fmt(UGR_BASE_FLUX, 0)} lm, then the flux correction above is added.`;
+
     const ceilings = reflectanceSets.map((set) => `<td>${fmt(set.ceil, 1)}</td>`).join('');
     const walls = reflectanceSets.map((set) => `<td>${fmt(set.wall, 1)}</td>`).join('');
     const planes = reflectanceSets.map((set) => `<td>${fmt(set.plane, 1)}</td>`).join('');
@@ -342,18 +428,18 @@
     const duplicateWalls = reflectanceSets.map((set, index) => `<td${index === 0 ? ' class="mid-split"' : ''}>${fmt(set.wall, 1)}</td>`).join('');
     const duplicatePlanes = reflectanceSets.map((set, index) => `<td${index === 0 ? ' class="mid-split"' : ''}>${fmt(set.plane, 1)}</td>`).join('');
     return `
-      <div class="ugr-note">Calculated by the UGR formula using the tabular room dimensions below. H is the distance between the luminaire plane and the observer eye level. Base spacing is 1.0H.</div>
+      <div class="ugr-note">${normalizedLine}<br>${fluxLine}<br>H is the distance between the luminaire plane and the observer eye level. Base spacing is 1.0H.</div>
       <table class="ugr-standard-table">
         <tbody>
           <tr><th colspan="2">ceiling/cavity</th>${ceilings}${duplicateCeilings}</tr>
           <tr><th colspan="2">walls</th>${walls}${duplicateWalls}</tr>
           <tr><th colspan="2">working plane</th>${planes}${duplicatePlanes}</tr>
           <tr class="section-title"><th colspan="2">Room dimensions</th><th colspan="5">Viewed crosswise</th><th class="mid-split" colspan="5">Viewed endwise</th></tr>
-          ${roomRowsHtml(data)}
+          ${roomRowsHtml(normalizedData)}
           <tr class="variation-title"><td colspan="12">Variations with the observer position at spacings:</td></tr>
-          <tr><td class="variation-left" colspan="2">s = 1.0H</td><td class="variation-mid" colspan="5">${variationValue(data, 1.0, false)}</td><td colspan="5">${variationValue(data, 1.0, true)}</td></tr>
-          <tr><td class="variation-left" colspan="2">1.5H</td><td class="variation-mid" colspan="5">${variationValue(data, 1.5, false)}</td><td colspan="5">${variationValue(data, 1.5, true)}</td></tr>
-          <tr><td class="variation-left" colspan="2">2.0H</td><td class="variation-mid" colspan="5">${variationValue(data, 2.0, false)}</td><td colspan="5">${variationValue(data, 2.0, true)}</td></tr>
+          <tr><td class="variation-left" colspan="2">s = 1.0H</td><td class="variation-mid" colspan="5">${variationValue(normalizedData, 1.0, false)}</td><td colspan="5">${variationValue(normalizedData, 1.0, true)}</td></tr>
+          <tr><td class="variation-left" colspan="2">1.5H</td><td class="variation-mid" colspan="5">${variationValue(normalizedData, 1.5, false)}</td><td colspan="5">${variationValue(normalizedData, 1.5, true)}</td></tr>
+          <tr><td class="variation-left" colspan="2">2.0H</td><td class="variation-mid" colspan="5">${variationValue(normalizedData, 2.0, false)}</td><td colspan="5">${variationValue(normalizedData, 2.0, true)}</td></tr>
         </tbody>
       </table>
     `;
