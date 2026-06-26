@@ -8,44 +8,43 @@
 <style>
   :root { --bg:#0a0c0f; --panel:#12161b; --ink:#f5f2ea; --muted:#aeb7c2; --line:rgba(255,255,255,.14); --red:#d71920; --gold:#dca642; --cyan:#58d7ff; }
   * { box-sizing:border-box; }
-  body { margin:0; background:radial-gradient(circle at 18% 8%, rgba(215,25,32,.24), transparent 26%), radial-gradient(circle at 88% 20%, rgba(88,215,255,.16), transparent 28%), linear-gradient(135deg,#08090b 0%,#10151b 52%,#15120d 100%); color:var(--ink); font-family:Inter,"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif; }
+  html { -webkit-text-size-adjust:100%; }
+  body { margin:0; overflow-x:hidden; background:radial-gradient(circle at 18% 8%, rgba(215,25,32,.22), transparent 26%), radial-gradient(circle at 88% 20%, rgba(88,215,255,.14), transparent 28%), linear-gradient(135deg,#08090b 0%,#10151b 52%,#15120d 100%); color:var(--ink); font-family:Inter,"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif; }
   a { color:inherit; text-decoration:none; }
-  .topbar { position:sticky; top:0; z-index:5; display:flex; align-items:center; justify-content:space-between; gap:18px; padding:16px clamp(18px,4vw,48px); border-bottom:1px solid var(--line); background:rgba(8,10,13,.78); backdrop-filter:blur(18px); }
-  .brand { display:flex; align-items:center; gap:12px; }
-  .mark { width:38px; height:38px; display:grid; place-items:center; border:1px solid rgba(255,255,255,.22); background:linear-gradient(135deg,var(--red),var(--gold)); font-weight:800; font-size:14px; }
+  .topbar { position:sticky; top:0; z-index:5; display:flex; align-items:center; justify-content:space-between; gap:18px; padding:16px clamp(18px,4vw,48px); border-bottom:1px solid var(--line); background:rgba(8,10,13,.82); backdrop-filter:blur(18px); }
+  .brand { display:flex; align-items:center; gap:12px; min-width:0; }
+  .mark { width:38px; height:38px; flex:0 0 38px; display:grid; place-items:center; border:1px solid rgba(255,255,255,.22); background:linear-gradient(135deg,var(--red),var(--gold)); font-weight:800; font-size:14px; }
   .brand strong,.brand span { display:block; }
-  .brand strong { font-size:14px; line-height:18px; }
+  .brand strong { font-size:14px; line-height:18px; white-space:nowrap; }
   .brand span { color:var(--muted); font-size:12px; line-height:16px; }
-  .nav { display:flex; gap:14px; color:#d9dee5; font-size:13px; }
+  .nav { display:flex; gap:14px; color:#d9dee5; font-size:13px; white-space:nowrap; }
   .nav a { border-bottom:1px solid transparent; }
   .nav a:hover { color:#fff; border-color:var(--gold); }
-  .hero { display:grid; grid-template-columns:minmax(0,.9fr) minmax(340px,1.1fr); gap:clamp(24px,4vw,54px); align-items:center; padding:clamp(34px,6vw,72px) clamp(18px,5vw,64px) 28px; }
+  .hero { padding:clamp(28px,5vw,58px) clamp(18px,5vw,64px) 20px; }
+  .hero-inner { max-width:920px; }
   .eyebrow { display:inline-flex; align-items:center; gap:9px; color:#f0d89f; font-size:12px; text-transform:uppercase; letter-spacing:.14em; }
   .eyebrow::before { content:""; width:32px; height:1px; background:var(--gold); }
-  h1 { margin:18px 0 0; max-width:760px; font-size:clamp(36px,6vw,74px); line-height:.98; }
-  .hero p { margin:22px 0 0; max-width:620px; color:#d5dbe3; font-size:clamp(15px,1.5vw,18px); line-height:1.7; }
-  .hero-visual { min-height:340px; position:relative; border:1px solid var(--line); background:linear-gradient(90deg,rgba(255,255,255,.07) 1px,transparent 1px), linear-gradient(rgba(255,255,255,.07) 1px,transparent 1px), linear-gradient(150deg,rgba(255,255,255,.09),rgba(255,255,255,.03)); background-size:34px 34px,34px 34px,auto; overflow:hidden; }
-  .beam { position:absolute; left:50%; top:48%; width:min(58vw,520px); aspect-ratio:1; transform:translate(-50%,-50%); border:1px solid rgba(88,215,255,.44); border-radius:50%; background:radial-gradient(circle,rgba(255,255,255,.92) 0 4%,rgba(220,166,66,.84) 8%,rgba(215,25,32,.36) 29%,rgba(88,215,255,.10) 52%,transparent 66%); box-shadow:0 0 80px rgba(88,215,255,.12); }
-  .visual-label { position:absolute; left:18px; bottom:16px; color:#d9e1ea; font-size:13px; line-height:1.55; }
+  h1 { margin:18px 0 0; max-width:760px; font-size:clamp(34px,5.4vw,68px); line-height:1; }
+  .hero p { margin:20px 0 0; max-width:680px; color:#d5dbe3; font-size:clamp(15px,1.4vw,18px); line-height:1.7; }
   .workspace { display:grid; grid-template-columns:minmax(280px,420px) minmax(0,1fr); gap:16px; padding:16px clamp(18px,5vw,64px) clamp(38px,6vw,72px); }
-  .panel { border:1px solid var(--line); background:rgba(18,22,27,.82); }
+  .panel { min-width:0; border:1px solid var(--line); background:rgba(18,22,27,.82); }
   .panel-head { display:flex; justify-content:space-between; gap:16px; align-items:center; padding:16px 18px; border-bottom:1px solid var(--line); }
   .panel-head h2 { margin:0; font-size:18px; line-height:1.2; }
   .panel-head span { color:#cdd8ff; font-size:12px; line-height:1.45; }
   .form { display:grid; gap:14px; padding:18px; }
-  .field { display:grid; gap:7px; }
+  .field { display:grid; gap:7px; min-width:0; }
   label { color:#d8dee6; font-size:13px; }
-  input,textarea { width:100%; min-height:40px; border:1px solid rgba(255,255,255,.15); background:#0e1216; color:var(--ink); padding:10px 11px; font:inherit; font-size:14px; outline:none; }
+  input,textarea { width:100%; min-height:40px; border:1px solid rgba(255,255,255,.15); border-radius:0; background:#0e1216; color:var(--ink); padding:10px 11px; font:inherit; font-size:14px; outline:none; }
   textarea { min-height:92px; resize:vertical; line-height:1.5; }
   input:focus,textarea:focus { border-color:rgba(220,166,66,.72); }
   .fields-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   .actions { display:flex; flex-wrap:wrap; gap:10px; padding-top:4px; }
-  button { min-height:42px; display:inline-flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.08); color:#fff; padding:10px 14px; font:inherit; font-size:14px; cursor:pointer; }
+  button { min-height:42px; display:inline-flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,.18); border-radius:0; background:rgba(255,255,255,.08); color:#fff; padding:10px 14px; font:inherit; font-size:14px; cursor:pointer; }
   button.primary { border-color:var(--red); background:var(--red); }
   button:hover { border-color:rgba(220,166,66,.72); }
-  .main-grid { display:grid; grid-template-columns:minmax(0,.95fr) minmax(320px,1.05fr); gap:16px; }
+  .main-grid { display:grid; grid-template-columns:minmax(0,.95fr) minmax(320px,1.05fr); gap:16px; min-width:0; }
   .chart-wrap { padding:18px; }
-  canvas { width:100%; height:auto; aspect-ratio:1; display:block; background:#0e1216; border:1px solid rgba(255,255,255,.1); }
+  canvas { width:100%; height:auto; max-width:100%; aspect-ratio:1; display:block; background:#0e1216; border:1px solid rgba(255,255,255,.1); }
   .stats { display:grid; grid-template-columns:repeat(4,1fr); border-top:1px solid var(--line); }
   .stat { min-height:86px; padding:14px; border-right:1px solid var(--line); }
   .stat:last-child { border-right:0; }
@@ -60,17 +59,58 @@
   .report-shell { background:#f7f7f5; color:#111; border:1px solid rgba(0,0,0,.12); padding:26px; display:grid; gap:22px; }
   .report-title { display:flex; justify-content:space-between; gap:18px; align-items:flex-start; border-bottom:2px solid #111; padding-bottom:14px; }
   .report-title h2 { margin:0; font-size:22px; }
-  .report-title span { font-size:13px; color:#333; text-align:right; }
-  .report-page { background:#fff; border:1px solid #d8d8d8; padding:20px; min-height:260px; }
+  .report-title span { font-size:13px; color:#333; text-align:right; overflow-wrap:anywhere; }
+  .report-page { background:#fff; border:1px solid #d8d8d8; padding:20px; min-height:260px; overflow:hidden; }
   .report-page h3 { margin:0 0 14px; font-size:16px; letter-spacing:.02em; }
-  .report-page pre { margin:0; white-space:pre-wrap; font-family:Consolas,"Courier New",monospace; font-size:12px; line-height:1.45; }
+  .report-page pre { margin:0; white-space:pre-wrap; overflow-wrap:anywhere; font-family:Consolas,"Courier New",monospace; font-size:12px; line-height:1.45; }
   .report-page table { width:100%; border-collapse:collapse; font-size:13px; }
   .report-page th,.report-page td { padding:6px 8px; border-bottom:1px solid #e5e5e5; text-align:left; }
-  .table-scroll { overflow:auto; max-height:520px; border:1px solid #e5e5e5; }
+  .table-scroll { overflow:auto; max-height:520px; border:1px solid #e5e5e5; -webkit-overflow-scrolling:touch; }
   .wide-table { min-width:560px; }
   #reportPolar { background:#fff; border:1px solid #222; }
-  @media (max-width:1120px) { .hero,.workspace,.main-grid { grid-template-columns:1fr; } }
-  @media (max-width:700px) { .topbar { align-items:flex-start; flex-direction:column; } .nav { width:100%; overflow-x:auto; padding-bottom:2px; } .hero-visual { min-height:260px; } .fields-2,.stats { grid-template-columns:1fr; } .stat { border-right:0; border-bottom:1px solid var(--line); } .stat:last-child { border-bottom:0; } .report-shell { padding:16px; } .report-title { display:block; } .report-title span { display:block; text-align:left; margin-top:8px; } }
+  @media (max-width:1120px) { .workspace,.main-grid { grid-template-columns:1fr; } }
+  @media (max-width:700px) {
+    .topbar { align-items:flex-start; flex-direction:column; padding:14px 16px; gap:12px; }
+    .brand strong { white-space:normal; }
+    .nav { width:100%; overflow-x:auto; padding-bottom:4px; gap:16px; font-size:12px; -webkit-overflow-scrolling:touch; }
+    .hero { padding:26px 16px 12px; }
+    .eyebrow { font-size:11px; letter-spacing:.1em; }
+    .eyebrow::before { width:24px; }
+    h1 { font-size:34px; line-height:1.04; }
+    .hero p { font-size:14px; line-height:1.65; }
+    .workspace { display:block; padding:12px 12px 38px; }
+    .workspace > .panel, .main-grid > .panel { margin-bottom:12px; }
+    .panel-head { align-items:flex-start; flex-direction:column; gap:6px; padding:14px; }
+    .panel-head h2 { font-size:17px; }
+    .form { padding:14px; gap:12px; }
+    .fields-2 { grid-template-columns:1fr; gap:12px; }
+    .actions { display:grid; grid-template-columns:1fr; }
+    button { width:100%; min-height:44px; }
+    .upload { padding:14px; }
+    .notes { padding:0 14px 14px; }
+    .chart-wrap { padding:10px; }
+    .stats { grid-template-columns:1fr 1fr; }
+    .stat { min-height:72px; padding:12px; border-right:1px solid var(--line); border-bottom:1px solid var(--line); }
+    .stat:nth-child(2n) { border-right:0; }
+    .stat:nth-last-child(-n+2) { border-bottom:0; }
+    .stat strong { font-size:20px; }
+    .preview { height:360px; padding:12px; font-size:11px; }
+    .report { padding:0 12px 42px; }
+    .report-shell { padding:12px; gap:12px; }
+    .report-title { display:block; padding-bottom:10px; }
+    .report-title h2 { font-size:18px; }
+    .report-title span { display:block; text-align:left; margin-top:8px; font-size:12px; }
+    .report-page { padding:12px; min-height:0; }
+    .report-page h3 { font-size:14px; }
+    .report-page table { font-size:12px; }
+    .report-page th,.report-page td { padding:5px 6px; }
+  }
+  @media (max-width:380px) {
+    h1 { font-size:30px; }
+    .stats { grid-template-columns:1fr; }
+    .stat, .stat:nth-child(2n), .stat:nth-last-child(-n+2) { border-right:0; border-bottom:1px solid var(--line); }
+    .stat:last-child { border-bottom:0; }
+  }
 </style>
 </head>
 <body>
@@ -81,8 +121,7 @@
   </header>
   <main>
     <section class="hero">
-      <div><div class="eyebrow">Photometric file generator</div><h1>Generate, inspect and export IES files.</h1><p>Input luminaire parameters, build a photometric file, preview the curve, and generate indoor report pages only after you ask for them.</p></div>
-      <div class="hero-visual" aria-hidden="true"><div class="beam"></div><div class="visual-label">IESNA LM-63 / Distribution preview / Report on demand</div></div>
+      <div class="hero-inner"><div class="eyebrow">Photometric file generator</div><h1>Generate, inspect and export IES files.</h1><p>Input luminaire parameters, build a photometric file, preview the curve, and generate indoor report pages only after you ask for them.</p></div>
     </section>
     <section class="workspace" id="generator">
       <aside class="panel">
