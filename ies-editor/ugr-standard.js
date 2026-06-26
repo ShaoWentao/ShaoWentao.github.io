@@ -153,7 +153,7 @@
   ];
 
   const roomRows = [
-    { x: '2H', y: '2H', dx: 0.0 }, { x: '', y: '3H', dx: -0.1 }, { x: '', y: '4H', dx: -0.2 }, { x: '', y: '6H', dx: -0.3 }, { x: '', y: '8H', dx: -0.3 }, { x: '', y: '12H', dx: -0.3 },
+    { x: 'x = 2H', y: 'y = 2H', dx: 0.0 }, { x: '', y: '3H', dx: -0.1 }, { x: '', y: '4H', dx: -0.2 }, { x: '', y: '6H', dx: -0.3 }, { x: '', y: '8H', dx: -0.3 }, { x: '', y: '12H', dx: -0.3 },
     { spacer: true },
     { x: '4H', y: '2H', dx: -0.2 }, { x: '', y: '3H', dx: -0.3 }, { x: '', y: '4H', dx: -0.4 }, { x: '', y: '6H', dx: -0.5 }, { x: '', y: '8H', dx: -0.6 }, { x: '', y: '12H', dx: -0.7 },
     { spacer: true },
@@ -196,7 +196,6 @@
           <tr><th colspan="2">walls</th>${walls}${reflectanceSets.map((set, index) => `<td${index === 0 ? ' class="mid-split"' : ''}>${set.wall}</td>`).join('')}</tr>
           <tr><th colspan="2">working plane</th>${planes}${reflectanceSets.map((set, index) => `<td${index === 0 ? ' class="mid-split"' : ''}>${set.plane}</td>`).join('')}</tr>
           <tr class="section-title"><th colspan="2">Room dimensions</th><th colspan="5">Viewed crosswise</th><th class="mid-split" colspan="5">Viewed endwise</th></tr>
-          <tr><th class="left-label">x = 2H</th><th class="y-label">y =</th><td colspan="5"></td><td class="mid-split" colspan="5"></td></tr>
           ${roomRowsHtml(data)}
           <tr class="variation-title"><td colspan="12">Variations with the observer position at spacings:</td></tr>
           <tr><td class="variation-left" colspan="2">s = 1.0H</td><td class="variation-mid" colspan="5">${variationValue(data, 1, false)}</td><td colspan="5">${variationValue(data, 1, true)}</td></tr>
