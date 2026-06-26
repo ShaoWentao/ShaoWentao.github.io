@@ -41,21 +41,21 @@
       #report.report { display:none !important; }
       .full-report-embed { padding:0 clamp(18px,5vw,64px) 72px; }
       .full-report-embed.hidden { display:none; }
-      .full-report-card { border:1px solid var(--line); background:rgba(18,22,27,.82); }
+      .full-report-card { border:1px solid var(--line); background:rgba(18,22,27,.82); min-width:0; }
       .full-report-head { display:flex; justify-content:space-between; align-items:flex-start; gap:18px; padding:16px 18px; border-bottom:1px solid var(--line); }
       .full-report-head h2 { margin:0; font-size:18px; line-height:1.2; }
       .full-report-head p { margin:6px 0 0; color:var(--muted); font-size:12px; line-height:1.55; }
       .full-report-actions { display:flex; gap:10px; flex-wrap:wrap; }
       .full-report-status { padding:10px 18px; border-bottom:1px solid var(--line); color:#dbe3ea; font-size:12px; line-height:1.45; }
-      .full-report-frame-wrap { height:auto; overflow:hidden; background:#fff; }
-      #fullReportFrame { width:100%; min-height:1180px; display:block; border:0; background:#fff; }
+      .full-report-frame-wrap { width:100%; height:auto; overflow:hidden; background:#fff; }
+      #fullReportFrame { width:100%; min-height:1180px; display:block; border:0; background:#fff; overflow:hidden; }
       @media (max-width:700px) {
         .full-report-embed { padding:0 12px 42px; }
         .full-report-head { display:block; padding:14px; }
         .full-report-actions { display:grid; grid-template-columns:1fr; margin-top:12px; }
         .full-report-actions button { width:100%; }
         .full-report-status { padding:10px 14px; }
-        #fullReportFrame { min-height:900px; }
+        #fullReportFrame { min-height:680px; }
       }
     `;
     document.head.appendChild(style);
@@ -81,7 +81,7 @@
           </div>
         </div>
         <div class="full-report-status" id="fullReportStatus"></div>
-        <div class="full-report-frame-wrap"><iframe id="fullReportFrame" title="Full photometric report"></iframe></div>
+        <div class="full-report-frame-wrap"><iframe id="fullReportFrame" title="Full photometric report" scrolling="no"></iframe></div>
       </div>
     `;
     const simpleReport = $('report');
@@ -144,26 +144,73 @@
     style.id = 'editor-embedded-report-style';
     style.textContent = `
       @media screen {
-        body { background:#fff !important; }
+        html, body { width:100% !important; max-width:100% !important; overflow-x:hidden !important; background:#fff !important; }
         .topbar, .panel { display:none !important; }
-        .layout { display:block !important; width:100% !important; padding:0 !important; margin:0 !important; }
-        .paper-wrap { display:block !important; width:100% !important; padding:12px !important; margin:0 !important; border:0 !important; background:#fff !important; overflow:visible !important; }
-        .paper { margin:0 auto 24px !important; }
+        .layout { display:block !important; width:100% !important; max-width:100% !important; padding:0 !important; margin:0 !important; overflow:hidden !important; }
+        .paper-wrap { display:block !important; width:100% !important; max-width:100% !important; padding:12px 0 !important; margin:0 !important; border:0 !important; background:#fff !important; overflow:hidden !important; }
+        .editor-report-scale-holder { width:calc(var(--editor-paper-width, 960px) * var(--editor-report-scale, 1)); height:calc(var(--editor-report-height, 1358px) * var(--editor-report-scale, 1)); margin:0 auto !important; overflow:visible !important; }
+        .editor-report-scale-shell { width:var(--editor-paper-width, 960px); transform:scale(var(--editor-report-scale, 1)); transform-origin:top left; overflow:visible !important; }
+        .editor-report-scale-shell .paper { margin:0 0 24px !important; }
+      }
+      @media print {
+        .editor-report-scale-holder { width:auto !important; height:auto !important; margin:0 !important; }
+        .editor-report-scale-shell { width:auto !important; transform:none !important; }
       }
     `;
     doc.head.appendChild(style);
+  }
+
+  function ensureReportScaleWrapper(doc) {
+    const wrap = doc.querySelector('.paper-wrap');
+    if (!wrap) return null;
+    let holder = doc.querySelector('.editor-report-scale-holder');
+    let shell = doc.querySelector('.editor-report-scale-shell');
+    if (holder && shell) return { holder, shell };
+
+    holder = doc.createElement('div');
+    holder.className = 'editor-report-scale-holder';
+    shell = doc.createElement('div');
+    shell.className = 'editor-report-scale-shell';
+
+    while (wrap.firstChild) shell.appendChild(wrap.firstChild);
+    holder.appendChild(shell);
+    wrap.appendChild(holder);
+    return { holder, shell };
+  }
+
+  function applyReportScale(frame) {
+    const doc = frame.contentDocument;
+    if (!doc) return;
+    const parts = ensureReportScaleWrapper(doc);
+    if (!parts) return;
+    const { holder, shell } = parts;
+    const paper = shell.querySelector('.paper');
+    const paperWidth = Math.max(1, Math.ceil((paper && paper.getBoundingClientRect().width) || paper?.offsetWidth || 960));
+    const available = Math.max(280, frame.clientWidth || frame.getBoundingClientRect().width || 360);
+    const scale = Math.min(1, Math.max(0.28, (available - 2) / paperWidth));
+    const contentHeight = Math.max(1000, Math.ceil(shell.scrollHeight || shell.getBoundingClientRect().height || 1358));
+
+    doc.documentElement.style.setProperty('--editor-paper-width', `${paperWidth}px`);
+    doc.documentElement.style.setProperty('--editor-report-scale', String(scale));
+    doc.documentElement.style.setProperty('--editor-report-height', `${contentHeight}px`);
+    holder.style.width = `${Math.ceil(paperWidth * scale)}px`;
+    holder.style.height = `${Math.ceil(contentHeight * scale)}px`;
   }
 
   function resizeFrame(frame) {
     try {
       const doc = frame.contentDocument;
       if (!doc) return;
+      injectEmbeddedStyle(doc);
+      applyReportScale(frame);
+      const holder = doc.querySelector('.editor-report-scale-holder');
       const height = Math.max(
+        holder ? holder.offsetHeight : 0,
         doc.body ? doc.body.scrollHeight : 0,
         doc.documentElement ? doc.documentElement.scrollHeight : 0,
-        1000
+        680
       );
-      frame.style.height = `${height + 40}px`;
+      frame.style.height = `${height + 36}px`;
     } catch (error) {}
   }
 
@@ -173,6 +220,7 @@
       const doc = frame.contentDocument;
       if (!win || !doc) throw new Error('iframe not ready');
       injectEmbeddedStyle(doc);
+      ensureReportScaleWrapper(doc);
       syncReportLanguage(doc);
       const input = doc.getElementById('iesFile');
       if (!input) throw new Error('IES input not found');
@@ -184,12 +232,12 @@
       setStatus('ready');
       let count = 0;
       const timer = setInterval(() => {
-        if (token !== frameLoadToken || count > 20) return clearInterval(timer);
+        if (token !== frameLoadToken || count > 30) return clearInterval(timer);
         syncReportLanguage(doc);
         injectEmbeddedStyle(doc);
         resizeFrame(frame);
         count += 1;
-      }, 350);
+      }, 300);
     } catch (error) {
       setStatus(label('failed') + ` ${error.message || error}`, true);
     }
@@ -238,7 +286,14 @@
     window.addEventListener('ies-language-change', () => {
       updateLabels();
       const frame = $('fullReportFrame');
-      if (frame && frame.contentDocument) syncReportLanguage(frame.contentDocument);
+      if (frame && frame.contentDocument) {
+        syncReportLanguage(frame.contentDocument);
+        resizeFrame(frame);
+      }
+    });
+    window.addEventListener('resize', () => {
+      const frame = $('fullReportFrame');
+      if (frame && frame.contentDocument) resizeFrame(frame);
     });
   });
 })();
