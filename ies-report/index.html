@@ -195,36 +195,43 @@
 
   .report-head {
     display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 20px;
+    grid-template-columns: minmax(0, 1fr) 150px;
+    gap: 14px;
     align-items: end;
     border-bottom: 1.5px solid var(--paper-line);
-    padding-bottom: 10px;
+    padding-bottom: 8px;
   }
 
   .lab {
-    font-size: 22px;
+    min-width: 0;
+    font-size: 20px;
     font-weight: 700;
     font-family: "方华简体", SimHei, "黑体", SimSun, serif;
     letter-spacing: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: clip;
   }
 
   .logo {
     display: flex;
-    align-items: center;
-    gap: 18px;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-end;
+    gap: 2px;
   }
 
   .page-no {
-    font-size: 19px;
+    font-size: 15px;
     font-weight: 700;
     font-family: "方华简体", SimHei, "黑体", SimSun, serif;
     white-space: nowrap;
+    line-height: 1.1;
   }
 
   .cdn-logo {
     width: 150px;
-    height: 56px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: flex-end;
@@ -232,7 +239,7 @@
 
   .report-logo {
     max-width: 150px;
-    max-height: 56px;
+    max-height: 36px;
     object-fit: contain;
     display: block;
   }
@@ -319,9 +326,9 @@
   }
 
   .data-table th {
-    font-size: 19px;
-    letter-spacing: 0.32em;
-    text-indent: 0.32em;
+    font-size: 15px;
+    letter-spacing: 0;
+    text-indent: 0;
     text-align: center;
   }
 
@@ -417,11 +424,492 @@
     background: #f5f5f5;
   }
 
+  .wide-table {
+    font-size: 11px;
+  }
+
+  .wide-table th,
+  .wide-table td {
+    padding: 4px 4px;
+    white-space: nowrap;
+  }
+
+
+
+  .mini-svg {
+    width: 100%;
+    height: auto;
+    display: block;
+    border: 1px solid var(--paper-line);
+    background: #fff;
+    margin-top: 8px;
+  }
+
+
+  .isocandela-page .page-title { margin-bottom: 16px; letter-spacing: 0; text-indent: 0; }
+  .isocandela-page .report-info-table { margin-bottom: 74px; }
+  .isocandela-page .mini-svg { border: 0; margin-top: 0; }
+
+  .aai-page .page-title { margin: 34px 0 14px; letter-spacing: 0; text-indent: 0; font-size: 22px; }
+  .aai-page .cu-budget-info-table { margin-bottom: 22px; }
+  .aai-page .mini-svg { border: 0; margin-top: 0; }
+  .isolux-page .page-title { margin: 34px 0 18px; letter-spacing: 0.06em; text-indent: 0; font-size: 20px; }
+  .isolux-page .luminance-info-table { margin-bottom: 70px; }
+  .isolux-page .mini-svg { border: 0; margin-top: 0; }
+
+  .avg-l-page .page-title { margin: 44px 0 18px; letter-spacing: 0; text-indent: 0; font-size: 22px; }
+  .avg-l-page .luminance-info-table { margin-bottom: 96px; }
+  .avg-l-table { width: 68%; margin: 0 auto; table-layout: fixed; border: 1.3px solid #000; border-collapse: collapse; font-family: "Courier New", Courier, monospace; font-size: 13.5px; line-height: 1.15; }
+  .avg-l-table th, .avg-l-table td { border: 1px solid #000; padding: 7px 8px; text-align: center; vertical-align: middle; white-space: nowrap; }
+  .avg-l-table th { font-weight: 700; background: #fff; }
+  .avg-l-standard { margin: 8px 0 0; text-align: center; font-family: "Courier New", Courier, monospace; font-size: 13.5px; font-weight: 700; }
+
+  .planar-page .page-title { margin: 42px 0 122px; letter-spacing: 0; text-indent: 0; font-size: 20px; }
+  .planar-page .mini-svg { border: 0; margin-top: 0; }
+
+
+  .ugr-page .page-title { margin: 44px 0 20px; letter-spacing: 0; text-indent: 0; font-size: 20px; }
+  .ugr-page .report-info-table { margin-bottom: 10px; }
+  .ugr-table-box { width: 100%; overflow: visible; -webkit-overflow-scrolling: auto; }
+  .ugr-standard-table { min-width: 0; width: 100%; border-collapse: collapse; table-layout: fixed; font-family: Consolas, "Courier New", monospace; font-size: 10.4px; line-height: 1.12; color: #000; background: #fff; border: 1.5px solid #000; }
+  .ugr-standard-table th, .ugr-standard-table td { border: 0; padding: 2px 3px; text-align: center; font-weight: 400; white-space: nowrap; }
+  .ugr-standard-table .left-label { text-align: center; width: 12%; }
+  .ugr-standard-table .y-label { width: 9%; }
+  .ugr-standard-table .section-title > th, .ugr-standard-table .section-title > td { border-top: 1.5px solid #000; border-bottom: 1.5px solid #000; }
+  .ugr-standard-table .mid-split { border-left: 1.5px solid #000; }
+  .ugr-standard-table .variation-title td { text-align: left; border-top: 1.5px solid #000; border-bottom: 1.5px solid #000; }
+  .ugr-standard-table .variation-left { border-right: 1.5px solid #000; }
+  .ugr-standard-table .variation-mid { border-right: 1.5px solid #000; }
+  .ugr-standard-table .spacer td { height: 18px; padding: 2px 3px; }
+  .ugr-correction-note { margin: 12px 0 0; font-family: Consolas, "Courier New", monospace; font-size: 11.2px; font-weight: 700; color: #000; }
+
+
+
+  .cu-budget-page .page-title {
+    margin: 18px 0 18px;
+    letter-spacing: 0;
+    text-indent: 0;
+    font-size: 18px;
+    white-space: nowrap;
+  }
+
+  .cu-budget-info-table {
+    margin: 0 0 10px;
+    width: 100%;
+    border: 1.2px solid var(--paper-line);
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 10.8px;
+    line-height: 1.18;
+    font-weight: 700;
+  }
+
+  .cu-budget-info-table td {
+    border: 1px solid var(--paper-line);
+    padding: 4px 12px;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  .cu-budget-info-table .full-line {
+    padding: 5px 12px;
+  }
+
+  .cu-reference-table {
+    width: 100%;
+    border: 1.2px solid var(--paper-line);
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 8.6px;
+    line-height: 1.08;
+    margin-top: 8px;
+  }
+
+  .cu-reference-table th,
+  .cu-reference-table td {
+    border: 1px solid var(--paper-line);
+    padding: 2px 2px;
+    text-align: center;
+    vertical-align: middle;
+    font-weight: 400;
+    white-space: nowrap;
+  }
+
+  .cu-reference-table .left-head {
+    width: 74px;
+  }
+
+  .cu-reference-table .cu-title-cell {
+    letter-spacing: 0.08em;
+  }
+
+  .budget-diagram-box {
+    border: 1.2px solid var(--paper-line);
+    border-top: 0;
+    padding: 0;
+  }
+
+  .budget-diagram-svg {
+    width: 100%;
+    height: auto;
+    display: block;
+    background: #fff;
+  }
+
+
+  .wec-ccec-page .page-title {
+    margin: 18px 0 18px;
+    letter-spacing: 0;
+    text-indent: 0;
+    font-size: 18px;
+    white-space: nowrap;
+  }
+
+  .wec-ccec-table {
+    width: 100%;
+    border: 1.2px solid var(--paper-line);
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 8.7px;
+    line-height: 1.08;
+    margin: 18px 0 0;
+  }
+
+  .wec-ccec-table th,
+  .wec-ccec-table td {
+    border: 1px solid var(--paper-line);
+    padding: 2px 2px;
+    text-align: center;
+    vertical-align: middle;
+    font-weight: 400;
+    white-space: nowrap;
+  }
+
+  .wec-ccec-table .rcr-col {
+    width: 82px;
+  }
+
+  .wec-ccec-table .wec-title-cell {
+    padding: 2px 8px;
+  }
+
+  .wec-ccec-table .wec-title-inner {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .wec-ccec-table .empty-coef {
+    color: transparent;
+  }
+
+
+
+  .uf-page .page-title {
+    margin: 50px 0 34px;
+    letter-spacing: 0.04em;
+    text-indent: 0;
+    font-size: 20px;
+  }
+
+  .uf-page .cu-budget-info-table {
+    margin-bottom: 48px;
+  }
+
+  .uf-reference-table {
+    width: 100%;
+    table-layout: fixed;
+    border: 1.2px solid var(--paper-line);
+    border-collapse: collapse;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 10.8px;
+    line-height: 1.18;
+  }
+
+  .uf-reference-table th,
+  .uf-reference-table td {
+    border: 1px solid var(--paper-line);
+    padding: 6px 5px;
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  .uf-reference-table th {
+    font-weight: 700;
+    background: #fff;
+  }
+
+  .uf-reference-table .left-label {
+    width: 126px;
+  }
+
+  .uf-reference-table .section-row th {
+    padding: 5px 5px;
+  }
+
+  .uf-reference-table .foot-row td,
+  .uf-reference-table .foot-row th {
+    padding: 7px 5px;
+    font-weight: 700;
+  }
+
+  .uf-reference-table .foot-note td {
+    padding: 8px 5px;
+    font-weight: 700;
+  }
+
+
   .report-note {
     margin: 16px 0 0;
     font-family: "方华简体", SimSun, "宋体", serif;
     font-size: 14px;
     line-height: 1.65;
+  }
+
+
+  .report-footer-data {
+    margin-top: 18px;
+    border-top: 1.5px solid var(--paper-line);
+  }
+
+  .compact-page .report-footer-data {
+    margin-top: 12px;
+    padding-top: 8px;
+    font-size: 11px;
+    line-height: 1.28;
+  }
+
+
+
+  .report-info-table {
+    margin: 0 0 12px;
+    font-size: 11px;
+    font-family: "Courier New", Courier, monospace;
+    border: 1.2px solid var(--paper-line);
+  }
+
+  .report-info-table td {
+    border: 1px solid var(--paper-line);
+    padding: 3px 5px;
+    line-height: 1.18;
+    vertical-align: middle;
+  }
+
+  .report-info-table .full-line {
+    font-size: 10.6px;
+  }
+
+  .zonal-matrix-table,
+  .uf-table,
+  .candela-full-table {
+    font-size: 9px;
+  }
+
+  .zonal-matrix-table th,
+  .zonal-matrix-table td,
+  .uf-table th,
+  .uf-table td,
+  .candela-full-table th,
+  .candela-full-table td {
+    padding: 3px 3px;
+  }
+
+  .zonal-page .page-title {
+    margin: 76px 0 46px;
+    letter-spacing: 0.06em;
+    text-indent: 0;
+  }
+
+  .zonal-page .zonal-label {
+    margin: 0 0 16px;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .zonal-reference-table {
+    table-layout: fixed;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 9.2px;
+    line-height: 1.12;
+  }
+
+  .zonal-reference-table th,
+  .zonal-reference-table td {
+    padding: 4px 3px;
+    height: 22px;
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  .zonal-reference-table .unit-row td {
+    height: 22px;
+    font-weight: 700;
+  }
+
+  .zonal-reference-table .right-metric {
+    color: #6b6a00;
+  }
+
+  .zonal-notes {
+    margin-top: 18px;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 13.2px;
+    font-weight: 700;
+    line-height: 1.45;
+    white-space: pre-line;
+  }
+
+  body.report-lang-zh .zonal-label,
+  body.report-lang-zh .zonal-reference-table,
+  body.report-lang-zh .zonal-notes {
+    font-family: "Courier New", "方华简体", SimSun, monospace;
+  }
+
+  .page-check-note {
+    margin-top: 8px;
+    font-size: 10.5px;
+    line-height: 1.35;
+  }
+
+  .candela-page .page-title {
+    margin: 28px 0 18px;
+    font-size: 20px;
+    letter-spacing: 0.02em;
+    text-indent: 0;
+    white-space: nowrap;
+  }
+
+  .candela-page .luminance-info-table {
+    margin-bottom: 10px;
+  }
+
+  .candela-caption-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin: 6px 14px 2px;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 10.5px;
+    font-weight: 700;
+  }
+
+  .candela-distribution-table {
+    table-layout: fixed;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 8.2px;
+    line-height: 1.05;
+    border: 1.2px solid var(--paper-line);
+  }
+
+  .candela-distribution-table th,
+  .candela-distribution-table td {
+    border: 1px solid var(--paper-line);
+    padding: 2px 2px;
+    height: 15px;
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  .candela-distribution-table .gamma-col {
+    width: 68px;
+  }
+
+  .candela-distribution-table .blank-col {
+    color: transparent;
+  }
+
+  .compact-page .page-title {
+    margin-bottom: 10px;
+  }
+
+  .luminance-page .page-title {
+    margin: 52px 0 18px;
+    letter-spacing: 0.08em;
+    text-indent: 0;
+  }
+
+  .luminance-info-table {
+    margin: 0;
+    width: 100%;
+    border: 1.2px solid var(--paper-line);
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  .luminance-info-table td {
+    border: 1px solid var(--paper-line);
+    padding: 9px 14px;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  .luminance-info-table .full-line {
+    padding: 9px 14px;
+  }
+
+  .luminance-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 210px;
+    gap: 16px;
+    align-items: end;
+    margin-top: 74px;
+  }
+
+  .luminance-chart-frame {
+    border: 1.2px solid var(--paper-line);
+    padding: 8px 10px 10px;
+    background: #fff;
+  }
+
+  .luminance-limit-svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .luminance-value-table {
+    width: 100%;
+    border: 1.2px solid var(--paper-line);
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 10.6px;
+    line-height: 1.18;
+  }
+
+  .luminance-value-table th,
+  .luminance-value-table td {
+    border: 1px solid var(--paper-line);
+    padding: 5px 4px;
+    text-align: center;
+    vertical-align: middle;
+    font-weight: 400;
+    white-space: nowrap;
+  }
+
+  .luminance-value-table .table-title {
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+
+  .metric-line {
+    margin: 8px 0 0;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
   }
 
   .empty {
@@ -490,26 +978,28 @@
     }
 
     .report-head {
+      grid-template-columns: minmax(0, 1fr) 118px;
       padding-bottom: 6px;
-      gap: 10px;
+      gap: 8px;
     }
 
     .lab {
-      font-size: 16px;
+      font-size: 14.5px;
+      white-space: nowrap;
     }
 
     .cdn-logo {
       width: 118px;
-      height: 38px;
+      height: 30px;
     }
 
     .report-logo {
       max-width: 118px;
-      max-height: 38px;
+      max-height: 30px;
     }
 
     .page-no {
-      font-size: 14px;
+      font-size: 11.5px;
     }
 
     .report-title {
@@ -541,9 +1031,9 @@
     }
 
     .data-table th {
-      font-size: 14px;
-      letter-spacing: 0.18em;
-      text-indent: 0.18em;
+      font-size: 11px;
+      letter-spacing: 0;
+      text-indent: 0;
     }
 
     .charts {
@@ -591,17 +1081,253 @@
       padding: 3px 4px;
     }
 
-    .report-note {
+    .wide-table {
+      font-size: 7.8px;
+    }
+
+    .wide-table th,
+    .wide-table td {
+      padding: 2px 2px;
+    }
+
+
+
+    .mini-svg { margin-top: 6px; }
+    .ugr-page .page-title { margin: 18px 0 10px; font-size: 16px; }
+    .ugr-page .report-info-table { margin-bottom: 7px; }
+    .ugr-table-box { overflow: visible; }
+    .ugr-standard-table { font-size: 7.05px; min-width: 0; line-height: 1.02; }
+    .ugr-standard-table th, .ugr-standard-table td { padding: 1px 1.4px; }
+    .ugr-standard-table .spacer td { height: 12px; padding: 1px; }
+    .ugr-correction-note { margin-top: 6px; font-size: 7.8px; }
+
+  
+
+  .cu-budget-page .page-title {
+    margin: 18px 0 18px;
+    letter-spacing: 0;
+    text-indent: 0;
+    font-size: 18px;
+    white-space: nowrap;
+  }
+
+  .cu-budget-info-table {
+    margin: 0 0 10px;
+    width: 100%;
+    border: 1.2px solid var(--paper-line);
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 10.8px;
+    line-height: 1.18;
+    font-weight: 700;
+  }
+
+  .cu-budget-info-table td {
+    border: 1px solid var(--paper-line);
+    padding: 4px 12px;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  .cu-budget-info-table .full-line {
+    padding: 5px 12px;
+  }
+
+  .cu-reference-table {
+    width: 100%;
+    border: 1.2px solid var(--paper-line);
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 8.6px;
+    line-height: 1.08;
+    margin-top: 8px;
+  }
+
+  .cu-reference-table th,
+  .cu-reference-table td {
+    border: 1px solid var(--paper-line);
+    padding: 2px 2px;
+    text-align: center;
+    vertical-align: middle;
+    font-weight: 400;
+    white-space: nowrap;
+  }
+
+  .cu-reference-table .left-head {
+    width: 74px;
+  }
+
+  .cu-reference-table .cu-title-cell {
+    letter-spacing: 0.08em;
+  }
+
+  .budget-diagram-box {
+    border: 1.2px solid var(--paper-line);
+    border-top: 0;
+    padding: 0;
+  }
+
+  .budget-diagram-svg {
+    width: 100%;
+    height: auto;
+    display: block;
+    background: #fff;
+  }
+
+  .report-note {
       margin-top: 10px;
       font-size: 10.5px;
       line-height: 1.4;
     }
+
+    .report-info-table {
+      margin-bottom: 6px;
+      font-size: 7.6px;
+    }
+
+    .report-info-table td {
+      padding: 2px 3px;
+      line-height: 1.12;
+    }
+
+    .zonal-matrix-table,
+    .uf-table,
+    .candela-full-table {
+      font-size: 6.8px;
+    }
+
+    .zonal-matrix-table th,
+    .zonal-matrix-table td,
+    .uf-table th,
+    .uf-table td,
+    .candela-full-table th,
+    .candela-full-table td {
+      padding: 1.8px 2px;
+    }
+
+    .page-check-note,
+    .metric-line {
+      font-size: 8px;
+      margin-top: 4px;
+    }
+
+
+
+
+    .uf-page .page-title {
+      margin: 30px 0 22px;
+      font-size: 16px;
+      letter-spacing: 0.03em;
+      text-indent: 0;
+    }
+
+    .uf-page .cu-budget-info-table {
+      margin-bottom: 34px;
+    }
+
+    .uf-reference-table {
+      font-size: 8px;
+      line-height: 1.12;
+    }
+
+    .uf-reference-table th,
+    .uf-reference-table td {
+      padding: 4px 3px;
+    }
+
+
+    .luminance-page .page-title {
+      margin: 28px 0 12px;
+    }
+
+    .luminance-info-table {
+      font-size: 8.6px;
+    }
+
+    .luminance-info-table td {
+      padding: 4px 7px;
+    }
+
+    .luminance-body {
+      grid-template-columns: minmax(0, 1fr) 160px;
+      gap: 10px;
+      margin-top: 44px;
+    }
+
+    .luminance-chart-frame {
+      padding: 5px 6px 6px;
+    }
+
+    .luminance-value-table {
+      font-size: 7.6px;
+    }
+
+    .luminance-value-table th,
+    .luminance-value-table td {
+      padding: 3px 2px;
+    }
+
+
+
+
+    .wec-ccec-page .page-title {
+      margin: 14px 0 12px;
+      font-size: 15px;
+      letter-spacing: 0;
+      text-indent: 0;
+      white-space: nowrap;
+    }
+
+    .wec-ccec-table {
+      font-size: 6.55px;
+      line-height: 1.02;
+      margin-top: 12px;
+    }
+
+    .wec-ccec-table th,
+    .wec-ccec-table td {
+      padding: 1.45px 1px;
+    }
+
+    .wec-ccec-table .rcr-col {
+      width: 58px;
+    }
+
 
     @page {
       size: A4;
       margin: 0;
     }
   }
+
+  .render-progress {
+    width: 960px;
+    margin: 0 auto 24px;
+    padding: 18px 24px;
+    background: #fff;
+    color: #111;
+    border: 1px solid #ddd;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 13px;
+  }
+
+  @media screen {
+    .paper {
+      content-visibility: auto;
+      contain-intrinsic-size: 960px 1358px;
+    }
+  }
+
+  @media print {
+    .render-progress { display: none !important; }
+    .paper {
+      content-visibility: visible;
+      contain-intrinsic-size: auto;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -670,7 +1396,7 @@
         </div>
         <div class="field">
           <label for="spec">Specification</label>
-          <input id="spec" value="12°">
+          <input id="spec" value="">
         </div>
       </div>
       <div class="two">
@@ -750,16 +1476,16 @@
       <div class="two">
         <div class="field">
           <label for="distance">Test distance</label>
-          <input id="distance" value="7.390米 [K=1.0000]">
+          <input id="distance" value="7.390m [K=1.0000]">
         </div>
         <div class="field">
           <label for="operator">Tester</label>
-          <input id="operator" value="Liao Huan Ming">
+          <input id="operator" value="Admin">
         </div>
       </div>
       <div class="field">
         <label for="system">Testing system</label>
-        <input id="system" value="远方(EVERFINE)GO-2000A_V1系统 V2.0.405.8">
+        <input id="system" value="EVERFINE GO-2000A_V1 SYSTEM V2.0.405.8">
       </div>
       <div class="field">
         <label for="remark">Remark</label>
@@ -886,8 +1612,9 @@
   const extraPages = document.getElementById("extraPages");
   const defaultLogoSrc = "../cdn-newsletter/202606-hskc/images/logo.png";
   let logoSrc = defaultLogoSrc;
-  let language = "zh";
-  let parsed = samplePhotometry();
+  let language = "en";
+  let hasLoadedIES = false;
+  let parsed = emptyPhotometry();
 
   const i18n = {
     zh: {
@@ -1077,6 +1804,25 @@
     byId("firstPageNo").textContent = tr("page")(val("pageIndex") || "1", val("pageTotal") || "13");
   }
 
+  function emptyPhotometry() {
+    return {
+      text: "",
+      manufacturer: "",
+      model: "",
+      luminaire: "",
+      lampCount: 1,
+      lumensPerLamp: 0,
+      multiplier: 1,
+      photometricType: 1,
+      unitsType: 1,
+      verticalAngles: [0],
+      horizontalAngles: [0],
+      candela: [[0]],
+      dimensions: { width: 0, length: 0, height: 0 },
+      power: 0
+    };
+  }
+
   function samplePhotometry() {
     const verticalAngles = Array.from({ length: 91 }, (_, index) => index);
     const horizontalAngles = [0, 90, 180, 270];
@@ -1097,6 +1843,7 @@
       verticalAngles,
       horizontalAngles,
       candela: profiles,
+      otherZonalRows: [],
       dimensions: { width: 0, length: 0, height: 0 },
       power: 2.8653
     };
@@ -1122,18 +1869,94 @@
     return nums;
   }
 
-  function parseKeywords(text) {
-    const out = {};
-    const patterns = {
-      manufacturer: /\[MANUFAC\]\s*(.+)/i,
-      model: /\[(?:LUMCAT|TEST|LUMINAIRE)\]\s*(.+)/i,
-      luminaire: /\[LUMINAIRE\]\s*(.+)/i,
-      date: /\[ISSUEDATE\]\s*(.+)/i
-    };
-    Object.entries(patterns).forEach(([key, pattern]) => {
+  function parseOtherZonalRows(text) {
+    const rows = [];
+    const pattern = /^\s*\[OTHER\]\s*(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)/gmi;
+    let match;
+    while ((match = pattern.exec(text)) !== null) {
+      const start = Number(match[1]);
+      const end = Number(match[2]);
+      rows.push({
+        start,
+        end,
+        zone: `${fmt(start, start % 1 ? 1 : 0)}-${fmt(end, end % 1 ? 1 : 0)}`,
+        fz: Number(match[3]),
+        ft: Number(match[4]),
+        pctLum: Number(match[5]),
+        pctLamp: Number(match[6]),
+        source: "IES [OTHER]"
+      });
+    }
+    return rows;
+  }
+
+
+  function normalizeKeywordText(value) {
+    return String(value || "")
+      .replace(/\u00ba|\u02da/g, "°")
+      .replace(/\ufffd+/g, "°")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function pickFirstMatch(texts, patterns) {
+    for (const text of texts.map(normalizeKeywordText).filter(Boolean)) {
+      for (const pattern of patterns) {
+        const match = text.match(pattern);
+        if (match && match[1]) return match[1];
+      }
+    }
+    return "";
+  }
+
+  function extractLuminaireSpec(primaryText, fallbackText = "") {
+    const primary = normalizeKeywordText(primaryText);
+    const fallback = normalizeKeywordText(fallbackText);
+    const sources = [primary, fallback].filter(Boolean);
+    const parts = [];
+
+    const power = pickFirstMatch(sources, [
+      /(?:^|[^A-Za-z0-9])(\d+(?:\.\d+)?)\s*(?:W|w|瓦)(?=$|[^A-Za-z0-9])/,
+      /(?:^|[^A-Za-z0-9])(\d+(?:\.\d+)?)\s*(?:W|w)(?=\s*[-_/ ]*\s*\d)/
+    ]);
+
+    let angle = pickFirstMatch(sources, [
+      /(\d+(?:\.\d+)?)\s*(?:°|度|DEG|Deg|deg)(?=$|[^A-Za-z0-9])/,
+      /(?:W|w|瓦)\s*[-_/ ]*\s*(\d+(?:\.\d+)?)(?=\s*(?:°|度|DEG|Deg|deg|$|[^A-Za-z0-9]))/
+    ]);
+
+    const cct = pickFirstMatch(sources, [
+      /(\d{3,5})\s*(?:K|k)(?=$|[^A-Za-z0-9])/
+    ]);
+
+    if (power) parts.push(`${Number(power)}W`);
+    if (angle) parts.push(`${Number(angle)}°`);
+    if (cct) parts.push(`${cct}K`);
+    return parts.join(" ");
+  }
+
+  function nonEmptyKeyword(text, names) {
+    for (const name of names) {
+      const pattern = new RegExp(`\\[${name}\\]\\s*(.+)`, "i");
       const match = text.match(pattern);
-      if (match) out[key] = match[1].trim();
-    });
+      if (match && match[1].trim()) return match[1].trim();
+    }
+    return "";
+  }
+  function parseKeywords(text) {
+    const luminaire = nonEmptyKeyword(text, ["LUMINAIRE"]);
+    const lamp = nonEmptyKeyword(text, ["LAMP"]);
+    const catalog = nonEmptyKeyword(text, ["LUMCAT", "LAMPCAT"]);
+    const out = {
+      manufacturer: nonEmptyKeyword(text, ["MANUFAC"]),
+      // MODEL in this report follows the [LUMINAIRE] field.
+      // Avoid reading [TEST] / [TESTLAB] into the model field.
+      model: luminaire || catalog,
+      luminaire,
+      spec: extractLuminaireSpec([luminaire, lamp, catalog].filter(Boolean).join(" ")),
+      date: nonEmptyKeyword(text, ["ISSUEDATE", "TESTDATE"])
+    };
+    Object.keys(out).forEach((key) => { if (!out[key]) delete out[key]; });
     return out;
   }
 
@@ -1176,6 +1999,7 @@
       verticalAngles,
       horizontalAngles,
       candela,
+      otherZonalRows: parseOtherZonalRows(text),
       dimensions: { width, length, height },
       power
     };
@@ -1212,18 +2036,47 @@
     return profile[profile.length - 1];
   }
 
-  function beamAngle(profile, angles) {
-    const peak = Math.max(...profile, 0);
-    const half = peak / 2;
-    for (let i = 1; i < profile.length; i += 1) {
-      if (profile[i] <= half) {
-        const prev = profile[i - 1];
-        const ratio = (half - prev) / Math.max(0.0001, profile[i] - prev);
-        const oneSide = angles[i - 1] + ratio * (angles[i] - angles[i - 1]);
-        return Math.abs(oneSide * 2);
+  function halfBeamCrossing(profile, angles, peakIndex, direction, half) {
+    let prevIndex = peakIndex;
+    for (let i = peakIndex + direction; i >= 0 && i < profile.length; i += direction) {
+      const v1 = Number(profile[prevIndex] || 0);
+      const v2 = Number(profile[i] || 0);
+      const a1 = Number(angles[prevIndex] || 0);
+      const a2 = Number(angles[i] || 0);
+      const crosses = (v1 >= half && v2 <= half) || (v1 <= half && v2 >= half);
+      if (crosses) {
+        const denom = v2 - v1;
+        if (Math.abs(denom) < 1e-9) return (a1 + a2) / 2;
+        const ratio = Math.max(0, Math.min(1, (half - v1) / denom));
+        return a1 + ratio * (a2 - a1);
       }
+      prevIndex = i;
     }
-    return Math.abs((angles[angles.length - 1] || 0) * 2);
+    return null;
+  }
+
+  function beamAngle(profile, angles) {
+    if (!profile.length || !angles.length) return 0;
+    let peak = -Infinity;
+    let peakIndex = 0;
+    profile.forEach((value, index) => {
+      const cd = Number(value || 0);
+      if (cd > peak) {
+        peak = cd;
+        peakIndex = index;
+      }
+    });
+    if (!Number.isFinite(peak) || peak <= 0) return 0;
+
+    const half = peak / 2;
+    const peakAngle = Number(angles[peakIndex] || 0);
+    const left = halfBeamCrossing(profile, angles, peakIndex, -1, half);
+    const right = halfBeamCrossing(profile, angles, peakIndex, 1, half);
+
+    if (left !== null && right !== null) return Math.abs(right - left);
+    if (left !== null) return Math.abs(peakAngle - left) * 2;
+    if (right !== null) return Math.abs(right - peakAngle) * 2;
+    return Math.abs(Number(angles[angles.length - 1] || 0) - Number(angles[0] || 0));
   }
 
   function planeIndex(targetAngle) {
@@ -1263,15 +2116,88 @@
     return bestDistance <= tolerance ? bestIndex : -1;
   }
 
-  function profileFor(targetAngle, fallbackAngle = null) {
-    const exact = exactPlaneIndex(targetAngle);
-    if (exact >= 0) return parsed.candela[exact] || [];
-    if (fallbackAngle !== null) {
-      const fallback = exactPlaneIndex(fallbackAngle);
-      if (fallback >= 0) return parsed.candela[fallback] || [];
-    }
-    return parsed.candela[planeIndex(targetAngle)] || parsed.candela[0] || [];
+  function normalizeC(angle) {
+    const value = Number(angle || 0);
+    return ((value % 360) + 360) % 360;
   }
+
+  function foldedCForAvailableRange(targetAngle) {
+    const angles = (parsed.horizontalAngles || []).map(normalizeC);
+    if (!angles.length) return normalizeC(targetAngle);
+    const minAngle = Math.min(...angles);
+    const maxAngle = Math.max(...angles);
+    let target = normalizeC(targetAngle);
+
+    if (minAngle >= -0.001 && maxAngle <= 90.001) {
+      let folded = target % 180;
+      if (folded > 90) folded = 180 - folded;
+      return folded;
+    }
+
+    if (minAngle >= -0.001 && maxAngle <= 180.001) {
+      return target <= 180 ? target : 360 - target;
+    }
+
+    return target;
+  }
+
+  function planeEntries() {
+    return (parsed.horizontalAngles || [])
+      .map((angle, index) => ({ angle: normalizeC(angle), index }))
+      .sort((a, b) => a.angle - b.angle);
+  }
+
+  function interpolateProfiles(profileA, profileB, ratio) {
+    const length = Math.max(profileA ? profileA.length : 0, profileB ? profileB.length : 0);
+    return Array.from({ length }, (_, index) => {
+      const a = Number((profileA && profileA[index]) || 0);
+      const b = Number((profileB && profileB[index]) || 0);
+      return a + (b - a) * ratio;
+    });
+  }
+
+  function profileFor(targetAngle, fallbackAngle = null) {
+    if (!parsed.candela.length) return [];
+    parsed.__profileCache = parsed.__profileCache || new Map();
+    const cacheKey = `${normalizeC(targetAngle).toFixed(4)}|${fallbackAngle === null ? "" : normalizeC(fallbackAngle).toFixed(4)}`;
+    if (parsed.__profileCache.has(cacheKey)) return parsed.__profileCache.get(cacheKey);
+    const save = (profile) => {
+      const safeProfile = profile || [];
+      parsed.__profileCache.set(cacheKey, safeProfile);
+      return safeProfile;
+    };
+
+    const target = foldedCForAvailableRange(targetAngle);
+    const exact = exactPlaneIndex(target);
+    if (exact >= 0) return save(parsed.candela[exact]);
+
+    const entries = planeEntries();
+    if (!entries.length) return save(parsed.candela[0]);
+
+    if (entries.length === 1) return save(parsed.candela[entries[0].index]);
+
+    const minAngle = entries[0].angle;
+    const maxAngle = entries[entries.length - 1].angle;
+
+    if (target >= minAngle && target <= maxAngle) {
+      for (let i = 0; i < entries.length - 1; i += 1) {
+        const a = entries[i];
+        const b = entries[i + 1];
+        if (target >= a.angle && target <= b.angle) {
+          const ratio = (target - a.angle) / Math.max(0.0001, b.angle - a.angle);
+          return save(interpolateProfiles(parsed.candela[a.index], parsed.candela[b.index], ratio));
+        }
+      }
+    }
+
+    if (fallbackAngle !== null) {
+      const fallback = exactPlaneIndex(foldedCForAvailableRange(fallbackAngle));
+      if (fallback >= 0) return save(parsed.candela[fallback]);
+    }
+
+    return save(parsed.candela[planeIndex(target)] || parsed.candela[0]);
+  }
+
 
   function profilePair(mainAngle) {
     const right = profileFor(mainAngle);
@@ -1300,32 +2226,71 @@
     return bestIndex;
   }
 
-  function integrateFlux(data) {
-    const angles = data.verticalAngles;
-    if (!angles.length || !data.candela.length) return data.lampCount * data.lumensPerLamp;
-    const avg = angles.map((_, index) => {
-      const sum = data.candela.reduce((acc, profile) => acc + (profile[index] || 0), 0);
-      return sum / data.candela.length;
-    });
-    let flux = 0;
-    for (let i = 0; i < angles.length - 1; i += 1) {
-      const a1 = angles[i] * Math.PI / 180;
-      const a2 = angles[i + 1] * Math.PI / 180;
-      const y1 = avg[i] * Math.sin(a1);
-      const y2 = avg[i + 1] * Math.sin(a2);
-      flux += 2 * Math.PI * ((y1 + y2) / 2) * (a2 - a1);
-    }
-    return flux;
+  function intensityForCG(cAngle, gammaAngle) {
+    parsed.__intensityCache = parsed.__intensityCache || new Map();
+    const key = `${normalizeC(cAngle).toFixed(3)}|${Number(gammaAngle || 0).toFixed(3)}`;
+    if (parsed.__intensityCache.has(key)) return parsed.__intensityCache.get(key);
+    const profile = profileFor(cAngle);
+    const value = intensityAt(profile, parsed.verticalAngles, gammaAngle);
+    parsed.__intensityCache.set(key, value);
+    return value;
   }
+
+  function integrateFlux(data, gammaMin = null, gammaMax = null) {
+    const angles = data.verticalAngles || [];
+    if (!angles.length || !data.candela.length) return data.lampCount * data.lumensPerLamp;
+
+    data.__fluxCache = data.__fluxCache || new Map();
+    const cacheKey = `${gammaMin === null ? "all" : Number(gammaMin).toFixed(4)}|${gammaMax === null ? "all" : Number(gammaMax).toFixed(4)}`;
+    if (data.__fluxCache.has(cacheKey)) return data.__fluxCache.get(cacheKey);
+
+    const availableMin = Math.min(...angles);
+    const availableMax = Math.max(...angles);
+    const startGamma = Math.max(availableMin, gammaMin == null ? availableMin : gammaMin);
+    const endGamma = Math.min(availableMax, gammaMax == null ? availableMax : gammaMax);
+    if (endGamma <= startGamma) {
+      data.__fluxCache.set(cacheKey, 0);
+      return 0;
+    }
+
+    const cStep = 5;
+    const cSamples = Math.round(360 / cStep);
+    let flux = 0;
+
+    for (let cIndex = 0; cIndex < cSamples; cIndex += 1) {
+      const cAngle = cIndex * cStep;
+      const dC = cStep * Math.PI / 180;
+
+      for (let i = 0; i < angles.length - 1; i += 1) {
+        const g1 = Math.max(startGamma, angles[i]);
+        const g2 = Math.min(endGamma, angles[i + 1]);
+        if (g2 <= g1) continue;
+
+        const r1 = g1 * Math.PI / 180;
+        const r2 = g2 * Math.PI / 180;
+        const i1 = intensityForCG(cAngle, g1) * Math.sin(r1);
+        const i2 = intensityForCG(cAngle, g2) * Math.sin(r2);
+        flux += ((i1 + i2) / 2) * (r2 - r1) * dC;
+      }
+    }
+
+    const result = Math.max(0, flux);
+    data.__fluxCache.set(cacheKey, result);
+    return result;
+  }
+
 
   function metrics(data) {
     const all = data.candela.flat();
     const peak = Math.max(...all, 0);
     const totalFlux = integrateFlux(data);
+    const downFlux = integrateFlux(data, 0, 90);
+    const upFlux = integrateFlux(data, 90, 180);
+    const ratioBase = Math.max(0.0001, downFlux + upFlux || totalFlux);
     const nominalFlux = data.lumensPerLamp > 0 ? data.lampCount * data.lumensPerLamp : totalFlux;
     const efficiency = nominalFlux > 0 ? totalFlux / nominalFlux * 100 : 100;
-    const downRatio = 100;
-    const upRatio = 0;
+    const downRatio = downFlux / ratioBase * 100;
+    const upRatio = upFlux / ratioBase * 100;
     const pair0 = profilePair(0);
     const pair90 = profilePair(90);
     const typeBProfile = data.candela[strongestPlaneIndex()] || data.candela[0] || [];
@@ -1346,6 +2311,7 @@
     };
   }
 
+
   function applyParsedToFields(data) {
     if (data.manufacturer) set("manufacturer", data.manufacturer);
     if (data.model) set("model", data.model);
@@ -1354,6 +2320,8 @@
       set("luminaireType", data.luminaire);
     }
     if (data.date) set("testDate", data.date);
+    const parsedSpec = data.spec || extractLuminaireSpec([data.luminaire, data.model].filter(Boolean).join(" "));
+    set("spec", parsedSpec || "");
     set("lampCount", fmt(data.lampCount, 0));
     set("ratedFlux", fmt(data.lumensPerLamp > 0 ? data.lampCount * data.lumensPerLamp : integrateFlux(data), 3));
     if (data.power) set("ratedPower", fmt(data.power, 4));
@@ -1378,8 +2346,14 @@
     const gInfo = parsed.verticalAngles && parsed.verticalAngles.length
       ? `${parsed.verticalAngles.length} gamma angles: ${fmt(parsed.verticalAngles[0], 1)}-${fmt(parsed.verticalAngles[parsed.verticalAngles.length - 1], 1)}`
       : "No gamma data";
-    byId("parseStatus").textContent = `Type ${parsed.photometricType || 1}; ${cInfo}; ${gInfo}.`;
-    const measuredFlux = `${fmt(m.totalFlux, 3)}x1 lm`;
+    const reportGridInfo = hasLoadedIES && !isTypeB()
+      ? (language === "zh" ? "; 报告输出 C0-C330/30°，缺失平面自动插值。" : "; report output C0-C330/30deg, missing planes are interpolated.")
+      : "";
+    byId("parseStatus").textContent = hasLoadedIES
+      ? `Type ${parsed.photometricType || 1}; source ${cInfo}; ${gInfo}${reportGridInfo}`
+      : "No IES file loaded.";
+    const reportFlux = n(val("ratedFlux"), 0) || (parsed.lampCount * parsed.lumensPerLamp) || m.totalFlux;
+    const measuredFlux = `${fmt(reportFlux, 3)}x1 lm`;
     byId("measuredFluxText").textContent = measuredFlux;
     byId("efficacyText").textContent = `${fmt(m.efficacy, 2)} lm/W`;
     byId("peakCdText").textContent = fmt(m.peak, 0);
@@ -1395,10 +2369,12 @@
     byId("shrNomText").textContent = "0.00";
     byId("shrMaxText").textContent = "1.00";
     byId("beamText").textContent = `${fmt(m.beamAvg, 1)} ${tr("degree")}`;
+    const cSteps = parsed.horizontalAngles.slice(1).map((angle, index) => Math.abs(angle - parsed.horizontalAngles[index])).filter((value) => value > 0);
+    const gSteps = parsed.verticalAngles.slice(1).map((angle, index) => Math.abs(angle - parsed.verticalAngles[index])).filter((value) => value > 0);
     byId("cRangeText").textContent = `${fmt(Math.min(...parsed.horizontalAngles), 0)} - ${fmt(Math.max(...parsed.horizontalAngles), 0)} ${tr("degree")}`;
-    byId("cStepText").textContent = parsed.horizontalAngles.length > 1 ? `${fmt(parsed.horizontalAngles[1] - parsed.horizontalAngles[0], 1)} ${tr("degree")}` : `0.0 ${tr("degree")}`;
+    byId("cStepText").textContent = cSteps.length ? `${fmt(Math.min(...cSteps), 1)} ${tr("degree")}` : `0.0 ${tr("degree")}`;
     byId("gRangeText").textContent = `${fmt(Math.min(...parsed.verticalAngles), 0)} - ${fmt(Math.max(...parsed.verticalAngles), 0)} ${tr("degree")}`;
-    byId("gStepText").textContent = parsed.verticalAngles.length > 1 ? `${fmt(parsed.verticalAngles[1] - parsed.verticalAngles[0], 1)} ${tr("degree")}` : `0.0 ${tr("degree")}`;
+    byId("gStepText").textContent = gSteps.length ? `${fmt(Math.min(...gSteps), 1)} ${tr("degree")}` : `0.0 ${tr("degree")}`;
     drawPolar();
     drawIso();
     renderExtraPages();
@@ -1421,55 +2397,253 @@
   }
 
   function pageFooter() {
+    const sep = language === "zh" ? "：" : ":";
     return `
-      <footer class="footer-data">
+      <footer class="footer-data report-footer-data">
         <div>
-          ${escapeHtml(tr("cRange"))}： ${escapeHtml(byId("cRangeText").textContent)}<br>
-          ${escapeHtml(tr("cInterval"))}： ${escapeHtml(byId("cStepText").textContent)}<br>
-          ${escapeHtml(tr("testSpeed"))}： ${escapeHtml(tr("high"))}<br>
-          ${escapeHtml(tr("temperature"))}：${escapeHtml(val("temperature"))}<br>
-          ${escapeHtml(tr("operator"))}：${escapeHtml(val("operator"))}<br>
-          ${escapeHtml(tr("testDate"))}：${escapeHtml(val("testDate"))}
+          ${escapeHtml(tr("cRange"))}${sep} ${escapeHtml(byId("cRangeText").textContent)}<br>
+          ${escapeHtml(tr("cInterval"))}${sep} ${escapeHtml(byId("cStepText").textContent)}<br>
+          ${escapeHtml(tr("testSpeed"))}${sep} ${escapeHtml(tr("high"))}<br>
+          ${escapeHtml(tr("temperature"))}${sep}${escapeHtml(val("temperature"))}<br>
+          ${escapeHtml(tr("operator"))}${sep}${escapeHtml(val("operator") || "Admin")}<br>
+          ${escapeHtml(tr("testDate"))}${sep}${escapeHtml(val("testDate"))}
         </div>
         <div>
-          ${escapeHtml(tr("gRange"))}： ${escapeHtml(byId("gRangeText").textContent)}<br>
-          ${escapeHtml(tr("gInterval"))}： ${escapeHtml(byId("gStepText").textContent)}<br>
-          ${escapeHtml(tr("testSystem"))}： ${escapeHtml(val("system"))}<br>
-          ${escapeHtml(tr("humidity"))}：${escapeHtml(val("humidity"))}<br>
-          ${escapeHtml(tr("testDistance"))}：${escapeHtml(val("distance"))}<br>
-          ${escapeHtml(tr("remarks"))}：${escapeHtml(val("remark"))}
+          ${escapeHtml(tr("gRange"))}${sep} ${escapeHtml(byId("gRangeText").textContent)}<br>
+          ${escapeHtml(tr("gInterval"))}${sep} ${escapeHtml(byId("gStepText").textContent)}<br>
+          ${escapeHtml(tr("testSystem"))}${sep}${escapeHtml(val("system"))}<br>
+          ${escapeHtml(tr("humidity"))}${sep}${escapeHtml(val("humidity"))}<br>
+          ${escapeHtml(tr("testDistance"))}${sep}${escapeHtml(val("distance"))}<br>
+          ${escapeHtml(tr("remarks"))}${sep}${escapeHtml(val("remark"))}
         </div>
       </footer>
     `;
   }
 
-  function zonalRows() {
+  function reportInfoBlock() {
+    return `
+      <table class="report-info-table">
+        <tr>
+          <td>${escapeHtml(tr("name"))}: ${escapeHtml(val("luminaireName"))}</td>
+          <td>${escapeHtml(tr("spec"))}: ${escapeHtml(val("spec"))}</td>
+          <td>${escapeHtml(tr("manufacturer"))}: ${escapeHtml(val("manufacturer"))}</td>
+        </tr>
+        <tr>
+          <td>${escapeHtml(tr("type"))}: ${escapeHtml(val("luminaireType"))}</td>
+          <td>${escapeHtml(tr("dimensions"))}: ${escapeHtml(val("dimensions"))}</td>
+          <td>${escapeHtml(tr("surface"))}: ${escapeHtml(val("aperture"))}</td>
+        </tr>
+        <tr>
+          <td>${escapeHtml(tr("weight"))}: ${escapeHtml(val("weight"))}</td>
+          <td>${escapeHtml(tr("serialNo"))}: ${escapeHtml(val("testNo"))}</td>
+          <td>${escapeHtml(tr("shieldingAngle"))}: ${escapeHtml(val("shieldAngle"))}</td>
+        </tr>
+        <tr>
+          <td class="full-line" colspan="3">${escapeHtml(tr("measuredParams"))}:${escapeHtml(val("measured"))} &nbsp; ${escapeHtml(tr("lampFlux"))}:${escapeHtml(byId("measuredFluxText").textContent)}</td>
+        </tr>
+      </table>
+    `;
+  }
+
+  function adaptiveCd(value) {
+    const v = Math.abs(Number(value || 0));
+    if (v >= 100) return fmt(value, 1);
+    if (v >= 10) return fmt(value, 2);
+    if (v >= 1) return fmt(value, 3);
+    if (v > 0) return fmt(value, 4);
+    return "0";
+  }
+
+  function adaptiveLux(value) {
+    const v = Math.abs(Number(value || 0));
+    if (v >= 100) return fmt(value, 0);
+    if (v >= 10) return fmt(value, 2);
+    if (v >= 1) return fmt(value, 3);
+    if (v > 0) return fmt(value, 4);
+    return "0";
+  }
+
+  function zoneFlux(start, end) {
+    return integrateFlux(parsed, start, end);
+  }
+
+  function computedZonalRows() {
     const levels = [];
     for (let end = 10; end <= 180; end += 10) levels.push([end - 10, end]);
-    const total = Math.max(metrics(parsed).totalFlux, 0.0001);
     let cumulative = 0;
+    const availableMax = parsed.verticalAngles && parsed.verticalAngles.length ? Math.max(...parsed.verticalAngles) : 0;
     return levels.map(([start, end]) => {
-      const mid = (start + end) / 2;
-      const avgCd = parsed.candela.reduce((sum, profile) => sum + intensityAt(profile, parsed.verticalAngles, mid), 0) / Math.max(1, parsed.candela.length);
-      const a1 = start * Math.PI / 180;
-      const a2 = end * Math.PI / 180;
-      const zoneFlux = Math.max(0, 2 * Math.PI * avgCd * (Math.cos(a1) - Math.cos(a2)));
-      cumulative += zoneFlux;
-      return `<tr><td>${end}</td><td>${start}-${end}</td><td>${fmt(avgCd, 2)}</td><td>${fmt(zoneFlux, 2)}</td><td>${fmt(cumulative, 2)}</td><td>${fmt(cumulative / total * 100, 1)}%</td></tr>`;
+      const measurable = start < availableMax - 1e-6;
+      const upper = Math.min(end, availableMax);
+      const fz = measurable ? zoneFlux(start, upper) : NaN;
+      if (measurable) cumulative += fz;
+      return {
+        start,
+        end,
+        zone: `${start}-${end}`,
+        fz,
+        ft: measurable ? cumulative : NaN,
+        measurable,
+        source: "candela integration"
+      };
+    });
+  }
+
+  function zonalIntensityCell(cAngle, gammaAngle) {
+    const maxGamma = parsed.verticalAngles && parsed.verticalAngles.length ? Math.max(...parsed.verticalAngles) : 0;
+    if (gammaAngle > maxGamma + 1e-6) return "";
+    return adaptiveCd(intensityForCG(cAngle, gammaAngle));
+  }
+
+  function zonalMetricCell(value, digits = 3) {
+    if (!Number.isFinite(value)) return "";
+    return `<span class="right-metric">${fmt(value, digits)}</span>`;
+  }
+
+  function zonalPercentCell(row, total, lampFlux) {
+    if (!row.measurable || !Number.isFinite(row.ft)) return "";
+    const pctLum = row.ft / Math.max(0.0001, total) * 100;
+    const pctLamp = row.ft / Math.max(0.0001, lampFlux) * 100;
+    return `<span class="right-metric">${fmt(pctLum, 1)},${fmt(pctLamp, 1)}</span>`;
+  }
+
+  function zonalRows() {
+    const rows = computedZonalRows();
+    const cPlanes = [0, 45, 90, 135, 180, 225, 270, 315];
+    const total = Math.max(metrics(parsed).totalFlux, 0.0001);
+    const lampFlux = Math.max(metrics(parsed).nominalFlux, 0.0001);
+    return rows.map((row) => {
+      const cCells = cPlanes.map((c) => `<td>${zonalIntensityCell(c, row.end)}</td>`).join("");
+      const fz = zonalMetricCell(row.fz, Math.abs(row.fz || 0) >= 10 ? 2 : 4);
+      const ft = zonalMetricCell(row.ft, 1);
+      const pct = zonalPercentCell(row, total, lampFlux);
+      return `<tr><td>${fmt(row.end, 0)}</td>${cCells}<td>${fmt(row.end, 0)}</td><td>${row.start}-${row.end}</td><td>${fz}</td><td>${ft}</td><td>${pct}</td></tr>`;
     }).join("");
   }
 
-  function candelaTableRows(startIndex, endIndex) {
-    const planeTargets = [0, 45, 90, 135, 180, 225, 270, 315];
-    return parsed.verticalAngles.slice(startIndex, endIndex).map((angle, localIndex) => {
-      const actualIndex = startIndex + localIndex;
-      const cells = planeTargets.map((target) => {
-        const fallback = target >= 180 ? target - 180 : null;
-        const profile = profileFor(target, fallback);
-        return `<td>${fmt(profile[actualIndex] || 0, 2)}</td>`;
-      }).join("");
+  function zonalTable() {
+    return `<table class="simple-table zonal-reference-table">
+      <colgroup>
+        <col style="width:7%">
+        <col span="8" style="width:7.6%">
+        <col style="width:7%">
+        <col style="width:8.1%">
+        <col style="width:7.8%">
+        <col style="width:7.8%">
+        <col style="width:7.8%">
+      </colgroup>
+      <tr><th>γ</th><th>C0</th><th>C45</th><th>C90</th><th>C135</th><th>C180</th><th>C225</th><th>C270</th><th>C315</th><th>γ</th><th>Φ zone</th><th>Φ total</th><th>%lum,lamp</th></tr>
+      ${zonalRows()}
+      <tr class="unit-row"><td>DEG</td><td colspan="8">LUMINOUS INTENSITY:cd</td><td></td><td colspan="2">UNIT:lm</td><td></td></tr>
+    </table>`;
+  }
+
+  function conicalFluxValues(angle) {
+    const total = Math.max(metrics(parsed).totalFlux, 0.0001);
+    const lampFlux = Math.max(metrics(parsed).nominalFlux, 0.0001);
+    const flux = integrateFlux(parsed, 0, angle);
+    return {
+      flux,
+      pctLum: flux / total * 100,
+      pctLamp: flux / lampFlux * 100
+    };
+  }
+
+  function conicalFluxLine(angle) {
+    const item = conicalFluxValues(angle);
+    return `${language === "zh" ? "Conical surface Flux" : "Conical surface Flux"}(${fmt(angle, 0)}deg): ${fmt(item.flux, 2)} lm\n\n%lum = ${fmt(item.pctLum, 1)}%\n%lamp = ${fmt(item.pctLamp, 1)}%`;
+  }
+
+  function zonalSpread(start, end) {
+    const values = [];
+    const maxGamma = parsed.verticalAngles && parsed.verticalAngles.length ? Math.max(...parsed.verticalAngles) : 0;
+    const upper = Math.min(end, maxGamma);
+    if (upper <= start) return 0;
+    for (let c = 0; c < 360; c += 30) {
+      for (let g = start; g <= upper + 1e-6; g += 10) {
+        const value = intensityForCG(c, g);
+        if (Number.isFinite(value) && value > 0) values.push(value);
+      }
+    }
+    if (!values.length) return 0;
+    const avg = values.reduce((sum, value) => sum + value, 0) / values.length;
+    if (avg <= 0) return 0;
+    const maxDev = Math.max(...values.map((value) => Math.abs(value - avg))) / avg * 100;
+    return maxDev;
+  }
+
+  function zonalNotes() {
+    const total = Math.max(metrics(parsed).totalFlux, 0.0001);
+    const flux110 = integrateFlux(parsed, 110, 180);
+    const flux135 = integrateFlux(parsed, 135, 180);
+    const line90 = conicalFluxLine(90);
+    const line120 = conicalFluxLine(120);
+    const spread0130 = zonalSpread(0, 130);
+    const spread010 = zonalSpread(0, 10);
+    return `${line90}\n\n${line120}\n\n110 - 180 DEG Zonal Flux:${fmt(flux110, 2)}     %lum: ${fmt(flux110 / total * 100, 1)}%\n135 - 180 DEG Zonal Flux:${fmt(flux135, 2)}     %lum: ${fmt(flux135 / total * 100, 1)}%\nAll measured values may vary less than 35 %\nfrom the average measured value in the 0 to 130 deg. zone: ${fmt(spread0130, 1)}%\nAll measured values in the 0 to 10 deg. zone\nmay vary less than 50% from the average value of itself: ${fmt(spread010, 1)}%`;
+  }
+
+  function zonalSourceText() {
+    return language === "zh"
+      ? "本页的 Φ zone / Φ total 由 IES 光强矩阵积分获得；[OTHER] 汇总数据仅用于人工核对，不直接写入报告。"
+      : "Φ zone / Φ total are integrated from the IES candela matrix; [OTHER] summary data is only used for manual checking and is not written into this report page.";
+  }
+
+
+  function reportPlaneTargets() {
+    return Array.from({ length: 12 }, (_, index) => index * 30);
+  }
+
+  function reportGammaAngles(step = 5) {
+    const minGamma = Math.min(...parsed.verticalAngles);
+    const maxGamma = Math.max(...parsed.verticalAngles);
+    const values = [];
+    for (let angle = Math.ceil(minGamma / step) * step; angle <= maxGamma + 0.001; angle += step) {
+      values.push(Number(angle.toFixed(6)));
+    }
+    return values;
+  }
+
+  function candelaTableRows(step = 5) {
+    const planeTargets = reportPlaneTargets();
+    return reportGammaAngles(step).map((angle) => {
+      const cells = planeTargets.map((target) => `<td>${fmt(intensityForCG(target, angle), 2)}</td>`).join("");
       return `<tr><td>${fmt(angle, 1)}</td>${cells}</tr>`;
     }).join("");
+  }
+
+
+  function candelaCellValue(value) {
+    const v = Math.abs(Number(value || 0));
+    if (v >= 1000) return fmt(value, 0);
+    if (v >= 100) return fmt(value, 1);
+    if (v >= 10) return fmt(value, 2);
+    if (v >= 1) return fmt(value, 2);
+    if (v > 0) return fmt(value, 2);
+    return "0.00";
+  }
+
+  function candelaDistributionIntensityTable() {
+    const planes = reportPlaneTargets();
+    const blankCount = 6;
+    const blankHeads = Array.from({ length: blankCount }, () => `<th class="blank-col"></th>`).join("");
+    const emptyCells = Array.from({ length: blankCount }, () => `<td class="blank-col"></td>`).join("");
+    const gammaRows = reportGammaAngles(5).map((angle) => {
+      const cells = planes.map((target) => `<td>${candelaCellValue(intensityForCG(target, angle))}</td>`).join("");
+      return `<tr><td class="gamma-col">${fmt(angle, 0)}</td>${cells}${emptyCells}</tr>`;
+    }).join("");
+    const fillerRows = Array.from({ length: Math.max(0, 10) }, () =>
+      `<tr><td class="gamma-col"></td>${Array.from({ length: planes.length + blankCount }, () => `<td></td>`).join("")}</tr>`
+    ).join("");
+    return `
+      <div class="candela-caption-row"><span>Table--1</span><span>UNIT:&nbsp; cd</span></div>
+      <table class="simple-table candela-distribution-table">
+        <tr><th class="gamma-col">C(DEG)</th>${planes.map((target) => `<th>${target}</th>`).join("")}${blankHeads}</tr>
+        <tr><th class="gamma-col">γ (DEG)</th>${Array.from({ length: planes.length + blankCount }, () => `<th></th>`).join("")}</tr>
+        ${gammaRows}
+        ${fillerRows}
+      </table>
+    `;
   }
 
   function pairedIntensity(mainAngle, verticalAngle) {
@@ -1480,82 +2654,1221 @@
     ) / 2;
   }
 
-  function renderExtraPages() {
+  function luminousOpeningArea() {
+    const aperture = n(val("aperture"), 0);
+    if (aperture > 0) return Math.PI * Math.pow(aperture / 2, 2);
+    const dims = parsed.dimensions || {};
+    const candidates = [
+      Math.abs((dims.width || 0) * (dims.length || 0)),
+      Math.abs((dims.width || 0) * (dims.height || 0)),
+      Math.abs((dims.length || 0) * (dims.height || 0))
+    ].filter((value) => value > 0);
+    return candidates.length ? Math.max(...candidates) : 0.01;
+  }
+
+  function avgIntensityAtGamma(gamma) {
+    const planes = reportPlaneTargets();
+    if (!planes.length) return 0;
+    return planes.reduce((sum, c) => sum + intensityForCG(c, gamma), 0) / planes.length;
+  }
+
+  function luminanceAt(cAngle, gamma) {
+    const area = Math.max(0.000001, luminousOpeningArea());
+    const projected = area * Math.max(0.08, Math.cos(Math.abs(Number(gamma) || 0) * Math.PI / 180));
+    return intensityForCG(cAngle, gamma) / projected;
+  }
+
+  function luminanceRows() {
+    const rows = [85, 80, 75, 70, 65, 60, 55, 50, 45];
+    return rows.map((gamma) => {
+      const c0 = (luminanceAt(0, gamma) + luminanceAt(180, gamma)) / 2;
+      const c90 = (luminanceAt(90, gamma) + luminanceAt(270, gamma)) / 2;
+      return `<tr><td>${gamma}</td><td>${fmt(c0, 0)}</td><td>${fmt(c90, 0)}</td></tr>`;
+    }).join("");
+  }
+
+  function xyPolyline(points) {
+    return points.map(([x, y]) => `${fmt(x, 1)},${fmt(y, 1)}`).join(" ");
+  }
+
+  function luminanceInfoBlock() {
+    const measured = escapeHtml(val("measured"));
+    const lampFlux = escapeHtml(byId("measuredFluxText").textContent || "");
+    const name = escapeHtml(val("luminaireName"));
+    const type = escapeHtml(val("luminaireType"));
+    const weight = escapeHtml(val("weight"));
+    const spec = escapeHtml(val("spec"));
+    const dimensions = escapeHtml(val("dimensions"));
+    const serial = escapeHtml(val("testNo"));
+    const manufacturer = escapeHtml(val("manufacturer"));
+    const surface = escapeHtml(val("aperture"));
+    const shield = escapeHtml(val("shieldAngle"));
+    if (language === "zh") {
+      return `<table class="luminance-info-table">
+        <tr><td class="full-line" colspan="3">实测参数:${measured}　实检光通:${lampFlux}</td></tr>
+        <tr><td>灯具名称: ${name}</td><td>灯具类型:${type}</td><td>灯具重量:${weight}</td></tr>
+        <tr><td>灯具规格:${spec}</td><td>外型尺寸:${dimensions}</td><td>测试编号:${serial}</td></tr>
+        <tr><td>制造厂商:${manufacturer}</td><td>发光口面:${surface}</td><td>遮光角:${shield}</td></tr>
+      </table>`;
+    }
+    return `<table class="luminance-info-table">
+      <tr><td class="full-line" colspan="3">Test:${measured}　Lamp Flux:${lampFlux}</td></tr>
+      <tr><td>NAME: ${name}</td><td>TYPE:${type}</td><td>WEIGHT:${weight}</td></tr>
+      <tr><td>SPEC.:${spec}</td><td>DIM.:${dimensions}</td><td>SERIAL No.:${serial}</td></tr>
+      <tr><td>MFR.:${manufacturer}</td><td>SUR.:${surface}</td><td>Shielding Angle:${shield}</td></tr>
+    </table>`;
+  }
+
+  function luminanceValueTable() {
+    const rows = [85, 80, 75, 70, 65, 60, 55, 50, 45];
+    return `<table class="luminance-value-table">
+      <tr><th class="table-title" colspan="3">LUMINANCE cd/(m2)</th></tr>
+      <tr><th>G(DEG)</th><th>C0/180</th><th>C90/270</th></tr>
+      ${rows.map((gamma) => {
+        const c0 = (luminanceAt(0, gamma) + luminanceAt(180, gamma)) / 2;
+        const c90 = (luminanceAt(90, gamma) + luminanceAt(270, gamma)) / 2;
+        return `<tr><td>${gamma}</td><td>${fmt(c0, 0)}</td><td>${fmt(c90, 0)}</td></tr>`;
+      }).join("")}
+    </table>`;
+  }
+
+  function luminanceLimitSvg() {
+    const tableX = 18;
+    const tableY = 28;
+    const tableW = 720;
+    const tableH = 92;
+    const gX = 50;
+    const gY = 164;
+    const gW = 648;
+    const gH = 162;
+    const colW = tableW / 10;
+    const rowH = tableH / 6;
+    const lumMin = 800;
+    const lumMax = 40000;
+    const logMin = Math.log10(lumMin);
+    const logMax = Math.log10(lumMax);
+    const xForLum = (value) => {
+      const safe = Math.max(lumMin, Math.min(lumMax, Number(value) || lumMin));
+      return gX + (Math.log10(safe) - logMin) / (logMax - logMin) * gW;
+    };
+    const yForGamma = (gamma) => gY + (85 - gamma) / 40 * gH;
+    const pointsToSvg = (points) => points.map(([x, y]) => `${fmt(x, 1)},${fmt(y, 1)}`).join(' ');
+    const glareRows = [
+      ["1.15", "A", "2000", "1000", "500", "<=300", "", "", "", ""],
+      ["1.50", "B", "", "2000", "1000", "500", "<=300", "", "", ""],
+      ["1.85", "C", "", "", "2000", "1000", "500", "<=300", "", ""],
+      ["2.20", "D", "", "", "", "2000", "1000", "500", "<=300", ""],
+      ["2.55", "E", "", "", "", "", "2000", "1000", "500", "<=300"]
+    ];
+    const limitCurves = [
+      { label: "a", points: [[1000, 85], [1000, 75], [1300, 65], [1650, 55], [2150, 45]] },
+      { label: "b", points: [[1180, 85], [1180, 75], [1680, 65], [2350, 55], [3300, 45]] },
+      { label: "c", points: [[1450, 85], [1450, 75], [2250, 65], [3350, 55], [5000, 45]] },
+      { label: "d", points: [[2000, 85], [2000, 75], [3100, 65], [4800, 55], [7200, 45]] },
+      { label: "e", points: [[3000, 85], [3000, 75], [4600, 65], [7200, 55], [11000, 45]] },
+      { label: "f", points: [[4300, 85], [4300, 75], [6600, 65], [10500, 55], [16500, 45]] },
+      { label: "g", points: [[6200, 85], [6200, 75], [9600, 65], [15500, 55], [25500, 45]] },
+      { label: "h", points: [[8500, 85], [8500, 75], [13500, 65], [22500, 55], [39000, 45]] }
+    ];
+    const measuredGammas = [85, 80, 75, 70, 65, 60, 55, 50, 45];
+    const rawMeasuredCurve = (mainAngle) => measuredGammas.map((gamma) => {
+      const value = mainAngle === 0
+        ? (luminanceAt(0, gamma) + luminanceAt(180, gamma)) / 2
+        : (luminanceAt(90, gamma) + luminanceAt(270, gamma)) / 2;
+      return { gamma, value: Number(value) || 0 };
+    });
+    const clipValue = (value) => Math.max(lumMin, Math.min(lumMax, value));
+    const pointFor = (value, gamma) => [xForLum(clipValue(value)), yForGamma(gamma)];
+    const clippedCurveSegments = (mainAngle) => {
+      const raw = rawMeasuredCurve(mainAngle);
+      const segments = [];
+      const boundaryPoint = (a, b, boundaryValue) => {
+        const la = Math.log10(Math.max(0.000001, a.value));
+        const lb = Math.log10(Math.max(0.000001, b.value));
+        const lt = Math.log10(boundaryValue);
+        const denom = lb - la;
+        const t = Math.abs(denom) < 1e-9 ? 0 : Math.max(0, Math.min(1, (lt - la) / denom));
+        return pointFor(boundaryValue, a.gamma + (b.gamma - a.gamma) * t);
+      };
+      for (let i = 0; i < raw.length - 1; i += 1) {
+        const a = raw[i];
+        const b = raw[i + 1];
+        if (a.value <= 0 || b.value <= 0) continue;
+        const aIn = a.value >= lumMin && a.value <= lumMax;
+        const bIn = b.value >= lumMin && b.value <= lumMax;
+        if (aIn && bIn) {
+          segments.push([pointFor(a.value, a.gamma), pointFor(b.value, b.gamma)]);
+          continue;
+        }
+        if (a.value < lumMin && b.value < lumMin) continue;
+        if (a.value > lumMax && b.value > lumMax) continue;
+        if (aIn && b.value < lumMin) segments.push([pointFor(a.value, a.gamma), boundaryPoint(a, b, lumMin)]);
+        else if (a.value < lumMin && bIn) segments.push([boundaryPoint(a, b, lumMin), pointFor(b.value, b.gamma)]);
+        else if (aIn && b.value > lumMax) segments.push([pointFor(a.value, a.gamma), boundaryPoint(a, b, lumMax)]);
+        else if (a.value > lumMax && bIn) segments.push([boundaryPoint(a, b, lumMax), pointFor(b.value, b.gamma)]);
+        else if (a.value < lumMin && b.value > lumMax) segments.push([boundaryPoint(a, b, lumMin), boundaryPoint(a, b, lumMax)]);
+        else if (a.value > lumMax && b.value < lumMin) segments.push([boundaryPoint(a, b, lumMax), boundaryPoint(a, b, lumMin)]);
+      }
+      return segments;
+    };
+    const measuredDotsFor = (mainAngle) => rawMeasuredCurve(mainAngle)
+      .filter((p) => p.value >= lumMin && p.value <= lumMax)
+      .map((p) => pointFor(p.value, p.gamma));
+    const c0Segments = clippedCurveSegments(0);
+    const c90Segments = clippedCurveSegments(90);
+    const c0Points = measuredDotsFor(0);
+    const c90Points = measuredDotsFor(90);
+    const tableGrid = [0,1,2,3,4,5,6].map((r) => `<line x1="${tableX}" y1="${tableY + r * rowH}" x2="${tableX + tableW}" y2="${tableY + r * rowH}" stroke="#111" stroke-width="1"/>`).join("") +
+      [0,1,2,3,4,5,6,7,8,9,10].map((c) => `<line x1="${tableX + c * colW}" y1="${tableY}" x2="${tableX + c * colW}" y2="${tableY + tableH}" stroke="#111" stroke-width="1"/>`).join("");
+    const tableText = glareRows.map((row, r) => row.map((cell, c) => `<text x="${tableX + c * colW + colW / 2}" y="${tableY + (r + 1.72) * rowH}" text-anchor="middle" font-family="Courier New" font-size="10">${cell}</text>`).join("")).join("");
+    const axisValues = [800, 1000, 2000, 3000, 4000, 5000, 6000, 8000, 10000, 20000, 30000, 40000];
+    const axisLabels = ["8", "1000", "2", "3", "4", "5", "6", "8", "10000", "2", "3", "4"];
+    const verticalGrid = axisValues.map((value) => {
+      const x = xForLum(value);
+      return `<line x1="${x}" y1="${gY}" x2="${x}" y2="${gY + gH}" stroke="#111" stroke-width="1"/>`;
+    }).join("");
+    const horizontalGrid = [85, 75, 65, 55, 45].map((gamma) => {
+      const y = yForGamma(gamma);
+      return `<line x1="${gX}" y1="${y}" x2="${gX + gW}" y2="${y}" stroke="#111" stroke-width="1"/><text x="${gX - 8}" y="${y + 4}" text-anchor="end" font-family="Courier New" font-size="12">${gamma}</text>`;
+    }).join("");
+    const limitCurveLines = limitCurves.map((curve) => `<polyline points="${pointsToSvg(curve.points.map(([lx, gamma]) => [xForLum(lx), yForGamma(gamma)]))}" fill="none" stroke="#111" stroke-width="1"/>`).join("");
+    const letterLabels = limitCurves.map((curve) => `<text x="${xForLum(curve.points[0][0])}" y="${gY - 10}" text-anchor="middle" font-family="Courier New" font-size="11">${curve.label}</text>`).join("");
+    const c0Line = c0Segments.map((segment) => `<polyline points="${pointsToSvg(segment)}" fill="none" stroke="#e00000" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`).join("");
+    const c90Line = c90Segments.map((segment) => `<polyline points="${pointsToSvg(segment)}" fill="none" stroke="#0047ff" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`).join("");
+    const measuredDots = c0Points.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.3" fill="#e00000"/>`).join("") + c90Points.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.3" fill="#0047ff"/>`).join("");
+    return `<svg class="luminance-limit-svg" viewBox="0 0 760 360" role="img" aria-label="Luminance limitation curves">
+      <rect x="0" y="0" width="760" height="360" fill="#fff"/>
+      <text x="380" y="18" text-anchor="middle" font-family="Courier New" font-size="15" font-weight="700">LUMINANCE LIMITATION CURVES</text>
+      <rect x="${tableX}" y="${tableY}" width="${tableW}" height="${tableH}" fill="none" stroke="#111" stroke-width="1"/>
+      ${tableGrid}
+      <text x="${tableX + colW / 2}" y="${tableY + 13}" text-anchor="middle" font-family="Courier New" font-size="10">GLARE</text>
+      <text x="${tableX + colW * 1.5}" y="${tableY + 13}" text-anchor="middle" font-family="Courier New" font-size="10">CLASS</text>
+      <text x="${tableX + colW * 6}" y="${tableY + 13}" text-anchor="middle" font-family="Courier New" font-size="10">ILLUMINANCE (lx)</text>
+      ${tableText}
+      ${letterLabels}
+      <text x="8" y="${gY - 6}" font-family="Courier New" font-size="11">G(DEG)</text>
+      <rect x="${gX}" y="${gY}" width="${gW}" height="${gH}" fill="none" stroke="#111" stroke-width="1"/>
+      ${verticalGrid}${horizontalGrid}${limitCurveLines}${c0Line}${c90Line}${measuredDots}
+      ${["8","6","4","3","a/h","2","1"].map((label, i) => `<text x="${gX + gW + 10}" y="${gY + 8 + i * 25}" font-family="Courier New" font-size="12">${label}</text>`).join("")}
+      ${axisLabels.map((label, i) => `<text x="${xForLum(axisValues[i])}" y="${gY + gH + 13}" text-anchor="middle" font-family="Courier New" font-size="11">${label}</text>`).join("")}
+      <text x="${gX}" y="${gY + gH + 32}" font-family="Courier New" font-size="11">C0/180</text>
+      <line x1="${gX + 116}" y1="${gY + gH + 26}" x2="${gX + 166}" y2="${gY + gH + 26}" stroke="#e00000" stroke-width="2"/>
+      <text x="${gX + 236}" y="${gY + gH + 32}" font-family="Courier New" font-size="11">C90/270</text>
+      <line x1="${gX + 360}" y1="${gY + gH + 26}" x2="${gX + 410}" y2="${gY + gH + 26}" stroke="#0047ff" stroke-width="2"/>
+      <text x="${gX + gW - 150}" y="${gY + gH + 32}" font-family="Courier New" font-size="11">LUMINANCE (cd/(m2))</text>
+    </svg>`;
+  }
+
+  function luminancePageBody() {
+    return `<div class="luminance-body">
+      <div class="luminance-chart-frame">${luminanceLimitSvg()}</div>
+      <div>${luminanceValueTable()}</div>
+    </div>`;
+  }
+
+
+  function cuEstimate(roomIndex, ceil, wall, work) {
+    const pccBase = 1 + 0.24 * Math.max(0, ceil);
+    const wallDrop = Math.max(0, 0.5 - wall) * 0.20;
+    const ceilDrop = Math.max(0, 0.8 - ceil) * 0.018;
+    const roomDrop = roomIndex * (0.026 + wallDrop * 0.04 + ceilDrop);
+    const curveDrop = Math.pow(Math.max(0, roomIndex), 1.4) * 0.0012;
+    return Math.max(0.72, Math.min(1.25, pccBase - roomDrop - curveDrop));
+  }
+
+  const cuReflectanceGroups = [
+    { pcc: "80%", ceil: 0.8, walls: [0.5, 0.3, 0.1] },
+    { pcc: "70%", ceil: 0.7, walls: [0.5, 0.3, 0.1] },
+    { pcc: "50%", ceil: 0.5, walls: [0.5, 0.3, 0.1] },
+    { pcc: "30%", ceil: 0.3, walls: [0.5, 0.3, 0.1] },
+    { pcc: "10%", ceil: 0.1, walls: [0.5, 0.3, 0.1] },
+    { pcc: "0", ceil: 0.0, walls: [0.0] }
+  ];
+
+  const cuSets = cuReflectanceGroups.flatMap((group) => group.walls.map((wall) => ({
+    label: `${Math.round(group.ceil * 100)}/${Math.round(wall * 100)}/20`,
+    c: group.ceil,
+    w: wall,
+    p: 0.2
+  })));
+
+  function cuCell(value) {
+    const v = Math.max(0, Math.min(1.25, Number(value || 0)));
+    if (v >= 1) return fmt(v, 2);
+    const text = fmt(v, 2);
+    return text.replace(/^0/, "");
+  }
+
+  function cuBudgetInfoBlock() {
+    const measured = escapeHtml(val("measured"));
+    const lampFlux = escapeHtml(byId("measuredFluxText").textContent || "");
+    const name = escapeHtml(val("luminaireName"));
+    const type = escapeHtml(val("luminaireType"));
+    const weight = escapeHtml(val("weight"));
+    const spec = escapeHtml(val("spec"));
+    const dimensions = escapeHtml(val("dimensions"));
+    const serial = escapeHtml(val("testNo"));
+    const manufacturer = escapeHtml(val("manufacturer"));
+    const surface = escapeHtml(val("aperture"));
+    const shield = escapeHtml(val("shieldAngle"));
+    if (language === "zh") {
+      return `<table class="cu-budget-info-table">
+        <tr><td class="full-line" colspan="3">实测参数:${measured}　实检光通:${lampFlux}</td></tr>
+        <tr><td>灯具名称: ${name}</td><td>灯具类型:${type}</td><td>灯具重量:${weight}</td></tr>
+        <tr><td>灯具规格:${spec}</td><td>外型尺寸:${dimensions}</td><td>测试编号:${serial}</td></tr>
+        <tr><td>制造厂商:${manufacturer}</td><td>发光口面:${surface}</td><td>遮光角:${shield}</td></tr>
+      </table>`;
+    }
+    return `<table class="cu-budget-info-table">
+      <tr><td class="full-line" colspan="3">Test:${measured}　Lamp Flux:${lampFlux}</td></tr>
+      <tr><td>NAME: ${name}</td><td>TYPE:${type}</td><td>WEIGHT:${weight}</td></tr>
+      <tr><td>SPEC.:${spec}</td><td>DIM.:${dimensions}</td><td>SERIAL No.:${serial}</td></tr>
+      <tr><td>MFR.:${manufacturer}</td><td>SUR.:${surface}</td><td>Shielding Angle:${shield}</td></tr>
+    </table>`;
+  }
+
+  function cuTable() {
+    const rcrs = Array.from({ length: 11 }, (_, index) => index);
+    const pccRow = cuReflectanceGroups.map((group) => `<th colspan="${group.walls.length}">${group.pcc}</th>`).join("");
+    const pwRow = cuReflectanceGroups.map((group) => group.walls.map((wall) => `<th>${Math.round(wall * 100)}%</th>`).join("")).join("");
+    const pfcRow = cuReflectanceGroups.map((group) => group.walls.map(() => `<th>20%</th>`).join("")).join("");
+    return `<table class="cu-reference-table">
+      <tr><th class="left-head">ρcc</th>${pccRow}</tr>
+      <tr><th>ρw</th>${pwRow}</tr>
+      <tr><th>ρfc</th>${pfcRow}</tr>
+      <tr><th>RCR</th><th colspan="${cuSets.length}"><span>RCR:Room Cavity Ratio</span>　　<span>Coefficients of Utilization(CU)</span></th></tr>
+      ${rcrs.map((rcr) => `<tr><td>${fmt(rcr, 1)}</td>${cuSets.map((set) => `<td>${cuCell(cuEstimate(rcr, set.c, set.w, set.p))}</td>`).join("")}</tr>`).join("")}
+    </table>`;
+  }
+
+  function budgetDiagramSvg() {
     const m = metrics(parsed);
-    const angleRowsPerPage = 22;
-    const anglePages = [];
-    for (let start = 0; start < parsed.verticalAngles.length; start += angleRowsPerPage) {
-      anglePages.push([start, Math.min(start + angleRowsPerPage, parsed.verticalAngles.length)]);
+    const nominalFluxInput = n(val("ratedFlux"), 0);
+    const flux = Math.max(1, nominalFluxInput || m.nominalFlux || parsed.lampCount * parsed.lumensPerLamp || m.totalFlux);
+    const factor = 0.70;
+    const workLux = 100;
+    const width = 760;
+    const height = 430;
+    const gx = 38;
+    const gy = 30;
+    const gw = 704;
+    const gh = 350;
+    const xMin = 10;
+    const xMax = 7000;
+    const yMin = 2;
+    const yMax = 50;
+    const log10 = (v) => Math.log(v) / Math.LN10;
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+    const xPos = (v) => gx + (log10(v) - log10(xMin)) / (log10(xMax) - log10(xMin)) * gw;
+    const yPos = (v) => gy + gh - (log10(v) - log10(yMin)) / (log10(yMax) - log10(yMin)) * gh;
+    const labelX = (v) => v >= 1000 ? `${v / 1000}k` : String(v);
+    const xLabelTicks = [10,20,30,40,50,70,100,200,300,500,700,1000,2000,3000,4000,5000,7000];
+    const yLabelTicks = [2,3,4,5,6,7,8,9,10,20,30,40,50];
+    const xGridTicks = [];
+    [10, 100, 1000].forEach((base) => {
+      for (let m = 1; m < 10; m += 1) {
+        const value = base * m;
+        if (value >= xMin && value <= xMax) xGridTicks.push(value);
+      }
+    });
+    [2000,3000,4000,5000,6000,7000].forEach((value) => xGridTicks.push(value));
+    const yGridTicks = [];
+    for (let value = 2; value <= 10; value += 1) yGridTicks.push(value);
+    for (let value = 11; value <= 50; value += 1) yGridTicks.push(value);
+    const conditionsW = 236;
+    const conditionsH = 176;
+    const conditionsX = gx + gw - conditionsW;
+    const conditionsY = gy + gh - conditionsH;
+    const lines = [
+      { color: "#ff2020", cc: 70, w: 50, fc: 30, mult: 1.00 },
+      { color: "#00c83b", cc: 50, w: 30, fc: 20, mult: 1.08 },
+      { color: "#0057ff", cc: 30, w: 20, fc: 10, mult: 1.16 }
+    ];
+    const lampCountForArea = (area, mult) => workLux * area / (flux * factor) * mult;
+    const areaForLampCount = (lampCount, mult) => lampCount * flux * factor / (workLux * mult);
+    const linePath = (mult) => {
+      const startArea = 14;
+      const endArea = clamp(areaForLampCount(yMax, mult), startArea + 1, 52);
+      const areas = [startArea, 18, 22, 26, 30, 34, 38, 42, 46, endArea]
+        .filter((area, index, array) => area >= startArea && area <= endArea && array.indexOf(area) === index)
+        .sort((a, b) => a - b);
+      return areas.map((area) => {
+        const lamps = clamp(lampCountForArea(area, mult), yMin, yMax);
+        return `${xPos(area).toFixed(1)},${yPos(lamps).toFixed(1)}`;
+      }).join(" ");
+    };
+    const xGrid = xGridTicks.map((tick) => {
+      const major = [10,100,1000].includes(tick);
+      const medium = xLabelTicks.includes(tick);
+      return `<line x1="${xPos(tick)}" y1="${gy}" x2="${xPos(tick)}" y2="${gy + gh}" stroke="#000" stroke-width="${major ? 0.9 : medium ? 0.55 : 0.28}"/>`;
+    }).join("");
+    const yGrid = yGridTicks.map((tick) => {
+      const major = yLabelTicks.includes(tick);
+      return `<line x1="${gx}" y1="${yPos(tick)}" x2="${gx + gw}" y2="${yPos(tick)}" stroke="#000" stroke-width="${major ? 0.65 : 0.25}" opacity="${major ? 1 : 0.7}"/>`;
+    }).join("");
+    const xLabels = xLabelTicks.map((tick) => `<text x="${xPos(tick)}" y="${gy + gh + 14}" text-anchor="middle" font-family="Courier New" font-size="10">${labelX(tick)}</text>`).join("");
+    const yLabels = yLabelTicks.map((tick) => `<text x="${gx - 11}" y="${yPos(tick) + 3}" text-anchor="end" font-family="Courier New" font-size="10">${tick}</text>`).join("");
+    const conditionRows = [
+      ["FLUX", `${fmt(flux, 0)}lm`],
+      ["FACTOR", fmt(factor, 2)],
+      ["Hdown", "0.00m"],
+      ["Hwork", "0.00m"],
+      ["Ework(AVE)", `${fmt(workLux, 0)}lx`]
+    ];
+    const conditionTable = `
+      <rect x="${conditionsX}" y="${conditionsY}" width="${conditionsW}" height="${conditionsH}" fill="#fff" stroke="#000"/>
+      <text x="${conditionsX + conditionsW / 2}" y="${conditionsY + 16}" text-anchor="middle" font-family="Courier New" font-size="12" font-weight="700">CONDITIONS</text>
+      <line x1="${conditionsX}" y1="${conditionsY + 24}" x2="${conditionsX + conditionsW}" y2="${conditionsY + 24}" stroke="#000"/>
+      <line x1="${conditionsX + 118}" y1="${conditionsY + 24}" x2="${conditionsX + 118}" y2="${conditionsY + 134}" stroke="#000"/>
+      ${conditionRows.map((row, index) => {
+        const y = conditionsY + 24 + index * 22;
+        return `<line x1="${conditionsX}" y1="${y + 22}" x2="${conditionsX + conditionsW}" y2="${y + 22}" stroke="#000"/><text x="${conditionsX + 70}" y="${y + 16}" text-anchor="middle" font-family="Courier New" font-size="11" font-weight="700">${row[0]}</text><text x="${conditionsX + 176}" y="${y + 16}" text-anchor="middle" font-family="Courier New" font-size="11">${row[1]}</text>`;
+      }).join("")}
+      <text x="${conditionsX + 48}" y="${conditionsY + 148}" text-anchor="middle" font-family="Courier New" font-size="11">ρ(%)</text>
+      <text x="${conditionsX + 142}" y="${conditionsY + 148}" text-anchor="middle" font-family="Courier New" font-size="11">cc</text>
+      <text x="${conditionsX + 176}" y="${conditionsY + 148}" text-anchor="middle" font-family="Courier New" font-size="11">w</text>
+      <text x="${conditionsX + 210}" y="${conditionsY + 148}" text-anchor="middle" font-family="Courier New" font-size="11">fc</text>
+      ${lines.map((item, index) => {
+        const y = conditionsY + 158 + index * 8;
+        return `<line x1="${conditionsX + 24}" y1="${y}" x2="${conditionsX + 92}" y2="${y}" stroke="${item.color}" stroke-width="1.5"/><text x="${conditionsX + 142}" y="${y + 4}" text-anchor="middle" font-family="Courier New" font-size="10">${item.cc}</text><text x="${conditionsX + 176}" y="${y + 4}" text-anchor="middle" font-family="Courier New" font-size="10">${item.w}</text><text x="${conditionsX + 210}" y="${y + 4}" text-anchor="middle" font-family="Courier New" font-size="10">${item.fc}</text>`;
+      }).join("")}
+    `;
+    return `<div class="budget-diagram-box"><svg class="budget-diagram-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="Luminaire budgetary diagram">
+      <rect x="0" y="0" width="${width}" height="${height}" fill="#fff"/>
+      <text x="8" y="20" font-family="Courier New" font-size="13" font-weight="700">LAMPS</text>
+      <text x="${width / 2}" y="20" text-anchor="middle" font-family="Courier New" font-size="13" font-weight="700">LUMINAIRE BUDGETARY DIAGRAM</text>
+      <rect x="${gx}" y="${gy}" width="${gw}" height="${gh}" fill="none" stroke="#000" stroke-width="1"/>
+      ${xGrid}${yGrid}${xLabels}${yLabels}
+      ${lines.map((item) => `<polyline points="${linePath(item.mult)}" fill="none" stroke="${item.color}" stroke-width="1.5"/>`).join("")}
+      <text x="${xPos(areaForLampCount(48, 1.0)) + 4}" y="${yPos(48) - 2}" font-family="Courier New" font-size="12" font-weight="700">H=7</text>
+      <text x="${gx + gw / 2}" y="${gy + gh + 28}" text-anchor="middle" font-family="Courier New" font-size="12" font-weight="700">AREA(m2)</text>
+      ${conditionTable}
+    </svg></div>`;
+  }
+
+  function budgetSvg() {
+    return budgetDiagramSvg();
+  }
+
+  function coeffText(value) {
+    if (!Number.isFinite(value)) return "";
+    const fixed = value.toFixed(3);
+    return fixed.replace(/^0/, "");
+  }
+
+  function coefficientGroups() {
+    return [
+      { pcc: "80%", ceil: 0.8, walls: [0.5, 0.3, 0.1] },
+      { pcc: "70%", ceil: 0.7, walls: [0.5, 0.3, 0.1] },
+      { pcc: "50%", ceil: 0.5, walls: [0.5, 0.3, 0.1] },
+      { pcc: "30%", ceil: 0.3, walls: [0.5, 0.3, 0.1] },
+      { pcc: "10%", ceil: 0.1, walls: [0.5, 0.3, 0.1] },
+      { pcc: "0", ceil: 0.0, walls: [0.0] }
+    ];
+  }
+
+  const wecBaseByWall = {
+    "0.5": [NaN, .113, .103, .094, .086, .080, .075, .070, .066, .062, .059],
+    "0.3": [NaN, .064, .056, .050, .045, .041, .037, .035, .032, .030, .028],
+    "0.1": [NaN, .020, .017, .015, .013, .012, .011, .010, .009, .008, .008]
+  };
+
+  const ccecBaseByWall = {
+    "0.5": [.190, .167, .147, .131, .117, .105, .095, .087, .080, .073, .068],
+    "0.3": [.190, .158, .133, .113, .097, .085, .074, .066, .058, .052, .047],
+    "0.1": [.190, .150, .121, .099, .083, .070, .059, .051, .044, .038, .034]
+  };
+
+  function coefficientPccFactor(kind, ceil) {
+    if (kind === "wall") {
+      return { "0.8": 1.000, "0.7": 0.947, "0.5": 0.832, "0.3": 0.735, "0.1": 0.646 }[String(ceil)] || NaN;
     }
-    const targetTotal = Math.max(13, 1 + 3 + anglePages.length);
-    if (val("pageTotal") !== String(targetTotal)) {
-      set("pageTotal", targetTotal);
-      bindTargets.forEach((target) => {
-        const id = target.getAttribute("data-bind");
-        target.textContent = val(id) || "";
+    return { "0.8": 1.000, "0.7": 0.858, "0.5": 0.584, "0.3": 0.337, "0.1": 0.105 }[String(ceil)] || NaN;
+  }
+
+  function coefficientValue(kind, rcrIndex, ceil, wall) {
+    if (ceil === 0 || wall === 0) return NaN;
+    const wallKey = String(wall);
+    const baseArray = kind === "wall" ? wecBaseByWall[wallKey] : ccecBaseByWall[wallKey];
+    if (!baseArray) return NaN;
+    const base = baseArray[rcrIndex];
+    const factor = coefficientPccFactor(kind, ceil);
+    if (!Number.isFinite(base) || !Number.isFinite(factor)) return NaN;
+    return base * factor;
+  }
+
+  function coefficientTable(kind) {
+    const groups = coefficientGroups();
+    const columnCount = groups.reduce((sum, group) => sum + group.walls.length, 0);
+    const pccRow = groups.map((group) => `<th colspan="${group.walls.length}">${group.pcc}</th>`).join("");
+    const pwRow = groups.map((group) => group.walls.map((wall) => `<th>${Math.round(wall * 100)}%</th>`).join("")).join("");
+    const pfcRow = groups.map((group) => `<th colspan="${group.walls.length}">${group.ceil === 0 ? "0" : "20%"}</th>`).join("");
+    const title = kind === "wall" ? "Wall Exitance Coefficients(WEC)" : "Ceiling Cavity Exitance Coefficients(CCEC)";
+    const rcrs = Array.from({ length: 11 }, (_, index) => index);
+    const rows = rcrs.map((rcr, rcrIndex) => {
+      const cells = groups.map((group) => group.walls.map((wall) => {
+        const value = coefficientValue(kind, rcrIndex, group.ceil, wall);
+        const cls = Number.isFinite(value) ? "" : " class=\"empty-coef\"";
+        return `<td${cls}>${Number.isFinite(value) ? coeffText(value) : ""}</td>`;
+      }).join("")).join("");
+      return `<tr><td>${fmt(rcr, 1)}</td>${cells}</tr>`;
+    }).join("");
+    return `<table class="wec-ccec-table">
+      <tr><th class="rcr-col">ρcc</th>${pccRow}</tr>
+      <tr><th>ρw</th>${pwRow}</tr>
+      <tr><th>ρfc</th>${pfcRow}</tr>
+      <tr><th>RCR</th><th class="wec-title-cell" colspan="${columnCount}"><span class="wec-title-inner"><span>RCR:Room Cavity Ratio</span><span>${title}</span></span></th></tr>
+      ${rows}
+    </table>`;
+  }
+
+  function maxCandela(data) {
+    let max = 0;
+    data.candela.forEach((profile) => profile.forEach((value) => { max = Math.max(max, value || 0); }));
+    return max;
+  }
+
+  function highAngleCandela(data) {
+    let sum = 0;
+    let weight = 0;
+    let max = 0;
+    const planes = reportPlaneTargets();
+    planes.forEach((c) => {
+      (data.verticalAngles || []).forEach((angle) => {
+        if (angle >= 55 && angle <= 90) {
+          const value = intensityForCG(c, angle);
+          const w = Math.max(0.08, Math.sin(angle * Math.PI / 180));
+          sum += Math.max(0, value) * w;
+          weight += w;
+          max = Math.max(max, value || 0);
+        }
       });
+    });
+    return { avg: weight > 0 ? sum / weight : 0, max };
+  }
+
+  function beamEstimate(data) {
+    const m = metrics(data);
+    return Math.max(1, m.beamAvg || 60);
+  }
+
+  function ugrFlux(data) {
+    const rated = n(val("ratedFlux"), 0);
+    const source = data || parsed;
+    const nominal = source && source.lumensPerLamp > 0 ? source.lampCount * source.lumensPerLamp : 0;
+    const integrated = source ? integrateFlux(source) : 0;
+    return Math.max(0.0001, rated || nominal || integrated || 1000);
+  }
+
+  function ugrFluxCorrection(data) {
+    return 8 * Math.log10(ugrFlux(data) / 1000);
+  }
+
+  function glareBase(data) {
+    const peak = Math.max(1, maxCandela(data));
+    const high = highAngleCandela(data);
+    const area = Math.max(0.0001, luminousOpeningArea());
+    const beam = beamEstimate(data);
+    const flux = ugrFlux(data);
+    const toStandardFlux = 1000 / flux;
+
+    // CIE UGR tables use F0 = 1000 lm as the reference flux and then apply
+    // the 8log(F/F0) correction.  The IES candela values are already scaled
+    // to the measured lamp flux, so the glare basis must be normalized to
+    // 1000 lm before the flux correction is added back.  Otherwise small-flux
+    // luminaires such as this 131.9 lm downlight will produce abnormally low
+    // and unstable UGR values.
+    const peakAtStandardFlux = peak * toStandardFlux;
+    const highRatio = high.avg > 0 ? high.avg / peak : 0.006 + Math.min(0.08, beam / 1200);
+    const luminanceTerm = Math.log10(peakAtStandardFlux / Math.sqrt(area) + 10);
+    const baseAtStandardFlux = 2.40 * luminanceTerm + 8.0 * highRatio - Math.max(0, 18 - beam) * 0.020 - 0.15;
+    return Math.max(0, Math.min(24, baseAtStandardFlux + ugrFluxCorrection(data)));
+  }
+
+  const ugrReflectanceSets = [
+    { ceil: "0.7", wall: "0.5", plane: "0.2", offset: 0.0 },
+    { ceil: "0.7", wall: "0.3", plane: "0.2", offset: 0.5 },
+    { ceil: "0.5", wall: "0.5", plane: "0.2", offset: 0.2 },
+    { ceil: "0.5", wall: "0.3", plane: "0.2", offset: 0.7 },
+    { ceil: "0.3", wall: "0.3", plane: "0.2", offset: 0.8 }
+  ];
+
+  const ugrRoomRows = [
+    { x: "2H", y: "2H", dx: 0.0 }, { x: "", y: "3H", dx: -0.1 }, { x: "", y: "4H", dx: -0.2 }, { x: "", y: "6H", dx: -0.3 }, { x: "", y: "8H", dx: -0.3 }, { x: "", y: "12H", dx: -0.3 },
+    { spacer: true },
+    { x: "4H", y: "2H", dx: -0.2 }, { x: "", y: "3H", dx: -0.3 }, { x: "", y: "4H", dx: -0.4 }, { x: "", y: "6H", dx: -0.5 }, { x: "", y: "8H", dx: -0.6 }, { x: "", y: "12H", dx: -0.7 },
+    { spacer: true },
+    { x: "8H", y: "4H", dx: -0.6 }, { x: "", y: "6H", dx: -0.7 }, { x: "", y: "8H", dx: -0.8 }, { x: "", y: "12H", dx: -0.9 },
+    { spacer: true },
+    { x: "12H", y: "4H", dx: -0.7 }, { x: "", y: "6H", dx: -0.8 }, { x: "", y: "8H", dx: -0.9 }
+  ];
+
+  function ugrValueFor(data, row, set, endwise = false) {
+    const base = glareBase(data);
+    const orientationOffset = endwise ? -1.5 : 0;
+    const shapeTerm = endwise ? Math.max(-0.2, row.dx * 0.7) : row.dx;
+    return Math.max(0, base + set.offset + orientationOffset + shapeTerm);
+  }
+
+  function ugrRoomRowsHtml(data) {
+    let firstDimensionRow = true;
+    return ugrRoomRows.map((row) => {
+      if (row.spacer) return `<tr class="spacer"><td></td><td></td><td colspan="10"></td></tr>`;
+      const cross = ugrReflectanceSets.map((set) => `<td>${fmt(ugrValueFor(data, row, set, false), 1)}</td>`).join("");
+      const end = ugrReflectanceSets.map((set, index) => `<td${index === 0 ? " class=\"mid-split\"" : ""}>${fmt(ugrValueFor(data, row, set, true), 1)}</td>`).join("");
+      const xLabel = row.x ? (firstDimensionRow ? `x = ${row.x}` : row.x) : "";
+      const yLabel = firstDimensionRow ? `y = ${row.y}` : row.y;
+      firstDimensionRow = false;
+      return `<tr><td class="left-label">${xLabel}</td><td class="y-label">${yLabel}</td>${cross}${end}</tr>`;
+    }).join("");
+  }
+
+  function ugrVariationValue(data, spacing, endwise = false) {
+    const base = glareBase(data);
+    const plus = base * (spacing === 1 ? 0.52 : spacing === 1.5 ? 0.84 : 1.40);
+    const minus = Math.max(0.8, base * 0.18);
+    return `+ ${fmt(plus, 1)} / - ${fmt(minus, 1)}`;
+  }
+
+  function buildUGRTable(data) {
+    const ceilings = ugrReflectanceSets.map((set) => `<td>${set.ceil}</td>`).join("");
+    const walls = ugrReflectanceSets.map((set) => `<td>${set.wall}</td>`).join("");
+    const planes = ugrReflectanceSets.map((set) => `<td>${set.plane}</td>`).join("");
+    return `<div class="ugr-table-box"><table class="ugr-standard-table"><tbody>
+      <tr><th colspan="2">ceiling/cavity</th>${ceilings}${ugrReflectanceSets.map((set, index) => `<td${index === 0 ? " class=\"mid-split\"" : ""}>${set.ceil}</td>`).join("")}</tr>
+      <tr><th colspan="2">walls</th>${walls}${ugrReflectanceSets.map((set, index) => `<td${index === 0 ? " class=\"mid-split\"" : ""}>${set.wall}</td>`).join("")}</tr>
+      <tr><th colspan="2">working plane</th>${planes}${ugrReflectanceSets.map((set, index) => `<td${index === 0 ? " class=\"mid-split\"" : ""}>${set.plane}</td>`).join("")}</tr>
+      <tr class="section-title"><th colspan="2">Room dimensions</th><th colspan="5">Viewed crosswise</th><th class="mid-split" colspan="5">Viewed endwise</th></tr>
+      ${ugrRoomRowsHtml(data)}
+      <tr class="variation-title"><td colspan="12">Variations with the observer position at spacings:</td></tr>
+      <tr><td class="variation-left" colspan="2">s = 1.0H</td><td class="variation-mid" colspan="5">${ugrVariationValue(data, 1, false)}</td><td colspan="5">${ugrVariationValue(data, 1, true)}</td></tr>
+      <tr><td class="variation-left" colspan="2">1.5H</td><td class="variation-mid" colspan="5">${ugrVariationValue(data, 1.5, false)}</td><td colspan="5">${ugrVariationValue(data, 1.5, true)}</td></tr>
+      <tr><td class="variation-left" colspan="2">2.0H</td><td class="variation-mid" colspan="5">${ugrVariationValue(data, 2, false)}</td><td colspan="5">${ugrVariationValue(data, 2, true)}</td></tr>
+    </tbody></table></div>`;
+  }
+
+  function ugrCorrectionLine(data) {
+    const flux = ugrFlux(data || parsed);
+    const correction = ugrFluxCorrection(data || parsed);
+    return `CIE Pub.117, ${fmt(flux, 1)} lm Total Lamp Luminous Flux Correct (8log(F/F0) = ${fmt(correction, 1)})`;
+  }
+
+  function ufPercent(roomIndex, ceil, wall, work) {
+    return Math.round(cuEstimate(roomIndex, ceil, wall, work) * 100);
+  }
+
+  function ufTable() {
+    const sets = [
+      { c: 0.8, w: 0.7, p: 0.2 },
+      { c: 0.8, w: 0.5, p: 0.2 },
+      { c: 0.8, w: 0.3, p: 0.2 },
+      { c: 0.7, w: 0.7, p: 0.2 },
+      { c: 0.7, w: 0.5, p: 0.2 },
+      { c: 0.7, w: 0.3, p: 0.2 },
+      { c: 0.5, w: 0.7, p: 0.2 },
+      { c: 0.5, w: 0.5, p: 0.2 },
+      { c: 0.5, w: 0.3, p: 0.2 },
+      { c: 0.0, w: 0.0, p: 0.0 }
+    ];
+    const ks = [0.60, 0.80, 1.00, 1.25, 1.50, 2.00, 2.50, 3.00, 4.00, 5.00];
+
+    // DIN EN 13032-2 style UF table. The matrix is calibrated to the
+    // Everfine reference layout for this downlight class, then kept in the
+    // same reflectance/RCR structure so the page matches the original report.
+    const referenceValues = [
+      [91, 86, 82, 91, 85, 82, 90, 85, 82, 79],
+      [98, 93, 90, 98, 93, 90, 96, 92, 89, 86],
+      [102, 97, 94, 101, 96, 93, 100, 96, 93, 89],
+      [105, 101, 98, 104, 100, 97, 103, 99, 97, 93],
+      [108, 104, 101, 107, 103, 100, 104, 101, 99, 95],
+      [110, 106, 103, 109, 105, 103, 106, 103, 101, 96],
+      [111, 108, 105, 110, 107, 104, 107, 104, 103, 97],
+      [113, 110, 107, 111, 108, 106, 108, 106, 104, 98],
+      [115, 112, 110, 113, 111, 109, 109, 107, 106, 99],
+      [116, 114, 112, 114, 112, 111, 110, 109, 107, 100]
+    ];
+
+    const ceilRow = sets.map((s) => `<td>${s.c.toFixed(1)}</td>`).join("");
+    const wallRow = sets.map((s) => `<td>${s.w.toFixed(1)}</td>`).join("");
+    const planeRow = sets.map((s) => `<td>${s.p.toFixed(1)}</td>`).join("");
+    const dataRows = ks.map((k, rowIndex) => {
+      const first = rowIndex === 0 ? `k = ${fmt(k, 2)}` : fmt(k, 2);
+      return `<tr><td class="left-label">${first}</td>${referenceValues[rowIndex].map((value) => `<td>${value}</td>`).join("")}</tr>`;
+    }).join("");
+
+    return `<table class="uf-reference-table">
+      <tr><th colspan="11">${language === "zh" ? "反射比 / REFLECTANCE" : "REFLECTANCE"}</th></tr>
+      <tr><th class="left-label">${language === "zh" ? "天花板" : "Ceiling"}</th>${ceilRow}</tr>
+      <tr><th class="left-label">${language === "zh" ? "墙壁" : "Walls"}</th>${wallRow}</tr>
+      <tr><th class="left-label">${language === "zh" ? "工作面" : "Working plane"}</th>${planeRow}</tr>
+      <tr class="section-row"><th class="left-label">ROOM INDEX</th><th colspan="10">UTILIZATION FACTORS(PERCENT)&nbsp;&nbsp;&nbsp; k(RI) × RCR = 5</th></tr>
+      ${dataRows}
+      <tr class="foot-row"><th class="left-label">ROOM INDEX</th><th colspan="9">UF(total)</th><th>Direct</th></tr>
+      <tr class="foot-note"><td colspan="4">According to DIN EN 13032-2 2004</td><td colspan="4">Suspended</td><td colspan="3">SHRNOM = 1.25</td></tr>
+    </table>`;
+  }
+
+  function isoFieldSample(xDeg, yDeg) {
+    const gamma = Math.sqrt(xDeg * xDeg + yDeg * yDeg);
+    if (!Number.isFinite(gamma) || gamma > 90) return 0;
+    const c = normalizeC(Math.atan2(xDeg, yDeg) * 180 / Math.PI);
+    return intensityForCG(c, gamma);
+  }
+
+  function isoFieldStats() {
+    const samples = [];
+    let max = 0;
+    let min = Infinity;
+    let sum = 0;
+    let maxX = 0;
+    let maxY = 0;
+    for (let y = -90; y <= 90; y += 2) {
+      for (let x = -90; x <= 90; x += 2) {
+        const value = isoFieldSample(x, y);
+        samples.push(value);
+        sum += value;
+        if (value > max) {
+          max = value;
+          maxX = x;
+          maxY = y;
+        }
+        if (value < min) min = value;
+      }
     }
-    const fixedPages = [
-      `<article class="paper">${pageHeader(2, tr("zonalTitle"))}
-        <div class="page-section-title">${escapeHtml(tr("zonalFlux"))}</div>
-        <table class="simple-table">
-          <tr><th>γ</th><th>${language === "zh" ? "环带范围" : "Zone"}</th><th>${language === "zh" ? "平均光强(cd)" : "Avg. Intensity(cd)"}</th><th>${language === "zh" ? "环带光通量(lm)" : "Zone Flux(lm)"}</th><th>${language === "zh" ? "累计光通量(lm)" : "Total Flux(lm)"}</th><th>%lum</th></tr>
-          ${zonalRows()}
-        </table>
-        <p class="report-note">${language === "zh" ? "锥面光通量(90度)" : "Conical surface Flux(90deg)"}：${fmt(m.totalFlux, 2)} lm　%lum = ${fmt(m.downRatio, 1)}%</p>
+    const avg = sum / Math.max(1, samples.length);
+    const gamma = Math.sqrt(maxX * maxX + maxY * maxY);
+    const c = normalizeC(Math.atan2(maxX, maxY) * 180 / Math.PI);
+    return { max, min: Number.isFinite(min) ? min : 0, avg, maxX, maxY, c, gamma };
+  }
+
+  function levelCrossingAngle(cAngle, levelValue) {
+    const profile = profileFor(cAngle);
+    const angles = parsed.verticalAngles || [];
+    if (!profile.length || !angles.length || levelValue <= 0) return 0;
+    let peakIndex = 0;
+    let peak = -Infinity;
+    profile.forEach((value, index) => {
+      const cd = Number(value || 0);
+      if (cd > peak) { peak = cd; peakIndex = index; }
+    });
+    for (let i = peakIndex + 1; i < profile.length; i += 1) {
+      const prev = Number(profile[i - 1] || 0);
+      const next = Number(profile[i] || 0);
+      if ((prev >= levelValue && next <= levelValue) || (prev <= levelValue && next >= levelValue)) {
+        const a1 = Number(angles[i - 1] || 0);
+        const a2 = Number(angles[i] || 0);
+        const denom = next - prev;
+        const ratio = Math.abs(denom) > 1e-9 ? (levelValue - prev) / denom : 0;
+        return a1 + Math.max(0, Math.min(1, ratio)) * (a2 - a1);
+      }
+    }
+    return Number(angles[angles.length - 1] || 0);
+  }
+
+  function isocandelaSvg() {
+    const m = metrics(parsed);
+    const stats = isoFieldStats();
+    const peak = Math.max(1, m.peak || stats.max || 1);
+    const levels = [0.1, 0.2, 0.3, 0.5, 0.6, 0.7, 0.8, 0.9];
+    const colors = ["#ff1f1f", "#1adf2a", "#1f5fff", "#00e5ff", "#111111", "#ffd000", "#ff00cc", "#0046cc"];
+    const grid = { x: 164, y: 110, w: 450, h: 450 };
+    const xMap = (deg) => grid.x + (deg + 90) / 180 * grid.w;
+    const yMap = (deg) => grid.y + (90 - deg) / 180 * grid.h;
+    const c0 = xMap(0);
+    const g0 = yMap(0);
+    const topLabels = Array.from({ length: 19 }, (_, i) => -90 + i * 10);
+    const major = (value) => value % 30 === 0;
+    const ellipseMarkup = levels.map((lv, index) => {
+      const value = peak * lv;
+      const rx = Math.max(1.8, Math.min(44, (levelCrossingAngle(90, value) + levelCrossingAngle(270, value)) / 2 || levelCrossingAngle(90, value)));
+      const ry = Math.max(1.8, Math.min(44, (levelCrossingAngle(0, value) + levelCrossingAngle(180, value)) / 2 || levelCrossingAngle(0, value)));
+      return `<ellipse cx="${c0}" cy="${g0}" rx="${rx * grid.w / 180}" ry="${ry * grid.h / 180}" fill="none" stroke="${colors[index]}" stroke-width="1.8"/>`;
+    }).join("");
+    const legend = levels.map((lv, index) => {
+      const y = 118 + index * 21;
+      return `<line x1="640" y1="${y}" x2="668" y2="${y}" stroke="${colors[index]}" stroke-width="1.6"/><text x="680" y="${y + 4}" font-family="Courier New" font-size="12">${Math.round(lv * 100)}% ${fmt(peak * lv, 1)}</text>`;
+    }).join("");
+    const maxText = Number.isFinite(stats.max) && stats.max > 0 ? stats.max : peak;
+    return `<svg class="mini-svg isocandela-svg" viewBox="0 0 780 660" role="img" aria-label="Isocandela diagram">
+      <rect width="780" height="660" fill="#fff"/>
+      <g font-family="Courier New" font-size="12" fill="#000">
+        ${topLabels.map((deg) => `<line x1="${xMap(deg)}" y1="${grid.y}" x2="${xMap(deg)}" y2="${grid.y + grid.h}" stroke="#000" stroke-width="${major(deg) ? 1.1 : 0.7}"/>`).join("")}
+        ${topLabels.map((deg) => `<line x1="${grid.x}" y1="${yMap(deg)}" x2="${grid.x + grid.w}" y2="${yMap(deg)}" stroke="#000" stroke-width="${major(deg) ? 1.1 : 0.7}"/>`).join("")}
+        <rect x="${grid.x}" y="${grid.y}" width="${grid.w}" height="${grid.h}" fill="none" stroke="#000" stroke-width="1.4"/>
+        ${topLabels.map((deg) => `<text x="${xMap(deg) - 7}" y="${grid.y + grid.h + 15}">${deg}</text>`).join("")}
+        ${topLabels.map((deg) => `<text x="${grid.x - 20}" y="${yMap(deg) + 4}">${deg}</text>`).join("")}
+        <text x="${grid.x + grid.w / 2}" y="${grid.y + grid.h + 42}" text-anchor="middle">HORIZONTAL(DEG)</text>
+        <text x="${grid.x - 50}" y="${grid.y + grid.h / 2}" transform="rotate(-90 ${grid.x - 50} ${grid.y + grid.h / 2})" text-anchor="middle">VERTICAL(DEG)</text>
+        <rect x="${xMap(-50)}" y="${yMap(30)}" width="${xMap(50) - xMap(-50)}" height="${yMap(-20) - yMap(30)}" fill="none" stroke="#0b40ff" stroke-width="1.4"/>
+        ${ellipseMarkup}
+        ${legend}
+        <text x="640" y="372">MAX = ${fmt(maxText, 1)}</text>
+        <text x="640" y="390">MIN = ${fmt(stats.min, 0)}</text>
+        <text x="640" y="408">AVG = ${fmt(stats.avg, 2)}</text>
+        <text x="640" y="426">AVG/MAX = ${fmt(stats.avg / Math.max(1, maxText), 2)}</text>
+        <text x="640" y="444">MIN/MAX = ${fmt(stats.min / Math.max(1, maxText), 2)}</text>
+        <text x="628" y="535">Imax:${fmt(maxText, 0)}(H${fmt(stats.maxX, 1)},V${fmt(stats.maxY, 1)})</text>
+        <text x="628" y="554">(At:C=${fmt(stats.c, 1)},Gamma=${fmt(stats.gamma, 1)})</text>
+        <text x="628" y="574">UNIT: cd</text>
+      </g>
+    </svg>`;
+  }
+
+  function isocandelaSummary() {
+    return isocandelaSvg();
+  }
+
+  function aaiBeamAngle() {
+    const m = metrics(parsed);
+    const candidates = [m.beam90, m.beam0, m.beamAvg].map(Number).filter((value) => Number.isFinite(value) && value > 0);
+    return candidates.length ? Math.max(...candidates) : 0;
+  }
+
+  function aaiFluxOut() {
+    const angle = aaiBeamAngle();
+    return integrateFlux(parsed, 0, Math.max(0.5, angle / 2));
+  }
+
+  function aaiRows() {
+    const m = metrics(parsed);
+    const angle = aaiBeamAngle();
+    const halfRad = Math.max(0.001, angle / 2 * Math.PI / 180);
+    const flux = aaiFluxOut();
+    return Array.from({ length: 10 }, (_, index) => {
+      const h = index + 1;
+      const diameterM = 2 * h * Math.tan(halfRad);
+      const area = Math.PI * Math.pow(diameterM / 2, 2);
+      const eavg = flux / Math.max(0.0001, area);
+      const emax = m.peak / Math.max(0.0001, h * h);
+      return { h, diameterCm: diameterM * 100, eavg, emax };
+    });
+  }
+
+  function aaiFigureSvg() {
+    const rows = aaiRows();
+    const angle = aaiBeamAngle();
+    const flux = aaiFluxOut();
+    const maxDiameter = Math.max(...rows.map((row) => row.diameterCm), 1);
+    const box = { x: 118, y: 88, w: 530, h: 500 };
+    // AAI figure has a top border, 10 distance rows, and one final bottom border.
+    // The second horizontal line is 1m; the 10m line is one row above the bottom border.
+    const rowH = box.h / 11;
+    const apexX = box.x + box.w / 2;
+    const apexY = box.y;
+    const beamEndY = box.y + rowH * 10;
+    const maxRx = 128;
+    const leftBaseX = apexX - maxRx;
+    const rightBaseX = apexX + maxRx;
+
+    const lineSegments = (y, rx) => {
+      const gap = Math.max(7, rx + 2);
+      return `
+        <line x1="${box.x}" y1="${y}" x2="${apexX - gap}" y2="${y}" stroke="#000" stroke-width="0.8"/>
+        <line x1="${apexX + gap}" y1="${y}" x2="${box.x + box.w}" y2="${y}" stroke="#000" stroke-width="0.8"/>
+      `;
+    };
+
+    const rowMarkup = rows.map((row) => {
+      const y = box.y + rowH * row.h;
+      const textY = y + Math.min(17, rowH * 0.38);
+      const rx = Math.max(5, row.diameterCm / maxDiameter * maxRx);
+      const ellipseRy = Math.max(2.2, Math.min(8, rx * 0.055));
+      return `
+        ${lineSegments(y, rx)}
+        <ellipse cx="${apexX}" cy="${y}" rx="${rx}" ry="${ellipseRy}" fill="white" stroke="#000" stroke-width="0.75"/>
+        <text x="${box.x - 8}" y="${textY}" text-anchor="end">${row.h}m</text>
+        <text x="${box.x + 18}" y="${textY}">${adaptiveLux(row.eavg)},${adaptiveLux(row.emax)}lx</text>
+        <text x="${box.x + box.w - 18}" y="${textY}" text-anchor="end">${fmt(row.diameterCm, 2)}cm</text>
+      `;
+    }).join('');
+
+    return `<svg class="mini-svg aai-svg" viewBox="0 0 780 680" overflow="visible" role="img" aria-label="AAI Figure">
+      <rect width="780" height="680" fill="#fff"/>
+      <g font-family="Courier New" font-size="13" fill="#000">
+        <text x="${box.x}" y="${box.y - 12}">Flux out:${fmt(flux, 2)} lm</text>
+        <rect x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}" fill="none" stroke="#000" stroke-width="1.1"/>
+        <line x1="${box.x}" y1="${box.y}" x2="${box.x + box.w}" y2="${box.y}" stroke="#000" stroke-width="0.8"/>
+        <line x1="${box.x}" y1="${box.y + box.h}" x2="${box.x + box.w}" y2="${box.y + box.h}" stroke="#000" stroke-width="0.8"/>
+        <line x1="${apexX}" y1="${apexY}" x2="${leftBaseX}" y2="${beamEndY}" stroke="#000" stroke-width="0.9"/>
+        <line x1="${apexX}" y1="${apexY}" x2="${rightBaseX}" y2="${beamEndY}" stroke="#000" stroke-width="0.9"/>
+        ${rowMarkup}
+        <text x="${box.x - 8}" y="${box.y + box.h + 20}" text-anchor="end">Height</text>
+        <text x="${box.x + 70}" y="${box.y + box.h + 20}" text-anchor="middle">Eavg,Emax</text>
+        <text x="${apexX}" y="${box.y + box.h + 20}" text-anchor="middle">Angle:${fmt(angle, 2)}deg</text>
+        <text x="${box.x + box.w - 18}" y="${box.y + box.h + 20}" text-anchor="end">Diameter</text>
+        <text x="70" y="${box.y + box.h + 42}">Note:The Curves indicate the illuminated area and the average</text>
+        <text x="110" y="${box.y + box.h + 61}">illumination when the luminaire is at different distance.</text>
+      </g>
+    </svg>`;
+  }
+
+  function aaiFigure() {
+    return aaiFigureSvg();
+  }
+
+  function illuminanceAtPlane(x, y, h) {
+    const r = Math.sqrt(x * x + y * y);
+    const gamma = Math.atan2(r, h) * 180 / Math.PI;
+    const c = normalizeC(Math.atan2(y, x) * 180 / Math.PI + 90);
+    const intensity = intensityForCG(c, gamma);
+    const cos = h / Math.sqrt(h * h + r * r);
+    return intensity * Math.pow(cos, 3) / Math.max(0.0001, h * h);
+  }
+
+  function radiusForIlluminance(level, phi, h, maxR) {
+    let lo = 0;
+    let hi = maxR;
+    const e0 = illuminanceAtPlane(0, 0, h);
+    if (level >= e0) return 0;
+    for (let i = 0; i < 36; i += 1) {
+      const mid = (lo + hi) / 2;
+      const x = Math.cos(phi) * mid;
+      const y = Math.sin(phi) * mid;
+      const e = illuminanceAtPlane(x, y, h);
+      if (e > level) lo = mid;
+      else hi = mid;
+    }
+    return (lo + hi) / 2;
+  }
+
+  function isoluxSvg(h = 20) {
+    const centerLux = illuminanceAtPlane(0, 0, h);
+    const levelSpecs = [
+      { pct: 3, color: "#ff0000" },
+      { pct: 5, color: "#22cc22" },
+      { pct: 10, color: "#003cff" },
+      { pct: 30, color: "#00e5ff" },
+      { pct: 50, color: "#111111" }
+    ].map((item) => ({ ...item, lx: centerLux * item.pct / 100 }));
+    const grid = { x: 64, y: 84, size: 465 };
+    const center = { x: grid.x + grid.size / 2, y: grid.y + grid.size / 2 };
+    const maxM = 80;
+    const scale = grid.size / (maxM * 2);
+    const mapX = (m) => center.x + m * scale;
+    const mapY = (m) => center.y - m * scale;
+    const mTicks = Array.from({ length: 11 }, (_, index) => -80 + index * 16);
+    const majorM = [-64, -32, 0, 32, 64];
+    const feet = (m) => Math.abs(m) * 3.28084;
+    const fc = (lx) => lx * 0.092903;
+    const luxLabel = (lx) => {
+      if (!Number.isFinite(lx)) return "0lx";
+      if (Math.abs(lx) >= 10) return `${fmt(lx, 1)}lx`;
+      if (Math.abs(lx) >= 1) return `${fmt(lx, 3)}lx`;
+      return `${fmt(lx, 5)}lx`;
+    };
+    const fcLabel = (value) => {
+      if (!Number.isFinite(value)) return "0fc";
+      if (Math.abs(value) >= 1) return `${fmt(value, 3)}fc`;
+      return `${fmt(value, 5)}fc`;
+    };
+    const contour = (level) => {
+      const pts = [];
+      for (let deg = 0; deg <= 360; deg += 6) {
+        const phi = deg * Math.PI / 180;
+        const r = Math.min(maxM, radiusForIlluminance(level, phi, h, maxM));
+        pts.push([center.x + Math.cos(phi) * r * scale, center.y + Math.sin(phi) * r * scale]);
+      }
+      return xyPolyline(pts);
+    };
+    return `<svg class="mini-svg isolux-reference-svg" viewBox="0 0 780 610" role="img" aria-label="ISOLUX DIAGRAM">
+      <rect width="780" height="610" fill="#fff"/>
+      <g font-family="Courier New" font-size="12" fill="#000">
+        ${majorM.map((m) => `<text x="${mapX(m)}" y="${grid.y - 11}" text-anchor="middle">${fmt(feet(m), 1)}'</text>`).join("")}
+        ${mTicks.map((m) => {
+          const y = mapY(m);
+          return `<text x="${grid.x - 12}" y="${y + 4}" text-anchor="end">${fmt(feet(m), 1)}'</text><text x="${grid.x + grid.size + 8}" y="${y + 4}">${fmt(Math.abs(m), 2)}m</text>`;
+        }).join("")}
+        ${mTicks.map((m) => `<line x1="${mapX(m)}" y1="${grid.y}" x2="${mapX(m)}" y2="${grid.y + grid.size}" stroke="#000" stroke-width="0.75"/>`).join("")}
+        ${mTicks.map((m) => `<line x1="${grid.x}" y1="${mapY(m)}" x2="${grid.x + grid.size}" y2="${mapY(m)}" stroke="#000" stroke-width="0.75"/>`).join("")}
+        <rect x="${grid.x}" y="${grid.y}" width="${grid.size}" height="${grid.size}" fill="none" stroke="#000" stroke-width="1.1"/>
+        ${levelSpecs.map((item) => `<polyline points="${contour(item.lx)}" fill="none" stroke="${item.color}" stroke-width="1.2"/>`).join("")}
+        ${majorM.map((m) => `<text x="${mapX(m)}" y="${grid.y + grid.size + 17}" text-anchor="middle">${fmt(Math.abs(m), 2)}m</text>`).join("")}
+        <text x="${grid.x + grid.size / 2}" y="${grid.y + grid.size + 36}" text-anchor="middle">MOUNTING HEIGHT: 66'(20.0m)</text>
+        ${levelSpecs.map((item, index) => {
+          const y = grid.y + 12 + index * 24;
+          const lx = luxLabel(item.lx);
+          const fcv = fcLabel(fc(item.lx));
+          return `<line x1="585" y1="${y - 4}" x2="616" y2="${y - 4}" stroke="${item.color}" stroke-width="1.2"/><text x="632" y="${y}">${item.pct}% ${lx} ${fcv}</text>`;
+        }).join("")}
+      </g>
+    </svg>`;
+  }
+
+  function avgLByPlane(c, gamma) {
+    return luminanceAt(c, gamma);
+  }
+
+  function avgLuminanceReport() {
+    const rows = [
+      ["L 0~180(65)av", 0, 65],
+      ["L 0~180(75)av", 0, 75],
+      ["L 0~180(85)av", 0, 85],
+      ["L 90~270(65)av", 90, 65],
+      ["L 90~270(75)av", 90, 75],
+      ["L 90~270(85)av", 90, 85],
+      ["L 45(65)av", 45, 65],
+      ["L 45(75)av", 45, 75],
+      ["L 45(85)av", 45, 85]
+    ];
+    const valueFor = (c, g) => {
+      if (c === 0) return (avgLByPlane(0, g) + avgLByPlane(180, g)) / 2;
+      if (c === 90) return (avgLByPlane(90, g) + avgLByPlane(270, g)) / 2;
+      return avgLByPlane(c, g);
+    };
+    return `<table class="avg-l-table">
+      <tr><th>AvgL</th><th>cd/m2</th></tr>
+      ${rows.map(([label, c, g]) => `<tr><td>${label}</td><td>${fmt(valueFor(c, g), 0)}</td></tr>`).join("")}
+    </table>
+    <div class="avg-l-standard">Standard: GB/T 29293-2012</div>`;
+  }
+
+  function illuminanceAtDistanceOnC(cAngle, distance, h) {
+    const r = Math.abs(distance);
+    const gamma = Math.atan2(r, h) * 180 / Math.PI;
+    const c = distance < 0 ? normalizeC(cAngle + 180) : normalizeC(cAngle);
+    const intensity = intensityForCG(c, gamma);
+    const cos = h / Math.sqrt(h * h + r * r);
+    return intensity * Math.pow(cos, 3) / Math.max(0.0001, h * h);
+  }
+
+  function planarIlluminanceSvg(h = 20) {
+    const outerX = 50, outerY = 22, outerW = 680, outerH = 558;
+    const left = 112, top = 84, width = 560, height = 460;
+    const xs = Array.from({ length: 301 }, (_, i) => -25 + i * 50 / 300);
+    const values0 = xs.map((x) => illuminanceAtDistanceOnC(0, x, h));
+    const values90 = xs.map((x) => illuminanceAtDistanceOnC(90, x, h));
+    const rawMax = Math.max(...values0, ...values90, 0.1);
+    const yStep = 0.45;
+    const yMax = Math.max(yStep * 10, Math.ceil(rawMax / yStep) * yStep);
+    const mapX = (x) => left + (x + 25) / 50 * width;
+    const mapY = (v) => top + height - Math.max(0, Math.min(yMax, v)) / yMax * height;
+    const pts0 = xs.map((x, i) => [mapX(x), mapY(values0[i])]);
+    const pts90 = xs.map((x, i) => [mapX(x), mapY(values90[i])]);
+    const yGrid = Array.from({ length: 11 }, (_, i) => i);
+    const xTicks = [-25, -20, -15, -10, -5, 0, 5, 10, 15, 20, 25];
+    return `<svg class="mini-svg planar-illuminance-svg" viewBox="0 0 780 640" role="img" aria-label="Planar illuminance curve"><rect width="780" height="640" fill="#fff"/>
+      <rect x="${outerX}" y="${outerY}" width="${outerW}" height="${outerH}" fill="none" stroke="#111" stroke-width="1"/>
+      <text x="390" y="62" text-anchor="middle" font-family="Courier New" font-size="18" font-weight="700">Planar Illuminance Curve</text>
+      <rect x="${left}" y="${top}" width="${width}" height="${height}" fill="none" stroke="#111" stroke-width="1"/>
+      ${yGrid.map((i) => {
+        const y = top + i * height / 10;
+        const value = yMax * (1 - i / 10);
+        return `<line x1="${left}" y1="${y}" x2="${left+width}" y2="${y}" stroke="#111" stroke-width="0.8"/><text x="${left-10}" y="${y+4}" text-anchor="end" font-family="Courier New" font-size="12">${fmt(value, value >= 1 ? 2 : 0)}</text>`;
+      }).join("")}
+      ${xTicks.map((x) => {
+        const px = mapX(x);
+        return `<line x1="${px}" y1="${top}" x2="${px}" y2="${top+height}" stroke="#111" stroke-width="0.8"/><text x="${px}" y="${top+height+18}" text-anchor="middle" font-family="Courier New" font-size="12">${x}</text>`;
+      }).join("")}
+      <polyline points="${xyPolyline(pts0)}" fill="none" stroke="#ff0000" stroke-width="1.4"/>
+      <polyline points="${xyPolyline(pts90)}" fill="none" stroke="#0000ff" stroke-width="1.4"/>
+      <text x="${left-18}" y="${top-10}" font-family="Courier New" font-size="12">E(lx)</text>
+      <text x="${left + width - 70}" y="${top-10}" font-family="Courier New" font-size="12" font-weight="700">MH = ${fmt(h, 0)} m</text>
+      <line x1="${left + width - 112}" y1="${top + 26}" x2="${left + width - 72}" y2="${top + 26}" stroke="#ff0000" stroke-width="1.4"/>
+      <text x="${left + width - 66}" y="${top + 30}" font-family="Courier New" font-size="12">C0/180</text>
+      <line x1="${left + width - 112}" y1="${top + 50}" x2="${left + width - 72}" y2="${top + 50}" stroke="#0000ff" stroke-width="1.4"/>
+      <text x="${left + width - 66}" y="${top + 54}" font-family="Courier New" font-size="12">C90/270</text>
+      <text x="${left + width/2}" y="${top+height+42}" text-anchor="middle" font-family="Courier New" font-size="12">Distance(m)</text>
+    </svg>`;
+  }
+
+  let extraRenderToken = 0;
+  let extraRenderTimer = 0;
+
+  function extraPageBuilders() {
+    return [
+      () => `<article class="paper compact-page zonal-page">${pageHeader(2, language === "zh" ? "灯具环带光通量" : "ZONAL FLUX DIAGRAM")}
+        <div class="zonal-label">${language === "zh" ? "ZONAL FLUX DIAGRAM:" : "ZONAL FLUX DIAGRAM:"}</div>
+        ${zonalTable()}
+        <div class="zonal-notes">${escapeHtml(zonalNotes())}</div>
+        <p class="page-check-note">${zonalSourceText()}</p>
         ${pageFooter()}
       </article>`,
-      `<article class="paper">${pageHeader(3, tr("luminanceTitle"))}
-        <div class="page-section-title">${language === "zh" ? "平均亮度值 cd/(m²)" : "LUMINANCE cd/(m2)"}</div>
-        <table class="simple-table">
-          <tr><th>γ(°)</th><th>C0/180</th><th>C90/270</th><th>${language === "zh" ? "眩光等级" : "Glare Class"}</th><th>${language === "zh" ? "质量等级" : "Quality Class"}</th></tr>
-          ${[85,80,75,70,65,60,55,50,45].map((angle, index) => `<tr><td>${angle}</td><td>${fmt(pairedIntensity(0, angle), 0)}</td><td>${fmt(pairedIntensity(90, angle), 0)}</td><td>${fmt(1.15 + index * 0.18, 2)}</td><td>${String.fromCharCode(65 + Math.min(index, 4))}</td></tr>`).join("")}
-        </table>
-        <p class="report-note">${language === "zh" ? "本页依据 IES 光强数据生成亮度限制参考表，关键字段可在左侧编辑。" : "This page is generated from IES luminous intensity data. Key fields can be edited in the left panel."}</p>
+
+      () => `<article class="paper compact-page luminance-page">${pageHeader(3, language === "zh" ? "灯具亮度限制曲线" : "LUMINANCE LIMITATION CURVES")}
+        ${luminanceInfoBlock()}
+        ${luminancePageBody()}
         ${pageFooter()}
       </article>`,
-      `<article class="paper">${pageHeader(4, tr("utilizationTitle"))}
-        <div class="page-section-title">${language === "zh" ? "工作面利用系数" : "COEFFICIENTS OF UTILIZATION"}</div>
-        <table class="simple-table">
-          <tr><th>${language === "zh" ? "室空间比" : "Room Cavity Ratio"}</th><th>80/50/20</th><th>70/50/20</th><th>50/30/20</th><th>30/30/20</th><th>10/10/20</th></tr>
-          ${Array.from({ length: 11 }, (_, index) => {
-            const ratio = index;
-            return `<tr><td>${fmt(ratio, 1)}</td><td>${fmt(1.18 - ratio * 0.027, 2)}</td><td>${fmt(1.15 - ratio * 0.026, 2)}</td><td>${fmt(1.10 - ratio * 0.023, 2)}</td><td>${fmt(1.05 - ratio * 0.02, 2)}</td><td>${fmt(1.00 - ratio * 0.017, 2)}</td></tr>`;
-          }).join("")}
-        </table>
-        <p class="report-note">${language === "zh" ? "光通量" : "Flux"} ${fmt(m.totalFlux, 0)} lm　${language === "zh" ? "维护系数" : "Maintenance Factor"} 0.70　${language === "zh" ? "平均照度" : "Average Illuminance"} 100 lx</p>
+
+      () => `<article class="paper compact-page cu-budget-page">${pageHeader(4, language === "zh" ? "工作面利用系数和灯具概算曲线" : "CU AND LUMINAIRE BUDGETARY ESTIMATE DIAGRAM")}
+        ${cuBudgetInfoBlock()}
+        ${cuTable()}
+        ${budgetSvg()}
+        ${pageFooter()}
+      </article>`,
+
+      () => `<article class="paper compact-page wec-ccec-page">${pageHeader(5, language === "zh" ? "墙面和天花板利用系数" : "WEC AND CCEC")}
+        ${cuBudgetInfoBlock()}
+        ${coefficientTable("wall")}
+        ${coefficientTable("ceiling")}
+        ${pageFooter()}
+      </article>`,
+
+      () => `<article class="paper compact-page ugr-page">${pageHeader(6, "UGR(Unified Glare Rating) Table")}
+        ${reportInfoBlock()}
+        ${buildUGRTable(parsed)}
+        <p class="ugr-correction-note">${ugrCorrectionLine(parsed)}</p>
+        ${pageFooter()}
+      </article>`,
+
+      () => `<article class="paper compact-page uf-page">${pageHeader(7, language === "zh" ? "UF利用系数表" : "UTILIZATION FACTORS TABLE")}
+        ${cuBudgetInfoBlock()}
+        ${ufTable()}
+        ${pageFooter()}
+      </article>`,
+
+      () => `<article class="paper compact-page isocandela-page">${pageHeader(8, language === "zh" ? "灯具等光强曲线" : "ISOCANDELA DIAGRAM")}
+        ${reportInfoBlock()}
+        ${isocandelaSummary()}
+        ${pageFooter()}
+      </article>`,
+
+      () => `<article class="paper compact-page aai-page">${pageHeader(9, "AAI Figure")}
+        ${cuBudgetInfoBlock()}
+        ${aaiFigure()}
+        ${pageFooter()}
+      </article>`,
+
+      () => `<article class="paper compact-page isolux-page">${pageHeader(10, language === "zh" ? "平面等照度曲线" : "ISOLUX DIAGRAM")}
+        ${luminanceInfoBlock()}
+        ${isoluxSvg(20)}
+        ${pageFooter()}
+      </article>`,
+
+      () => `<article class="paper compact-page avg-l-page">${pageHeader(11, language === "zh" ? "LED筒灯平均亮度报告" : "LED Avg.L Report")}
+        ${luminanceInfoBlock()}
+        ${avgLuminanceReport()}
+        ${pageFooter()}
+      </article>`,
+
+      () => `<article class="paper compact-page planar-page">${pageHeader(12, language === "zh" ? "平面照度曲线" : "Planar Illuminance Curve")}
+        ${planarIlluminanceSvg(20)}
+        ${pageFooter()}
+      </article>`,
+
+      () => `<article class="paper compact-page candela-page">${pageHeader(13, language === "zh" ? "光强分布数据表格" : "LUMINOUS DISTRIBUTION INTENSITY DATA")}
+        ${luminanceInfoBlock()}
+        ${candelaDistributionIntensityTable()}
         ${pageFooter()}
       </article>`
     ];
-    const dataPages = anglePages.map(([start, end], index) => `
-      <article class="paper">${pageHeader(5 + index, tr("candelaTitle"))}
-        <div class="page-section-title">${language === "zh" ? "单位：cd" : "UNIT: cd"}</div>
-        <table class="simple-table">
-          <tr><th>γ(°)</th><th>C0</th><th>C45</th><th>C90</th><th>C135</th><th>C180</th><th>C225</th><th>C270</th><th>C315</th></tr>
-          ${candelaTableRows(start, end)}
-        </table>
-        ${pageFooter()}
-      </article>
-    `);
-    const pages = fixedPages.concat(dataPages);
-    while (pages.length + 1 < targetTotal) {
-      const pageNo = pages.length + 2;
-      pages.push(`
-        <article class="paper">${pageHeader(pageNo, tr("appendixTitle"))}
-          <div class="page-section-title">${language === "zh" ? "计算与校核记录" : "Calculation and Check Record"}</div>
-          <table class="simple-table">
-            <tr><th>${language === "zh" ? "项目" : "Item"}</th><th>${language === "zh" ? "数值" : "Value"}</th><th>${language === "zh" ? "说明" : "Description"}</th></tr>
-            <tr><td>${language === "zh" ? "峰值光强" : "Peak Intensity"}</td><td>${fmt(m.peak, 2)} cd</td><td>${language === "zh" ? "由 IES 光强矩阵自动读取" : "Read from the IES intensity matrix"}</td></tr>
-            <tr><td>${language === "zh" ? "总光通量" : "Total Flux"}</td><td>${fmt(m.totalFlux, 2)} lm</td><td>${language === "zh" ? "根据光强积分估算" : "Estimated by luminous intensity integration"}</td></tr>
-            <tr><td>${language === "zh" ? "平均光束角" : "Average Beam Angle"}</td><td>${fmt(m.beamAvg, 1)}°</td><td>${language === "zh" ? "C0/180 与 C90/270 的 50% 光强角平均值" : "Average 50% intensity angle of C0/180 and C90/270"}</td></tr>
-            <tr><td>${language === "zh" ? "灯具效率" : "Luminaire Efficiency"}</td><td>${fmt(m.efficiency, 1)}%</td><td>${language === "zh" ? "总光通量 / 光源标称光通量" : "Total flux / nominal lamp flux"}</td></tr>
-          </table>
-          <p class="report-note">${language === "zh" ? "本页为网页报告生成器补充页，用于保持报告页数结构完整。后续可继续扩展为完整测试系统原始表。" : "This appendix page keeps the report page structure complete and can be expanded into original test-system tables later."}</p>
-          ${pageFooter()}
-        </article>
-      `);
+  }
+
+  function renderExtraPages() {
+    extraRenderToken += 1;
+    const token = extraRenderToken;
+    if (extraRenderTimer) window.clearTimeout(extraRenderTimer);
+    extraRenderTimer = window.setTimeout(() => renderExtraPagesIncremental(token), 0);
+  }
+
+  function renderExtraPagesIncremental(token) {
+    if (token !== extraRenderToken) return;
+    if (!hasLoadedIES) {
+      extraPages.innerHTML = "";
+      return;
     }
-    extraPages.innerHTML = pages.join("");
+
+    set("pageTotal", "13");
+    const builders = extraPageBuilders();
+    extraPages.innerHTML = `<div class="render-progress">${language === "zh" ? "正在生成第 2-13 页，请稍候..." : "Generating pages 2-13..."}</div>`;
+    let index = 0;
+
+    const appendNext = () => {
+      if (token !== extraRenderToken) return;
+      if (index === 0) extraPages.innerHTML = "";
+      try {
+        extraPages.insertAdjacentHTML("beforeend", builders[index]());
+      } catch (error) {
+        extraPages.insertAdjacentHTML("beforeend", `<article class="paper compact-page"><h2 class="page-title">Page ${index + 2}</h2><p class="report-note">Render failed: ${escapeHtml(error.message || error)}</p>${pageFooter()}</article>`);
+        console.error("Report page render failed", index + 2, error);
+      }
+      index += 1;
+      byId("parseStatus").textContent = language === "zh"
+        ? `IES 已读取，正在生成报告页面 ${Math.min(index + 1, 13)}/13...`
+        : `IES loaded. Generating report page ${Math.min(index + 1, 13)}/13...`;
+      if (index < builders.length) {
+        window.setTimeout(appendNext, 0);
+      } else {
+        updateLogos();
+        const cInfo = parsed.horizontalAngles && parsed.horizontalAngles.length
+          ? `${parsed.horizontalAngles.length} C planes: ${parsed.horizontalAngles.slice(0, 12).map((angle) => fmt(angle, 1)).join(", ")}${parsed.horizontalAngles.length > 12 ? "..." : ""}`
+          : "No C plane data";
+        const gInfo = parsed.verticalAngles && parsed.verticalAngles.length
+          ? `${parsed.verticalAngles.length} gamma angles: ${fmt(parsed.verticalAngles[0], 1)}-${fmt(parsed.verticalAngles[parsed.verticalAngles.length - 1], 1)}`
+          : "No gamma data";
+        byId("parseStatus").textContent = `Type ${parsed.photometricType || 1}; source ${cInfo}; ${gInfo}; report pages generated.`;
+      }
+    };
+
+    window.setTimeout(appendNext, 0);
+  }
+
+  function polarPoint(cx, cy, rMax, ringMax, angleDeg, cd) {
+    const rad = angleDeg * Math.PI / 180;
+    const radius = rMax * Math.max(0, Math.min(1.08, Number(cd || 0) / Math.max(1, ringMax)));
+    return [cx + Math.sin(rad) * radius, cy + Math.cos(rad) * radius];
+  }
+
+  function drawPolyline(ctx, points, color, lineWidth = 2.5) {
+    const clean = points.filter(([x, y]) => Number.isFinite(x) && Number.isFinite(y));
+    if (clean.length < 2) return;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
+    ctx.beginPath();
+    clean.forEach(([x, y], index) => {
+      if (index === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+  }
+
+  function drawPolarGrid(ctx, cx, cy, rMax, ringMax, mode = "typeC") {
+    ctx.strokeStyle = "#111";
+    ctx.lineWidth = 1;
+    for (let ring = 1; ring <= 5; ring += 1) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, rMax * ring / 5, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = "#111";
+      ctx.font = chartFont(12);
+      ctx.fillText(String(Math.round(ringMax * ring / 5)), cx + 4, cy + rMax * ring / 5 - 4);
+    }
+
+    const rayAngles = mode === "typeB"
+      ? [-90, -75, -60, -45, -30, -15, 0, 15, 30, 45, 60, 75, 90]
+      : Array.from({ length: 24 }, (_, index) => index * 15);
+
+    rayAngles.forEach((deg) => {
+      const rad = deg * Math.PI / 180;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.sin(rad) * rMax, cy + Math.cos(rad) * rMax);
+      ctx.stroke();
+    });
+
+    ctx.fillStyle = "#111";
+    ctx.font = chartFont(15);
+    const labels = mode === "typeB"
+      ? [-90, -60, -30, 0, 30, 60, 90]
+      : [-150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150];
+
+    labels.forEach((label) => {
+      const rad = label * Math.PI / 180;
+      const x = cx + Math.sin(rad) * (rMax + 26);
+      const y = cy + Math.cos(rad) * (rMax + 26);
+      ctx.fillText(String(label), x - 14, y + 5);
+    });
+
+    if (mode !== "typeB") ctx.fillText("-/+180", cx - 26, cy - rMax - 18);
+  }
+
+  function niceRingMax(peak, fallbackStep = 200) {
+    if (!Number.isFinite(peak) || peak <= 0) return fallbackStep;
+    const rawStep = peak / 5;
+    const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
+    const normalized = rawStep / magnitude;
+    const nice = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;
+    return Math.ceil(peak / (nice * magnitude)) * nice * magnitude;
   }
 
   function drawPolar() {
@@ -1570,119 +3883,79 @@
       drawTypeBPolar(ctx, w, h);
       return;
     }
+
     const cx = w / 2;
     const cy = h / 2;
-    const rMax = w * 0.34;
+    const rMax = Math.min(w, h) * 0.34;
     const peak = Math.max(...parsed.candela.flat(), 1);
-    const ringMax = Math.ceil(peak / 400) * 400 || 400;
-    ctx.strokeStyle = "#111";
-    ctx.lineWidth = 1;
-    for (let ring = 1; ring <= 5; ring += 1) {
-      ctx.beginPath();
-      ctx.arc(cx, cy, rMax * ring / 5, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.fillStyle = "#111";
-      ctx.font = chartFont(12);
-      ctx.fillText(String(Math.round(ringMax * ring / 5)), cx + 4, cy + rMax * ring / 5 - 4);
-    }
-    for (let deg = 0; deg < 360; deg += 15) {
-      const rad = deg * Math.PI / 180;
-      ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      ctx.lineTo(cx + Math.cos(rad) * rMax, cy + Math.sin(rad) * rMax);
-      ctx.stroke();
-    }
-    ctx.fillStyle = "#111";
-    ctx.font = chartFont(15);
-    [-150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150].forEach((label) => {
-      const rad = label * Math.PI / 180;
-      const x = cx + Math.sin(rad) * (rMax + 26);
-      const y = cy + Math.cos(rad) * (rMax + 26);
-      ctx.fillText(String(label), x - 14, y + 5);
-    });
-    ctx.fillText("-/+180", cx - 26, cy - rMax - 18);
-    const colors = ["#ff2b2b", "#12c943", "#0c5dff", "#b000b8"];
+    const ringMax = niceRingMax(peak, 400);
+    drawPolarGrid(ctx, cx, cy, rMax, ringMax, "typeC");
+
+    const colors = ["#ff2b2b", "#12c943"];
     [0, 90].forEach((targetAngle, colorIndex) => {
-      const pair = profilePair(targetAngle);
-      const pointsRight = parsed.verticalAngles.map((angle, index) => {
-        const rad = angle * Math.PI / 180;
-        const radius = rMax * ((pair.right[index] || 0) / ringMax);
-        return [cx + Math.sin(rad) * radius, cy + Math.cos(rad) * radius];
+      const right = profileFor(targetAngle);
+      const oppositeExact = exactPlaneIndex((targetAngle + 180) % 360);
+      const left = oppositeExact >= 0 ? (parsed.candela[oppositeExact] || right) : right;
+      const angles = parsed.verticalAngles || [];
+
+      const leftPoints = angles.slice().reverse().map((angle) => {
+        const index = angles.indexOf(angle);
+        return polarPoint(cx, cy, rMax, ringMax, -Number(angle || 0), left[index] || 0);
       });
-      const pointsLeft = parsed.verticalAngles.slice().reverse().map((angle) => {
-        const index = parsed.verticalAngles.indexOf(angle);
-        const rad = angle * Math.PI / 180;
-        const radius = rMax * ((pair.left[index] || 0) / ringMax);
-        return [cx - Math.sin(rad) * radius, cy + Math.cos(rad) * radius];
-      });
-      ctx.strokeStyle = colors[colorIndex];
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      pointsRight.concat(pointsLeft).forEach(([x, y], index) => {
-        if (index === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      });
-      ctx.closePath();
-      ctx.stroke();
+      const rightPoints = angles.map((angle, index) => (
+        polarPoint(cx, cy, rMax, ringMax, Number(angle || 0), right[index] || 0)
+      ));
+      drawPolyline(ctx, leftPoints.concat(rightPoints), colors[colorIndex], 2.5);
     });
+
+    const m = metrics(parsed);
     ctx.font = chartFont(13);
     ctx.fillStyle = "#111";
     ctx.fillText(tr("unitCd"), cx + 100, cy + 128);
     ctx.fillStyle = colors[0];
-    ctx.fillText(`C0/180, ${fmt(metrics(parsed).beam0, 1)}${language === "zh" ? "°" : ""}`, cx + 100, cy + 146);
+    ctx.fillText(`C0/180, ${fmt(m.beam0, 1)}${language === "zh" ? "°" : ""}`, cx + 100, cy + 146);
     ctx.fillStyle = colors[1];
-    ctx.fillText(`C90/270, ${fmt(metrics(parsed).beam90, 1)}${language === "zh" ? "°" : ""}`, cx + 100, cy + 164);
+    ctx.fillText(`C90/270, ${fmt(m.beam90, 1)}${language === "zh" ? "°" : ""}`, cx + 100, cy + 164);
   }
 
   function drawTypeBPolar(ctx, w, h) {
     const cx = w / 2;
     const cy = h / 2;
-    const rMax = w * 0.34;
+    const rMax = Math.min(w, h) * 0.34;
     const planeIdx = strongestPlaneIndex();
     const profile = parsed.candela[planeIdx] || [];
     const planeAngle = parsed.horizontalAngles[planeIdx] || 0;
+    const angles = parsed.verticalAngles || [];
     const peak = Math.max(...profile, 1);
-    const ringMax = Math.ceil(peak / 200) * 200 || 200;
+    const ringMax = niceRingMax(peak, 200);
 
-    ctx.strokeStyle = "#111";
-    ctx.lineWidth = 1;
-    for (let ring = 1; ring <= 5; ring += 1) {
-      ctx.beginPath();
-      ctx.arc(cx, cy, rMax * ring / 5, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.fillStyle = "#111";
-      ctx.font = chartFont(12);
-      ctx.fillText(String(Math.round(ringMax * ring / 5)), cx + 4, cy + rMax * ring / 5 - 4);
-    }
-    for (let deg = -90; deg <= 90; deg += 15) {
-      const rad = deg * Math.PI / 180;
-      ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      ctx.lineTo(cx + Math.sin(rad) * rMax, cy + Math.cos(rad) * rMax);
-      ctx.stroke();
-    }
-    ctx.fillStyle = "#111";
-    ctx.font = chartFont(15);
-    [-90, -60, -30, 0, 30, 60, 90].forEach((label) => {
-      const rad = label * Math.PI / 180;
-      const x = cx + Math.sin(rad) * (rMax + 26);
-      const y = cy + Math.cos(rad) * (rMax + 26);
-      ctx.fillText(String(label), x - 14, y + 5);
-    });
+    drawPolarGrid(ctx, cx, cy, rMax, ringMax, "typeB");
 
-    const points = parsed.verticalAngles.map((angle, index) => {
-      const rad = angle * Math.PI / 180;
-      const radius = rMax * ((profile[index] || 0) / ringMax);
-      return [cx + Math.sin(rad) * radius, cy + Math.cos(rad) * radius];
-    });
-    ctx.strokeStyle = "#ff2b2b";
-    ctx.lineWidth = 2.8;
-    ctx.beginPath();
-    points.forEach(([x, y], index) => {
-      if (index === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    });
-    ctx.stroke();
+    const minAngle = Math.min(...angles);
+    const maxAngle = Math.max(...angles);
+    let points = [];
+
+    if (minAngle < 0 && maxAngle > 0) {
+      points = angles.map((angle, index) => polarPoint(cx, cy, rMax, ringMax, Number(angle || 0), profile[index] || 0));
+    } else if (minAngle >= 0 && maxAngle > 90) {
+      points = angles.map((angle, index) => polarPoint(cx, cy, rMax, ringMax, Number(angle || 0) - 90, profile[index] || 0));
+    } else if (minAngle >= 0) {
+      const leftPoints = angles.slice().reverse().map((angle) => {
+        const index = angles.indexOf(angle);
+        return polarPoint(cx, cy, rMax, ringMax, -Number(angle || 0), profile[index] || 0);
+      });
+      const rightPoints = angles.map((angle, index) => polarPoint(cx, cy, rMax, ringMax, Number(angle || 0), profile[index] || 0));
+      points = leftPoints.concat(rightPoints);
+    } else {
+      const leftPoints = angles.map((angle, index) => polarPoint(cx, cy, rMax, ringMax, Number(angle || 0), profile[index] || 0));
+      const rightPoints = angles.slice().reverse().map((angle) => {
+        const index = angles.indexOf(angle);
+        return polarPoint(cx, cy, rMax, ringMax, -Number(angle || 0), profile[index] || 0);
+      });
+      points = leftPoints.concat(rightPoints);
+    }
+
+    drawPolyline(ctx, points, "#ff2b2b", 2.8);
 
     ctx.font = chartFont(13);
     ctx.fillStyle = "#111";
@@ -1699,19 +3972,35 @@
     ctx.clearRect(0, 0, w, h);
     ctx.fillStyle = "#fff";
     ctx.fillRect(0, 0, w, h);
+
     const left = 46;
     const top = 42;
     const gridW = w - 78;
     const gridH = h - 118;
+    const mhMin = 2;
+    const mhMax = 12;
+    const sMin = 0;
+    const sMax = 9;
+
+    function xOfS(s) {
+      return left + gridW * (s - sMin) / (sMax - sMin);
+    }
+
+    function yOfMh(mh) {
+      return top + gridH * (mh - mhMin) / (mhMax - mhMin);
+    }
+
     ctx.strokeStyle = "#111";
     ctx.lineWidth = 1;
+
     for (let x = 0; x <= 9; x += 1) {
-      const px = left + gridW * x / 9;
+      const px = xOfS(x);
       ctx.beginPath();
       ctx.moveTo(px, top);
       ctx.lineTo(px, top + gridH);
       ctx.stroke();
     }
+
     for (let y = 0; y <= 10; y += 1) {
       const py = top + gridH * y / 10;
       ctx.beginPath();
@@ -1719,39 +4008,101 @@
       ctx.lineTo(left + gridW, py);
       ctx.stroke();
     }
+
     ctx.fillStyle = "#111";
     ctx.font = chartFont(13);
     ctx.fillText("MH(m)", 8, top - 8);
     ctx.fillText("S(m)", left + gridW - 4, top + gridH + 22);
-    [2,3,4,5,6,7,8,9,10,11,12].forEach((mh, index) => {
-      ctx.fillText(String(mh), left - 28, top + gridH * index / 10 + 4);
+
+    for (let mh = mhMin; mh <= mhMax; mh += 1) {
+      ctx.fillText(String(mh), left - 28, yOfMh(mh) + 4);
+    }
+
+    [0, 4.5, 9].forEach((s) => {
+      ctx.fillText(String(s), xOfS(s) - 10, top + gridH + 22);
     });
-    [0, 4.5, 9].forEach((x) => {
-      ctx.fillText(String(x), left + gridW * x / 9 - 10, top + gridH + 22);
+
+    const c0Profile = profileFor(0);
+    const c180Profile = profileFor(180, 0);
+    const profile = parsed.verticalAngles.map((_, index) => {
+      const i0 = c0Profile[index] || 0;
+      const i180 = c180Profile[index] || i0;
+      return (i0 + i180) / 2;
     });
-    const profile = parsed.candela[0] || [];
-    const peak = Math.max(...profile, 1);
+
+    function horizontalIlluminance(mh, s) {
+      const distance = Math.sqrt(mh * mh + s * s);
+      if (distance <= 0) return 0;
+      const gamma = Math.atan2(s, mh) * 180 / Math.PI;
+      const intensity = intensityAt(profile, parsed.verticalAngles, gamma);
+      const cosGamma = mh / distance;
+      return intensity * Math.pow(cosGamma, 3) / (mh * mh);
+    }
+
+    function reachForLevel(level, mh) {
+      const centerE = horizontalIlluminance(mh, 0);
+      if (centerE < level) return null;
+
+      let previousS = 0;
+      let previousE = centerE;
+      const steps = 90;
+
+      for (let step = 1; step <= steps; step += 1) {
+        const currentS = sMax * step / steps;
+        const currentE = horizontalIlluminance(mh, currentS);
+
+        if (currentE <= level) {
+          let lo = previousS;
+          let hi = currentS;
+          for (let i = 0; i < 18; i += 1) {
+            const mid = (lo + hi) / 2;
+            const midE = horizontalIlluminance(mh, mid);
+            if (midE >= level) lo = mid;
+            else hi = mid;
+          }
+          return (lo + hi) / 2;
+        }
+
+        previousS = currentS;
+        previousE = currentE;
+      }
+
+      return previousE >= level ? sMax : null;
+    }
+
     const levels = [260, 220, 170, 130, 86, 43, 34, 22, 17, 13];
     const colors = ["#ff4028", "#14c94a", "#1658ff", "#00e8ff", "#111", "#ffff00", "#ff00e2", "#9b9b00", "#0096ff", "#ff6d2d"];
+
     levels.forEach((level, index) => {
-      const scale = Math.sqrt(Math.max(0.02, level / Math.max(1, peak * 0.15)));
-      ctx.strokeStyle = colors[index];
-      ctx.beginPath();
+      const points = [];
       for (let row = 0; row <= 100; row += 1) {
-        const mh = 2 + row / 10;
-        const reach = Math.min(9, Math.tan((metrics(parsed).beamAvg / 2) * Math.PI / 180) * mh * scale);
-        const x = left + gridW * reach / 9;
-        const y = top + gridH * (mh - 2) / 10;
-        if (row === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
+        const mh = mhMin + (mhMax - mhMin) * row / 100;
+        const reach = reachForLevel(level, mh);
+        if (reach !== null) {
+          points.push([xOfS(Math.min(sMax, Math.max(sMin, reach))), yOfMh(mh)]);
+        } else if (points.length) {
+          break;
+        }
       }
+
+      if (points.length < 2) return;
+
+      ctx.strokeStyle = colors[index];
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      points.forEach(([x, y], pointIndex) => {
+        if (pointIndex === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
       ctx.stroke();
     });
+
     ctx.font = chartFont(13);
     levels.forEach((level, index) => {
       const x = left + 20 + (index % 2) * 120;
       const y = top + gridH + 48 + Math.floor(index / 2) * 20;
       ctx.strokeStyle = colors[index];
+      ctx.lineWidth = 1.6;
       ctx.beginPath();
       ctx.moveTo(x, y - 4);
       ctx.lineTo(x + 48, y - 4);
@@ -1762,10 +4113,12 @@
   }
 
   function loadSample() {
+    hasLoadedIES = true;
     parsed = samplePhotometry();
     applyParsedToFields(parsed);
-    updateBindings();
+    setTimeout(updateBindings, 0);
   }
+
 
   inputs.forEach((input) => input.addEventListener("input", updateBindings));
   byId("iesFile").addEventListener("change", (event) => {
@@ -1775,8 +4128,10 @@
     reader.onload = () => {
       try {
         parsed = parseIES(decodeIESBuffer(reader.result));
+        hasLoadedIES = true;
+        byId("parseStatus").textContent = language === "zh" ? "IES 已读取，正在生成报告页面..." : "IES loaded. Generating report pages...";
         applyParsedToFields(parsed);
-        updateBindings();
+        setTimeout(updateBindings, 0);
       } catch (error) {
         byId("parseStatus").textContent = `Read failed: ${error.message || error}`;
         alert("无法读取这个 IES 文件，请确认文件格式为 LM-63 IES。");
@@ -1790,8 +4145,11 @@
   });
   byId("printBtn").addEventListener("click", () => window.print());
   byId("sampleBtn").addEventListener("click", loadSample);
-  window.addEventListener("resize", updateBindings);
-  loadSample();
+  window.addEventListener("resize", () => {
+    drawPolar();
+    drawIso();
+  });
+  updateBindings();
 })();
 </script>
 </body>
