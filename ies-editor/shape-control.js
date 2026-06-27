@@ -67,11 +67,11 @@
     }
   }
 
-  function loadOneDegreeGenerator() {
-    if (document.querySelector('script[data-generator-one-degree="true"]')) return;
+  function loadScriptOnce(src, key) {
+    if (document.querySelector(`script[data-${key}="true"]`)) return;
     const script = document.createElement('script');
-    script.src = 'generator-1deg.js';
-    script.dataset.generatorOneDegree = 'true';
+    script.src = src;
+    script.dataset[key] = 'true';
     document.body.appendChild(script);
   }
 
@@ -82,7 +82,8 @@
     if (diameter) diameter.addEventListener('input', () => syncDimensionsFromShape(true));
     applyLanguage();
     syncDimensionsFromShape(false);
-    loadOneDegreeGenerator();
+    loadScriptOnce('generator-1deg.js', 'generatorOneDegree');
+    loadScriptOnce('ldt-export.js', 'ldtExport');
   }
 
   window.addEventListener('DOMContentLoaded', bind);
