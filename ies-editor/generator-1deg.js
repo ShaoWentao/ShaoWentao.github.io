@@ -2,6 +2,7 @@
   const $ = (id) => document.getElementById(id);
   const verticalAngles = Array.from({ length: 181 }, (_, i) => i);
   const horizontalAngles = [0];
+  let initialized = false;
 
   function num(value, fallback) {
     const parsed = Number(value);
@@ -87,9 +88,13 @@
     return `${safeName(data.manufacturer)}-${safeName(data.serial)}.ies`;
   }
 
-  function updateGeneratedIES1Degree() {
+  function hasUploadedFile() {
     const upload = $('upload');
-    if (upload && upload.files && upload.files.length) return;
+    return !!(upload && upload.files && upload.files.length);
+  }
+
+  function updateGeneratedIES1Degree() {
+    if (hasUploadedFile()) return;
     const preview = $('iesPreview');
     if (!preview) return;
     const data = formData();
@@ -100,8 +105,7 @@
   }
 
   function downloadGeneratedIES(event) {
-    const upload = $('upload');
-    if (upload && upload.files && upload.files.length) return;
+    if (hasUploadedFile()) return;
     updateGeneratedIES1Degree();
     const preview = $('iesPreview');
     if (!preview || !preview.textContent.trim()) return;
@@ -118,7 +122,9 @@
     URL.revokeObjectURL(link.href);
   }
 
-  window.addEventListener('DOMContentLoaded', () => {
+  function init() {
+    if (initialized) return;
+    initialized = true;
     const form = $('iesForm');
     if (form) form.addEventListener('input', () => setTimeout(updateGeneratedIES1Degree, 0));
     const reportBtn = $('reportBtn');
@@ -126,5 +132,13 @@
     const downloadBtn = $('downloadBtn');
     if (downloadBtn) downloadBtn.addEventListener('click', downloadGeneratedIES, true);
     setTimeout(updateGeneratedIES1Degree, 0);
-  });
+  }
+
+  window.iesGenerateOneDegree = updateGeneratedIES1Degree;
+
+  if (document.readyState === 'loading') {
+    window.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 })();
