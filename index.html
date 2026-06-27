@@ -4,24 +4,25 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Shao Wentao | Digital Lighting Portfolio</title>
-<meta name="description" content="A digital portfolio collecting lighting brand pages, product storytelling pages, and CDN Lighting newsletter projects.">
+<meta name="description" content="A visual index for lighting brand pages, product storytelling, newsletter archives, and browser-based lighting tools.">
 <style>
   :root {
-    --bg: #0b0c0f;
-    --ink: #f4f1ea;
-    --muted: #aeb4bd;
-    --line: rgba(255, 255, 255, 0.14);
-    --red: #d71920;
-    --gold: #d9a441;
-    --cyan: #62d4ff;
-    --green: #8bd67c;
-    --panel: rgba(255, 255, 255, 0.075);
-    --panel-strong: rgba(255, 255, 255, 0.12);
+    --bg: #050505;
+    --ink: #f6f1e8;
+    --muted: rgba(235, 239, 245, 0.68);
+    --soft: rgba(255, 255, 255, 0.1);
+    --line: rgba(255, 255, 255, 0.16);
+    --gold: #e4b85b;
+    --ember: #ff6b25;
+    --green: #a6e96b;
+    --panel: rgba(8, 9, 11, 0.68);
+    --panel-strong: rgba(255, 255, 255, 0.08);
     --radius: 8px;
-    --shadow: 0 28px 90px rgba(0, 0, 0, 0.42);
   }
 
-  * { box-sizing: border-box; }
+  * {
+    box-sizing: border-box;
+  }
 
   html {
     scroll-behavior: smooth;
@@ -29,11 +30,7 @@
 
   body {
     margin: 0;
-    background:
-      linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
-      linear-gradient(135deg, #090a0d 0%, #11151b 46%, #15120e 100%);
-    background-size: 42px 42px, 42px 42px, auto;
+    background: var(--bg);
     color: var(--ink);
     font-family: Inter, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
     letter-spacing: 0;
@@ -44,33 +41,41 @@
     text-decoration: none;
   }
 
+  img,
+  video {
+    display: block;
+    max-width: 100%;
+  }
+
   a:focus-visible,
   button:focus-visible {
     outline: 2px solid var(--gold);
     outline-offset: 4px;
   }
 
-  img {
-    display: block;
-    max-width: 100%;
-  }
-
   .site {
     min-height: 100vh;
     overflow: hidden;
+    background:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px),
+      #050505;
+    background-size: 48px 48px, 48px 48px, auto;
   }
 
   .nav {
-    position: sticky;
+    position: fixed;
     top: 0;
-    z-index: 10;
+    left: 0;
+    right: 0;
+    z-index: 20;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 20px;
-    padding: 18px clamp(20px, 4vw, 56px);
-    background: rgba(9, 10, 13, 0.8);
-    border-bottom: 1px solid var(--line);
+    gap: 24px;
+    padding: 18px clamp(20px, 4vw, 58px);
+    background: linear-gradient(to bottom, rgba(0,0,0,0.82), rgba(0,0,0,0.32));
+    border-bottom: 1px solid rgba(255,255,255,0.08);
     backdrop-filter: blur(18px);
   }
 
@@ -86,16 +91,12 @@
     height: 38px;
     display: grid;
     place-items: center;
-    border: 1px solid rgba(255,255,255,0.25);
+    border: 1px solid rgba(255,255,255,0.28);
     border-radius: var(--radius);
-    background: linear-gradient(135deg, rgba(215,25,32,0.95), rgba(217,164,65,0.85));
-    box-shadow: 0 12px 30px rgba(215, 25, 32, 0.24);
-    font-weight: 800;
-    font-size: 15px;
-  }
-
-  .brand-name {
-    min-width: 0;
+    color: #0b0905;
+    background: linear-gradient(135deg, #fff0b8, #e6b34e 48%, #ff6b25);
+    font-weight: 900;
+    box-shadow: 0 0 34px rgba(228, 184, 91, 0.3);
   }
 
   .brand-name strong {
@@ -113,81 +114,106 @@
 
   .nav-links {
     display: flex;
-    gap: 18px;
-    color: #d8dde5;
+    align-items: center;
+    gap: 12px;
+    color: rgba(245,248,255,0.76);
     font-size: 13px;
   }
 
   .nav-links a {
-    padding: 7px 9px;
-    border: 1px solid transparent;
+    padding: 8px 10px;
     border-radius: 999px;
-    transition: background 180ms ease, border-color 180ms ease, color 180ms ease;
+    border: 1px solid transparent;
+    transition: border-color 180ms ease, background 180ms ease, color 180ms ease;
   }
 
   .nav-links a:hover {
-    border-color: rgba(217,164,65,0.48);
-    background: rgba(217,164,65,0.1);
     color: #fff;
+    border-color: rgba(228,184,91,0.45);
+    background: rgba(228,184,91,0.08);
   }
 
   .hero {
     position: relative;
+    min-height: 100vh;
+    isolation: isolate;
     display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
-    gap: clamp(24px, 4vw, 56px);
-    align-items: stretch;
-    min-height: calc(100vh - 74px);
-    padding: clamp(44px, 6vw, 76px) clamp(20px, 5vw, 72px) clamp(38px, 5vw, 64px);
+    align-items: center;
+    padding: 112px clamp(20px, 5vw, 76px) 58px;
+  }
+
+  .hero-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -3;
+    filter: saturate(1.05) contrast(1.08);
+  }
+
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    background:
+      radial-gradient(ellipse at 50% 46%, rgba(40, 120, 180, 0.18), transparent 36%),
+      linear-gradient(90deg, rgba(0,0,0,0.72), rgba(0,0,0,0.2) 46%, rgba(0,0,0,0.76)),
+      linear-gradient(to bottom, rgba(0,0,0,0.42), transparent 35%, #050505 100%);
   }
 
   .hero::after {
     content: "";
     position: absolute;
-    left: clamp(20px, 5vw, 72px);
-    right: clamp(20px, 5vw, 72px);
+    left: clamp(20px, 5vw, 76px);
+    right: clamp(20px, 5vw, 76px);
     bottom: 0;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.32), transparent);
   }
 
-  .hero-copy {
-    max-width: 760px;
-    align-self: center;
+  .hero-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(300px, 0.95fr);
+    gap: clamp(28px, 6vw, 82px);
+    align-items: end;
   }
 
-  .eyebrow {
+  .kicker {
     display: inline-flex;
     align-items: center;
-    gap: 9px;
-    margin-bottom: 18px;
-    color: #f0d7a0;
+    gap: 10px;
+    color: #f3d28a;
     font-size: 12px;
     text-transform: uppercase;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.14em;
   }
 
-  .eyebrow::before {
+  .kicker::before {
     content: "";
-    width: 32px;
+    width: 34px;
     height: 1px;
     background: var(--gold);
   }
 
   h1 {
-    margin: 0;
-    max-width: 820px;
-    font-size: clamp(54px, 8.3vw, 132px);
-    line-height: 0.95;
+    margin: 18px 0 0;
+    max-width: 930px;
+    font-family: Georgia, "Times New Roman", "Songti SC", serif;
+    font-size: clamp(58px, 9vw, 124px);
+    line-height: 0.88;
+    font-weight: 500;
     letter-spacing: 0;
+    text-shadow: 0 0 28px rgba(130, 190, 255, 0.34), 0 0 88px rgba(228, 184, 91, 0.18);
   }
 
   .hero-copy p {
     margin: 24px 0 0;
-    max-width: 590px;
-    color: #d5dae0;
-    font-size: clamp(16px, 1.7vw, 20px);
-    line-height: 1.65;
+    max-width: 620px;
+    color: rgba(244,248,255,0.82);
+    font-size: clamp(16px, 1.8vw, 21px);
+    line-height: 1.68;
   }
 
   .cta-row {
@@ -197,365 +223,254 @@
     margin-top: 30px;
   }
 
-  .hero-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 22px;
-  }
-
-  .hero-tags span {
-    display: inline-flex;
-    align-items: center;
-    min-height: 30px;
-    padding: 6px 10px;
-    border: 1px solid rgba(255,255,255,0.16);
-    border-radius: 999px;
-    background: rgba(255,255,255,0.06);
-    color: #dce4eb;
-    font-size: 12px;
-  }
-
   .btn {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    min-height: 44px;
-    padding: 12px 16px;
-    border: 1px solid rgba(255,255,255,0.22);
-    border-radius: var(--radius);
-    background: rgba(255,255,255,0.08);
+    min-height: 42px;
+    padding: 11px 16px;
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 999px;
     color: #fff;
-    font-size: 14px;
+    background: rgba(255,255,255,0.06);
+    font-size: 13px;
     transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+  }
+
+  .btn.primary {
+    border-color: rgba(228,184,91,0.72);
+    background: linear-gradient(135deg, rgba(228,184,91,0.92), rgba(255,107,37,0.88));
+    color: #120d08;
+    font-weight: 800;
   }
 
   .btn:hover {
     transform: translateY(-2px);
-    border-color: rgba(217,164,65,0.75);
-    background: rgba(217,164,65,0.13);
+    border-color: rgba(255,255,255,0.38);
+    background: rgba(255,255,255,0.11);
   }
 
-  .btn.primary {
-    border-color: rgba(215,25,32,0.95);
-    background: linear-gradient(135deg, #d71920, #ef5b2a);
-    box-shadow: 0 14px 36px rgba(215, 25, 32, 0.25);
-  }
-
-  .hero-board {
-    position: relative;
+  .hero-panel {
+    align-self: stretch;
     display: grid;
-    align-content: stretch;
-    min-height: 560px;
+    align-content: end;
+    gap: 14px;
   }
 
-  .hero-directory {
-    display: grid;
-    grid-template-rows: auto 1fr auto;
-    gap: 18px;
-    height: 100%;
-    padding: clamp(18px, 2vw, 24px);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    background:
-      linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.045)),
-      rgba(10,12,16,0.72);
-    box-shadow: var(--shadow);
-    backdrop-filter: blur(16px);
+  .signal-board {
+    border-left: 3px solid rgba(228,184,91,0.86);
+    padding-left: 18px;
+    max-width: 420px;
+    justify-self: end;
+    text-align: right;
   }
 
-  .directory-head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
-    padding-bottom: 18px;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .directory-head strong {
+  .signal-board small {
     display: block;
-    font-size: clamp(24px, 3vw, 42px);
-    line-height: 0.95;
-  }
-
-  .directory-head span {
-    color: var(--muted);
-    font-size: 13px;
-    line-height: 1.45;
-  }
-
-  .directory-badge {
-    flex: 0 0 auto;
-    padding: 7px 10px;
-    border: 1px solid rgba(217,164,65,0.38);
-    border-radius: 999px;
-    color: #f5d99b;
-    background: rgba(217,164,65,0.1);
+    color: var(--gold);
     font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
   }
 
-  .directory-list {
-    display: grid;
-    gap: 10px;
+  .signal-board strong {
+    display: block;
+    margin-top: 8px;
+    font-size: clamp(26px, 3.8vw, 48px);
+    line-height: 1;
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 500;
   }
 
-  .directory-item {
+  .signal-board span {
+    display: block;
+    margin-top: 12px;
+    color: rgba(235,239,245,0.72);
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .quick-routes {
     display: grid;
-    grid-template-columns: 44px 1fr auto;
+    gap: 8px;
+    max-width: 460px;
+    justify-self: end;
+    width: 100%;
+    margin-top: 32px;
+  }
+
+  .quick-routes a {
+    display: grid;
+    grid-template-columns: 38px 1fr auto;
     align-items: center;
-    gap: 12px;
-    padding: 12px;
-    border: 1px solid rgba(255,255,255,0.12);
+    gap: 14px;
+    min-height: 58px;
+    padding: 10px 12px;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(0,0,0,0.34);
     border-radius: var(--radius);
-    background: rgba(255,255,255,0.055);
+    backdrop-filter: blur(16px);
     transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
   }
 
-  .directory-item:hover {
-    transform: translateX(4px);
-    border-color: rgba(217,164,65,0.45);
-    background: rgba(217,164,65,0.09);
+  .quick-routes a:hover {
+    transform: translateX(-4px);
+    border-color: rgba(228,184,91,0.46);
+    background: rgba(228,184,91,0.08);
   }
 
-  .directory-index {
-    display: grid;
-    place-items: center;
-    width: 44px;
-    height: 44px;
-    border-radius: var(--radius);
-    background: #f4f1ea;
-    color: #111;
-    font-weight: 800;
-  }
-
-  .directory-item strong {
-    display: block;
-    font-size: 15px;
-    line-height: 1.2;
-  }
-
-  .directory-item span {
-    display: block;
-    margin-top: 4px;
-    color: var(--muted);
-    font-size: 12px;
-    line-height: 1.35;
-  }
-
-  .directory-arrow {
+  .quick-routes b {
     color: var(--gold);
-    font-weight: 800;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 18px;
+    font-weight: 500;
   }
 
-  .feature-stack {
+  .quick-routes strong {
+    display: block;
+    font-size: 14px;
+  }
+
+  .quick-routes span span {
+    display: block;
+    margin-top: 3px;
+    color: rgba(235,239,245,0.62);
+    font-size: 12px;
+  }
+
+  .reveal {
+    --mx: 50%;
+    --my: 52%;
     position: relative;
-    min-height: 210px;
-    border-radius: var(--radius);
+    min-height: 100vh;
+    display: grid;
+    align-items: center;
+    padding: 92px clamp(20px, 5vw, 76px);
+    isolation: isolate;
     overflow: hidden;
+    background: #050505;
   }
 
-  .feature-card {
+  .reveal-bg,
+  .reveal-mask {
     position: absolute;
-    overflow: hidden;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    background: #111;
-    box-shadow: var(--shadow);
+    inset: 0;
+    background-position: center;
+    background-size: cover;
+    z-index: -3;
   }
 
-  .feature-card::after {
+  .reveal-bg {
+    background-image: url("assets/home/dark-wood.jpg");
+  }
+
+  .reveal-mask {
+    z-index: -2;
+    background-image: url("assets/home/moss-wood.jpg");
+    -webkit-mask-image: radial-gradient(circle 250px at var(--mx) var(--my), #000 0%, #000 48%, transparent 74%);
+    mask-image: radial-gradient(circle 250px at var(--mx) var(--my), #000 0%, #000 48%, transparent 74%);
+  }
+
+  .reveal::before {
     content: "";
     position: absolute;
     inset: 0;
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: inherit;
-    pointer-events: none;
+    z-index: -1;
+    background:
+      linear-gradient(90deg, rgba(0,0,0,0.72), rgba(0,0,0,0.18) 54%, rgba(0,0,0,0.84)),
+      linear-gradient(to bottom, #050505 0%, transparent 22%, transparent 72%, #050505 100%);
   }
 
-  .feature-card img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+  .reveal-copy {
+    max-width: 670px;
   }
 
-  .feature-card.large {
-    left: 0;
-    right: 34%;
-    top: 0;
-    height: 68%;
-  }
-
-  .feature-card.small-a {
-    left: 42%;
-    bottom: 0;
-    width: 31%;
-    height: 42%;
-  }
-
-  .feature-card.small-b {
-    right: 0;
-    bottom: 0;
-    width: 33%;
-    height: 100%;
-  }
-
-  .stat-strip {
-    position: static;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    background: rgba(10, 12, 16, 0.78);
-    box-shadow: 0 20px 54px rgba(0,0,0,0.34);
-    backdrop-filter: blur(14px);
-    overflow: hidden;
-  }
-
-  .stat {
-    padding: 16px;
-    border-right: 1px solid var(--line);
-  }
-
-  .stat:last-child {
-    border-right: 0;
-  }
-
-  .stat strong {
-    display: block;
-    font-size: 24px;
-    line-height: 28px;
-  }
-
-  .stat span {
-    display: block;
-    margin-top: 3px;
-    color: var(--muted);
+  .section-label {
+    color: var(--gold);
     font-size: 12px;
-    line-height: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+  }
+
+  .reveal h2,
+  .section h2 {
+    margin: 14px 0 0;
+    font-family: Georgia, "Times New Roman", "Songti SC", serif;
+    font-size: clamp(40px, 6vw, 88px);
+    line-height: 0.98;
+    font-weight: 500;
+  }
+
+  .reveal p,
+  .section-head p {
+    margin: 18px 0 0;
+    max-width: 710px;
+    color: var(--muted);
+    font-size: 16px;
+    line-height: 1.75;
+  }
+
+  .reveal-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 26px;
   }
 
   .section {
-    padding: clamp(36px, 6vw, 76px) clamp(20px, 5vw, 72px);
-    border-top: 1px solid var(--line);
+    padding: clamp(70px, 8vw, 112px) clamp(20px, 5vw, 76px);
+    border-top: 1px solid rgba(255,255,255,0.1);
   }
 
   .section-head {
     display: flex;
-    align-items: end;
     justify-content: space-between;
-    gap: 24px;
-    margin-bottom: 24px;
-  }
-
-  .section h2 {
-    margin: 0;
-    font-size: clamp(28px, 4vw, 52px);
-    line-height: 1;
-    letter-spacing: 0;
+    gap: 28px;
+    align-items: end;
+    margin-bottom: 28px;
   }
 
   .section-head p {
-    max-width: 460px;
-    margin: 0;
-    color: var(--muted);
-    font-size: 14px;
-    line-height: 1.6;
+    max-width: 520px;
+    margin-top: 0;
   }
 
-  .grid {
+  .project-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 16px;
   }
 
   .project {
-    min-height: 390px;
+    min-height: 360px;
     display: grid;
-    grid-template-rows: 210px 1fr;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    background: var(--panel);
-    box-shadow: 0 16px 44px rgba(0,0,0,0.16);
+    grid-template-rows: 190px 1fr;
     overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: var(--radius);
+    background: rgba(255,255,255,0.045);
     transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
   }
 
-  .project.featured {
-    grid-column: span 2;
-    grid-row: span 2;
-    grid-template-rows: 360px 1fr;
-    min-height: 620px;
-  }
-
-  .project.featured h3 {
-    font-size: clamp(28px, 3vw, 44px);
-  }
-
-
   .project:hover {
     transform: translateY(-4px);
-    border-color: rgba(255,255,255,0.34);
-    background: var(--panel-strong);
-    box-shadow: 0 26px 64px rgba(0,0,0,0.26);
+    border-color: rgba(228,184,91,0.46);
+    background: rgba(228,184,91,0.055);
   }
 
   .project-media {
-    position: relative;
-    overflow: hidden;
     background: #111;
-  }
-
-  .project-media::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, transparent 52%, rgba(0,0,0,0.28));
-    pointer-events: none;
+    overflow: hidden;
   }
 
   .project-media img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transform: scale(1.01);
-    transition: transform 260ms ease;
+    transition: transform 500ms ease;
   }
 
-  .project-media.tool-visual {
-    position: relative;
-    display: grid;
-    place-items: center;
-    background:
-      linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px),
-      linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
-      radial-gradient(circle at 50% 58%, rgba(98,212,255,0.22), transparent 40%),
-      #10151b;
-    background-size: 28px 28px, 28px 28px, auto, auto;
-  }
-
-  .ies-orbit {
-    width: 148px;
-    height: 148px;
-    border: 1px solid rgba(98,212,255,0.48);
-    border-radius: 50%;
-    background:
-      radial-gradient(circle, rgba(244,241,234,0.95) 0 7%, rgba(217,164,65,0.72) 13%, rgba(215,25,32,0.32) 38%, transparent 66%);
-    box-shadow: 0 0 70px rgba(98,212,255,0.16);
-  }
-
-  .ies-code {
-    position: absolute;
-    left: 18px;
-    bottom: 16px;
-    color: #dce4eb;
-    font-family: Consolas, monospace;
-    font-size: 12px;
-    line-height: 1.45;
-  }
-
-  .project:hover .project-media img {
-    transform: scale(1.06);
+  .project:hover img {
+    transform: scale(1.04);
   }
 
   .project-body {
@@ -565,381 +480,91 @@
     padding: 18px;
   }
 
-  .tool-strip {
+  .tag {
+    display: inline-flex;
+    color: var(--gold);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  .project h3,
+  .tool h3 {
+    margin: 10px 0 0;
+    font-size: 24px;
+    line-height: 1.14;
+    font-weight: 600;
+  }
+
+  .project p,
+  .tool p {
+    margin: 10px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.65;
+  }
+
+  .open-link {
+    color: #fff;
+    font-size: 12px;
+  }
+
+  .tool-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
   }
 
-  .tool-link {
+  .tool {
+    min-height: 260px;
     display: grid;
-    grid-template-columns: 120px 1fr auto;
-    align-items: center;
-    gap: 18px;
-    min-height: 150px;
-    padding: 18px;
-    border: 1px solid var(--line);
+    align-content: space-between;
+    padding: 22px;
+    border: 1px solid rgba(255,255,255,0.14);
     border-radius: var(--radius);
     background:
-      linear-gradient(135deg, rgba(98,212,255,0.1), rgba(217,164,65,0.055)),
-      rgba(255,255,255,0.055);
-    transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+      linear-gradient(135deg, rgba(228,184,91,0.08), transparent 38%),
+      rgba(255,255,255,0.045);
+    transition: transform 180ms ease, border-color 180ms ease;
   }
 
-  .tool-link:hover {
-    transform: translateY(-3px);
-    border-color: rgba(98,212,255,0.36);
-    background:
-      linear-gradient(135deg, rgba(98,212,255,0.14), rgba(217,164,65,0.08)),
-      rgba(255,255,255,0.075);
+  .tool:hover {
+    transform: translateY(-4px);
+    border-color: rgba(228,184,91,0.5);
   }
 
-  .tool-visual-small {
-    position: relative;
+  .tool-icon {
+    width: 48px;
+    height: 48px;
     display: grid;
     place-items: center;
-    width: 120px;
-    height: 110px;
-    border: 1px solid rgba(255,255,255,0.12);
     border-radius: var(--radius);
-    background:
-      linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px),
-      linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
-      #10151b;
-    background-size: 20px 20px;
-    overflow: hidden;
-  }
-
-  .polar-svg,
-  .report-svg {
-    display: block;
-    width: 104px;
-    height: 104px;
-  }
-
-  .polar-grid {
-    fill: none;
-    stroke: rgba(98,212,255,0.22);
-    stroke-width: 1;
-  }
-
-  .polar-axis {
-    stroke: rgba(98,212,255,0.22);
-    stroke-width: 1;
-  }
-
-  .polar-label-svg {
-    fill: rgba(244,241,234,0.62);
-    font-family: Consolas, monospace;
-    font-size: 9px;
-  }
-
-  .polar-curve-red {
-    fill: none;
-    stroke: #ff3131;
-    stroke-width: 2.4;
-    stroke-linecap: round;
-    filter: drop-shadow(0 0 4px rgba(255,49,49,0.55));
-  }
-
-  .polar-curve-blue {
-    fill: none;
-    stroke: #62d4ff;
-    stroke-width: 2.2;
-    stroke-linecap: round;
-    opacity: 0.85;
-  }
-
-  .polar-fill {
-    fill: rgba(255,232,72,0.72);
-    stroke: rgba(217,164,65,0.68);
-    stroke-width: 1;
-  }
-
-  .polar-scale {
-    fill: rgba(244,241,234,0.48);
-    font-family: Consolas, monospace;
-    font-size: 8px;
-  }
-
-  .polar-origin {
-    fill: #fff7ce;
-    filter: drop-shadow(0 0 5px rgba(255,247,206,0.8));
-  }
-
-  .photometry-thumb {
-    position: relative;
-    width: 86px;
-    height: 86px;
-    border-radius: 50%;
-    background: #0d151d;
-    box-shadow: inset 0 0 22px rgba(98,212,255,0.1), 0 0 24px rgba(98,212,255,0.1);
-  }
-
-  .photometry-thumb::before {
-    content: "";
-    position: absolute;
-    inset: 5px;
-    border: 1px solid rgba(98,212,255,0.42);
-    border-radius: 50%;
-    background:
-      radial-gradient(circle, transparent 0 21%, rgba(98,212,255,0.18) 22% 23%, transparent 24% 42%, rgba(98,212,255,0.18) 43% 44%, transparent 45% 63%, rgba(98,212,255,0.2) 64% 65%, transparent 66%),
-      linear-gradient(0deg, transparent 49%, rgba(98,212,255,0.22) 50%, transparent 51%),
-      linear-gradient(45deg, transparent 49%, rgba(98,212,255,0.14) 50%, transparent 51%),
-      linear-gradient(90deg, transparent 49%, rgba(98,212,255,0.22) 50%, transparent 51%),
-      linear-gradient(135deg, transparent 49%, rgba(98,212,255,0.14) 50%, transparent 51%);
-  }
-
-  .photometry-thumb::after {
-    content: "0";
-    position: absolute;
-    left: 50%;
-    bottom: 3px;
-    transform: translateX(-50%);
-    color: rgba(244,241,234,0.72);
-    font-size: 9px;
-    font-family: Consolas, monospace;
-  }
-
-  .polar-label {
-    position: absolute;
-    color: rgba(244,241,234,0.58);
-    font-size: 8px;
-    font-family: Consolas, monospace;
-    line-height: 1;
-  }
-
-  .polar-label.left { left: 4px; top: 48%; }
-  .polar-label.right { right: 4px; top: 48%; }
-  .polar-label.top { left: 50%; top: 3px; transform: translateX(-50%); }
-
-  .polar-curve {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform-origin: 50% 0;
-    pointer-events: none;
-  }
-
-  .polar-curve.c0 {
-    width: 34px;
-    height: 47px;
-    transform: translateX(-50%) translateY(-1px);
-    border: 3px solid #ff3131;
-    border-top: 0;
-    border-radius: 0 0 24px 24px;
-    filter: drop-shadow(0 0 5px rgba(255,49,49,0.45));
-  }
-
-  .polar-curve.c90 {
-    width: 51px;
-    height: 36px;
-    transform: translateX(-50%) translateY(9px);
-    border: 2px solid #62d4ff;
-    border-top: 0;
-    border-radius: 0 0 30px 30px;
-    opacity: 0.82;
-  }
-
-  .polar-center {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 5px;
-    height: 5px;
-    transform: translate(-50%, -50%);
-    border-radius: 50%;
-    background: #fff7ce;
-    box-shadow: 0 0 8px rgba(255,247,206,0.8);
-  }
-
-  .report-thumb {
-    position: relative;
-    width: 86px;
-    height: 86px;
-  }
-
-  .report-page-mini {
-    position: absolute;
-    inset: 3px 5px 3px 20px;
-    border: 1px solid rgba(244,241,234,0.34);
-    border-radius: 5px;
-    background:
-      linear-gradient(#f6f1e7 0 12px, transparent 12px),
-      linear-gradient(90deg, rgba(20,26,32,0.12) 1px, transparent 1px),
-      linear-gradient(rgba(20,26,32,0.12) 1px, transparent 1px),
-      #d9e0e5;
-    background-size: auto, 13px 13px, 13px 13px, auto;
-    box-shadow: 0 12px 28px rgba(0,0,0,0.28);
-  }
-
-  .report-page-mini::before {
-    content: "";
-    position: absolute;
-    left: 8px;
-    right: 8px;
-    bottom: 8px;
-    height: 18px;
-    background:
-      linear-gradient(90deg, #d71920 0 16%, transparent 16% 24%, #d9a441 24% 43%, transparent 43% 51%, #62d4ff 51% 74%, transparent 74% 81%, #8bd67c 81%);
-    border-radius: 2px;
-  }
-
-  .report-polar-mini {
-    position: absolute;
-    left: 0;
-    top: 17px;
-    width: 50px;
-    height: 50px;
-    border: 1px solid rgba(98,212,255,0.44);
-    border-radius: 50%;
-    background:
-      radial-gradient(circle, transparent 0 22%, rgba(98,212,255,0.16) 23% 24%, transparent 25% 52%, rgba(98,212,255,0.18) 53% 54%, transparent 55%),
-      linear-gradient(0deg, transparent 49%, rgba(98,212,255,0.22) 50%, transparent 51%),
-      linear-gradient(90deg, transparent 49%, rgba(98,212,255,0.22) 50%, transparent 51%),
-      #111a22;
-  }
-
-  .report-polar-mini::before {
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 21px;
-    height: 29px;
-    transform: translateX(-50%);
-    border: 2px solid #ff3131;
-    border-top: 0;
-    border-radius: 0 0 18px 18px;
-    filter: drop-shadow(0 0 4px rgba(255,49,49,0.42));
-  }
-
-  .report-polar-mini::after {
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 31px;
-    height: 22px;
-    transform: translateX(-50%) translateY(6px);
-    border: 1px solid #62d4ff;
-    border-top: 0;
-    border-radius: 0 0 18px 18px;
-  }
-
-  .report-svg .report-sheet {
-    fill: #e9edf0;
-    stroke: rgba(244,241,234,0.36);
-    stroke-width: 1;
-  }
-
-  .report-svg .report-header {
-    fill: #f7f2e7;
-  }
-
-  .report-svg .report-line {
-    stroke: rgba(17,24,32,0.28);
-    stroke-width: 1.3;
-  }
-
-  .report-svg .report-bar-red { fill: #d71920; }
-  .report-svg .report-bar-gold { fill: #d9a441; }
-  .report-svg .report-bar-cyan { fill: #62d4ff; }
-
-  .tool-link h3 {
-    margin: 8px 0 0;
-    font-size: 24px;
-    line-height: 1.1;
-  }
-
-  .tool-link p {
-    margin: 8px 0 0;
-    color: #c7cdd5;
-    font-size: 14px;
-    line-height: 1.55;
-  }
-
-  .tool-arrow {
+    border: 1px solid rgba(255,255,255,0.18);
     color: var(--gold);
-    font-weight: 800;
-    font-size: 22px;
-  }
-
-  .tag {
-    display: inline-flex;
-    width: fit-content;
-    color: #0d0e10;
-    background: var(--gold);
-    padding: 5px 8px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-  }
-
-  .project h3 {
-    margin: 12px 0 0;
-    font-size: 21px;
-    line-height: 1.15;
-  }
-
-  .project p {
-    margin: 10px 0 0;
-    color: #c7cdd5;
-    font-size: 14px;
-    line-height: 1.55;
-  }
-
-  .open-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    color: #fff;
-    font-size: 13px;
-    font-weight: 700;
-  }
-
-  .open-link::after {
-    content: ">";
-    color: var(--gold);
+    font-weight: 900;
   }
 
   .newsletter-grid {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 12px;
   }
 
   .newsletter {
-    min-height: 180px;
+    min-height: 190px;
     display: grid;
     align-content: space-between;
     padding: 16px;
-    border: 1px solid var(--line);
+    border: 1px solid rgba(255,255,255,0.14);
     border-radius: var(--radius);
-    background:
-      linear-gradient(160deg, rgba(255,255,255,0.11), rgba(255,255,255,0.035)),
-      rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.045);
+    transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
   }
 
   .newsletter:hover {
-    border-color: rgba(217,164,65,0.55);
-    background:
-      linear-gradient(160deg, rgba(255,255,255,0.14), rgba(255,255,255,0.055)),
-      rgba(255,255,255,0.08);
-  }
-
-  .newsletter strong {
-    font-size: 18px;
-    line-height: 1.2;
-  }
-
-  .newsletter span {
-    display: block;
-    margin-top: 8px;
-    color: var(--muted);
-    font-size: 12px;
-    line-height: 1.45;
+    transform: translateY(-4px);
+    border-color: rgba(228,184,91,0.48);
+    background: rgba(228,184,91,0.06);
   }
 
   .newsletter small {
@@ -948,35 +573,50 @@
     text-transform: uppercase;
   }
 
+  .newsletter strong {
+    display: block;
+    margin-top: 10px;
+    font-size: 18px;
+    line-height: 1.18;
+  }
+
+  .newsletter span {
+    display: block;
+    margin-top: 9px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.55;
+  }
+
   .footer {
     display: flex;
     justify-content: space-between;
-    gap: 20px;
-    padding: 28px clamp(20px, 5vw, 72px);
-    color: var(--muted);
-    border-top: 1px solid var(--line);
-    font-size: 13px;
+    gap: 18px;
+    padding: 34px clamp(20px, 5vw, 76px);
+    border-top: 1px solid rgba(255,255,255,0.12);
+    color: rgba(235,239,245,0.58);
+    font-size: 12px;
   }
 
-  @media (max-width: 1100px) {
-    .hero {
+  @media (max-width: 1080px) {
+    .hero-layout,
+    .section-head {
       grid-template-columns: 1fr;
+      display: block;
     }
 
-    .hero-board {
-      min-height: 460px;
+    .hero-panel {
+      margin-top: 42px;
     }
 
-    .grid {
+    .signal-board,
+    .quick-routes {
+      justify-self: start;
+      text-align: left;
+    }
+
+    .project-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .project.featured {
-      grid-column: span 2;
-    }
-
-    .tool-strip {
-      grid-template-columns: 1fr;
     }
 
     .newsletter-grid {
@@ -986,106 +626,75 @@
 
   @media (max-width: 720px) {
     .nav {
+      position: absolute;
       align-items: flex-start;
       flex-direction: column;
+      gap: 12px;
     }
 
     .nav-links {
       width: 100%;
       overflow-x: auto;
-      padding-bottom: 2px;
+      padding-bottom: 4px;
+    }
+
+    .nav-links a:last-child {
+      display: none;
     }
 
     .hero {
-      padding-top: 34px;
+      min-height: 920px;
+      padding-top: 168px;
     }
 
-    .hero-board {
-      min-height: auto;
+    .hero-layout,
+    .hero-copy,
+    .hero-panel {
+      width: 100%;
+      min-width: 0;
     }
 
-    .hero-directory {
-      min-height: 520px;
+    h1 {
+      max-width: 100%;
+      font-size: clamp(42px, 14vw, 58px);
+      line-height: 0.96;
     }
 
-    .feature-card.large {
-      right: 28%;
+    .hero-copy p {
+      max-width: 330px;
+      font-size: 15px;
+      line-height: 1.6;
     }
 
-    .feature-card.small-a {
-      left: 34%;
-      width: 34%;
+    .signal-board span {
+      max-width: 330px;
     }
 
-    .feature-card.small-b {
-      width: 30%;
+    .cta-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      width: min(100%, 260px);
+      gap: 10px;
     }
 
-    .stat {
-      padding: 11px;
+    .btn {
+      justify-content: center;
+      min-height: 40px;
+      padding: 10px 14px;
     }
 
-    .stat strong {
-      font-size: 18px;
-    }
-
-    .section-head {
-      align-items: flex-start;
-      flex-direction: column;
-    }
-
-    .grid,
+    .project-grid,
+    .tool-grid,
     .newsletter-grid {
       grid-template-columns: 1fr;
     }
 
     .project {
-      min-height: 340px;
-      grid-template-rows: 190px 1fr;
+      min-height: 330px;
     }
 
-    .project.featured {
-      grid-column: span 1;
-      grid-row: span 1;
-      grid-template-columns: 1fr;
-      grid-template-rows: 210px 1fr;
-      min-height: 360px;
-    }
-
-    .tool-link {
-      grid-template-columns: 80px 1fr;
-      min-height: 132px;
-    }
-
-    .tool-visual-small {
-      width: 80px;
-      height: 82px;
-    }
-
-    .photometry-thumb,
-    .report-thumb {
-      width: 58px;
-      height: 58px;
-    }
-
-    .polar-svg,
-    .report-svg {
-      width: 66px;
-      height: 66px;
-    }
-
-    .report-page-mini {
-      inset: 3px 3px 2px 13px;
-    }
-
-    .report-polar-mini {
-      width: 33px;
-      height: 33px;
-      top: 14px;
-    }
-
-    .tool-arrow {
-      display: none;
+    .reveal {
+      min-height: 820px;
     }
 
     .footer {
@@ -1095,281 +704,153 @@
 </style>
 </head>
 <body>
-<div class="site">
-  <nav class="nav">
+<div class="site" id="top">
+  <header class="nav">
     <a class="brand" href="#top" aria-label="Back to top">
       <span class="brand-mark">SW</span>
       <span class="brand-name">
         <strong>Shao Wentao</strong>
-        <span>GitHub Pages portfolio</span>
+        <span>Lighting pages and web tools</span>
       </span>
     </a>
-    <div class="nav-links">
+    <nav class="nav-links" aria-label="Primary navigation">
       <a href="#projects">Projects</a>
       <a href="#tools">Tools</a>
       <a href="#newsletter">Newsletter</a>
-      <a href="ies-editor/">IES Tool</a>
-      <a href="ies-report/">IES Report</a>
+      <a href="cdn-newsletter/Mayalit/202607/">Latest</a>
       <a href="https://shaowt.com/">shaowt.com</a>
-    </div>
-  </nav>
+    </nav>
+  </header>
 
-  <main id="top">
-    <section class="hero">
-      <div class="hero-copy">
-        <div class="eyebrow">Digital lighting portfolio</div>
-        <h1>Building sharper stories for light, brands and projects.</h1>
-        <p>
-          A personal gateway for CDN Lighting web pages, BACH product storytelling,
-          event newsletters, and case pages. Designed as a fast visual map of the
-          public work inside this GitHub Pages repository.
-        </p>
-        <div class="hero-tags" aria-label="Portfolio categories">
-          <span>Brand pages</span>
-          <span>Product storytelling</span>
-          <span>IES browser tools</span>
+  <main>
+    <section class="hero" aria-label="Portfolio introduction">
+      <video class="hero-video" autoplay muted loop playsinline poster="assets/home/dark-wood.jpg">
+        <source src="assets/home/ambient-hero.mp4" type="video/mp4">
+      </video>
+      <div class="hero-layout">
+        <div class="hero-copy">
+          <div class="kicker">Digital Lighting Portfolio</div>
+          <h1>Light, tools,<br>and stories<br>in one place.</h1>
+          <p>
+            A visual gateway for CDN Lighting brand pages, BACH product launches, partner newsletters,
+            and browser tools for photometric file work.
+          </p>
+          <div class="cta-row">
+            <a class="btn primary" href="#projects">Explore projects</a>
+            <a class="btn" href="ies-editor/">Open IES tool</a>
+            <a class="btn" href="cdn-newsletter/Mayalit/202607/">View latest newsletter</a>
+          </div>
         </div>
-        <div class="cta-row">
-          <a class="btn primary" href="#projects">Explore projects</a>
-          <a class="btn" href="cdn-newsletter/Mayalit/202607/">Latest newsletter</a>
+
+        <div class="hero-panel">
+          <div class="signal-board">
+            <small>Live Work Index</small>
+            <strong>Built for fast access</strong>
+            <span>Every entry below links directly to a live page in this GitHub Pages repository.</span>
+          </div>
+          <div class="quick-routes" aria-label="Quick routes">
+            <a href="aboutCDN/"><b>01</b><span><strong>CDN Lighting</strong><span>Company and brand overview</span></span><span>></span></a>
+            <a href="bach-flash/"><b>02</b><span><strong>BACH Flash</strong><span>Product storytelling page</span></span><span>></span></a>
+            <a href="cdn-newsletter/Mayalit/202607/"><b>03</b><span><strong>Mayalit Newsletter</strong><span>Online training notice</span></span><span>></span></a>
+            <a href="ies-editor/"><b>04</b><span><strong>IES Browser Tool</strong><span>Generate, read and report</span></span><span>></span></a>
+          </div>
         </div>
       </div>
+    </section>
 
-      <div class="hero-board" aria-label="Portfolio directory">
-        <div class="hero-directory">
-          <div class="directory-head">
-            <div>
-              <strong>Live Work Index</strong>
-              <span>Fast routes into brand pages, product launches, newsletters and lighting tools.</span>
-            </div>
-            <span class="directory-badge">2026</span>
-          </div>
-          <div class="directory-list">
-            <a class="directory-item" href="aboutCDN/">
-              <span class="directory-index">01</span>
-              <span><strong>Brand Systems</strong><span>CDN and BACH introduction pages</span></span>
-              <span class="directory-arrow">></span>
-            </a>
-            <a class="directory-item" href="bach-flash/">
-              <span class="directory-index">02</span>
-              <span><strong>Product Stories</strong><span>BACH Flash and 5S product narratives</span></span>
-              <span class="directory-arrow">></span>
-            </a>
-            <a class="directory-item" href="cdn-newsletter/202606-hskc/">
-              <span class="directory-index">03</span>
-              <span><strong>Newsletter Archive</strong><span>Partner updates, events and cases</span></span>
-              <span class="directory-arrow">></span>
-            </a>
-            <a class="directory-item" href="ies-editor/">
-              <span class="directory-index">04</span>
-              <span><strong>IES Tooling</strong><span>Photometric editor and report builder</span></span>
-              <span class="directory-arrow">></span>
-            </a>
-          </div>
-          <div class="feature-stack" aria-label="Featured work images">
-            <div class="feature-card large">
-              <img src="cdn-newsletter/202606-hskc/images/hskc-hero.jpg" alt="HSKC2026 Seoul event">
-            </div>
-            <div class="feature-card small-a">
-              <img src="bach-flash/images/01-hero-flash.jpg" alt="BACH Flash lighting product">
-            </div>
-            <div class="feature-card small-b">
-              <img src="aboutCDN/images/hero.jpg" alt="CDN Lighting project environment">
-            </div>
-          </div>
-          <div class="stat-strip" aria-label="Repository summary">
-            <div class="stat"><strong>12+</strong><span>live pages</span></div>
-            <div class="stat"><strong>6</strong><span>newsletters</span></div>
-            <div class="stat"><strong>1</strong><span>browser tool</span></div>
-          </div>
+    <section class="reveal" id="surface" aria-label="Interactive visual reveal">
+      <div class="reveal-bg"></div>
+      <div class="reveal-mask"></div>
+      <div class="reveal-copy">
+        <div class="section-label">Unveil the unseen</div>
+        <h2>From raw texture to living detail.</h2>
+        <p>
+          The homepage now uses the provided visual materials as a living surface:
+          dark timber, ember lines, soft moss, and a cursor reveal that changes the mood as you move.
+        </p>
+        <div class="reveal-actions">
+          <a class="btn primary" href="#projects">Enter the archive</a>
+          <a class="btn" href="#newsletter">Browse newsletters</a>
         </div>
       </div>
     </section>
 
     <section class="section" id="projects">
       <div class="section-head">
-        <h2>Featured Pages</h2>
-        <p>Brand introductions, product launches, and visual storytelling pages collected as public GitHub Pages routes.</p>
+        <div>
+          <div class="section-label">Project Pages</div>
+          <h2>Brand and product work</h2>
+        </div>
+        <p>Selected pages from the repository, organized for quick inspection and reuse.</p>
       </div>
 
-      <div class="grid">
-        <a class="project featured" href="aboutCDN/">
-          <div class="project-media"><img src="aboutCDN/images/tech-lab.jpg" alt="About CDN"></div>
-          <div class="project-body">
-            <div>
-              <span class="tag">Brand</span>
-              <h3>About CDN Lighting</h3>
-              <p>A company introduction page covering brand capability, product families, references and technology.</p>
-            </div>
-            <span class="open-link">Open page</span>
-          </div>
+      <div class="project-grid">
+        <a class="project" href="aboutCDN/">
+          <div class="project-media"><img src="aboutCDN/images/hero.jpg" alt="CDN Lighting overview"></div>
+          <div class="project-body"><div><span class="tag">Brand</span><h3>About CDN Lighting</h3><p>Company overview with brand structure, capabilities and project references.</p></div><span class="open-link">Open page</span></div>
         </a>
-
         <a class="project" href="aboutbach/">
-          <div class="project-media"><img src="aboutbach/images/hero-bg.jpg" alt="About BACH"></div>
-          <div class="project-body">
-            <div>
-              <span class="tag">Brand</span>
-              <h3>About BACH</h3>
-              <p>A cinematic brand story for architectural lighting, built around mood, material and spatial feeling.</p>
-            </div>
-            <span class="open-link">Open page</span>
-          </div>
+          <div class="project-media"><img src="aboutbach/images/hero-bg.jpg" alt="BACH brand"></div>
+          <div class="project-body"><div><span class="tag">Brand</span><h3>About BACH</h3><p>Premium lighting brand page for architectural, museum and smart home categories.</p></div><span class="open-link">Open page</span></div>
         </a>
-
         <a class="project" href="bach-flash/">
-          <div class="project-media"><img src="bach-flash/images/02-product-system.png" alt="BACH Flash product system"></div>
-          <div class="project-body">
-            <div>
-              <span class="tag">Product</span>
-              <h3>BACH Flash</h3>
-              <p>Architectural linear lighting product page with optics, control, accessories and project scenes.</p>
-            </div>
-            <span class="open-link">Open page</span>
-          </div>
+          <div class="project-media"><img src="bach-flash/images/01-hero-flash.jpg" alt="BACH Flash product"></div>
+          <div class="project-body"><div><span class="tag">Product</span><h3>BACH Flash</h3><p>Compact product storytelling with optics, system features and application scenes.</p></div><span class="open-link">Open page</span></div>
         </a>
-
         <a class="project" href="bach-5s/">
-          <div class="project-media"><img src="bach-5s/hero_desktop.jpg" alt="BACH 5S product page"></div>
-          <div class="project-body">
-            <div>
-              <span class="tag">Product</span>
-              <h3>BACH 5S</h3>
-              <p>A product launch page for an outdoor lighting system, with sizing, structure and effect visuals.</p>
-            </div>
-            <span class="open-link">Open page</span>
-          </div>
+          <div class="project-media"><img src="bach-5s/hero_desktop.jpg" alt="BACH 5S product"></div>
+          <div class="project-body"><div><span class="tag">Product</span><h3>BACH 5S</h3><p>Product family page covering applications, wallwasher versions and specifications.</p></div><span class="open-link">Open page</span></div>
         </a>
-
         <a class="project" href="cdn-newsletter/202606/">
           <div class="project-media"><img src="cdn-newsletter/202606/images/mandiri-panorama-web.jpg" alt="Menara Mandiri newsletter"></div>
-          <div class="project-body">
-            <div>
-              <span class="tag">Case</span>
-              <h3>Menara Mandiri</h3>
-              <p>ARC case newsletter featuring facade lighting, project imagery and product application references.</p>
-            </div>
-            <span class="open-link">Open page</span>
-          </div>
+          <div class="project-body"><div><span class="tag">Case</span><h3>Menara Mandiri</h3><p>ARC case newsletter featuring facade lighting and product application references.</p></div><span class="open-link">Open page</span></div>
         </a>
-
-        <a class="project" href="cdn-newsletter/202606-hskc/">
-          <div class="project-media"><img src="cdn-newsletter/202606-hskc/images/hskc-products.jpg" alt="HSKC2026 newsletter"></div>
-          <div class="project-body">
-            <div>
-              <span class="tag">Event</span>
-              <h3>HSKC2026 Seoul</h3>
-              <p>Event recap newsletter with booth conversations, project references and hospitality lighting notes.</p>
-            </div>
-            <span class="open-link">Open page</span>
-          </div>
+        <a class="project" href="cdn-newsletter/Mayalit/202607/">
+          <div class="project-media"><img src="cdn-newsletter/Mayalit/202607/images/hero-sichuan-museum.jpg" alt="Mayalit online training newsletter"></div>
+          <div class="project-body"><div><span class="tag">Training</span><h3>Mayalit Online Training</h3><p>Partner training notice for museum lighting, product systems and references.</p></div><span class="open-link">Open page</span></div>
         </a>
-
       </div>
     </section>
 
     <section class="section" id="tools">
       <div class="section-head">
-        <h2>Lighting Tools</h2>
-        <p>Browser utilities kept separate from the visual portfolio, so the project gallery stays focused on page work.</p>
+        <div>
+          <div class="section-label">Browser Tools</div>
+          <h2>IES file workspace</h2>
+        </div>
+        <p>Local-browser utilities for generating, reading, previewing and reporting photometric files.</p>
       </div>
-      <div class="tool-strip">
-        <a class="tool-link" href="ies-editor/">
-          <span class="tool-visual-small" aria-hidden="true">
-            <svg class="polar-svg" viewBox="0 0 120 120" aria-hidden="true">
-              <circle class="polar-grid" cx="60" cy="16" r="20"></circle>
-              <circle class="polar-grid" cx="60" cy="16" r="38"></circle>
-              <circle class="polar-grid" cx="60" cy="16" r="56"></circle>
-              <circle class="polar-grid" cx="60" cy="16" r="74"></circle>
-              <line class="polar-axis" x1="60" y1="16" x2="60" y2="112"></line>
-              <line class="polar-axis" x1="4" y1="16" x2="116" y2="16"></line>
-              <line class="polar-axis" x1="20" y1="0" x2="100" y2="96"></line>
-              <line class="polar-axis" x1="100" y1="0" x2="20" y2="96"></line>
-              <line class="polar-axis" x1="4" y1="72" x2="116" y2="72"></line>
-              <text class="polar-label-svg" x="60" y="115" text-anchor="middle">0°</text>
-              <text class="polar-label-svg" x="6" y="19">90°</text>
-              <text class="polar-label-svg" x="98" y="19">90°</text>
-              <text class="polar-scale" x="63" y="58">400</text>
-              <text class="polar-scale" x="64" y="80">600</text>
-              <text class="polar-scale" x="64" y="101">800</text>
-              <path class="polar-fill" d="M60 16 C49 29 35 42 23 58 C12 72 10 85 18 91 C29 99 44 93 53 88 C57 97 63 97 67 88 C76 93 91 99 102 91 C110 85 108 72 97 58 C85 42 71 29 60 16 Z"></path>
-              <path class="polar-curve-blue" d="M60 16 C50 29 36 43 24 59 C14 72 12 84 19 90 C29 97 44 92 53 87 C57 95 63 95 67 87 C76 92 91 97 101 90 C108 84 106 72 96 59 C84 43 70 29 60 16"></path>
-              <path class="polar-curve-red" d="M60 16 C48 30 35 43 23 58 C12 72 10 85 18 91 C28 100 44 94 53 88 C56 99 64 99 67 88 C76 94 92 100 102 91 C110 85 108 72 97 58 C85 43 72 30 60 16"></path>
-              <circle class="polar-origin" cx="60" cy="16" r="3"></circle>
-            </svg>
-          </span>
-          <span>
-            <span class="tag">Tool</span>
-            <h3>IES Editor</h3>
-            <p>Create, preview, open and export IES photometric files directly in the browser.</p>
-          </span>
-          <span class="tool-arrow">></span>
+
+      <div class="tool-grid">
+        <a class="tool" href="ies-editor/">
+          <div><div class="tool-icon">IES</div><h3>IES Editor</h3><p>Generate IES files, upload and preview photometric curves, edit parameters and export LDT data.</p></div>
+          <span class="open-link">Open tool</span>
         </a>
-        <a class="tool-link" href="ies-report/">
-          <span class="tool-visual-small" aria-hidden="true">
-            <svg class="report-svg" viewBox="0 0 120 120" aria-hidden="true">
-              <rect class="report-sheet" x="34" y="12" width="66" height="92" rx="5"></rect>
-              <rect class="report-header" x="34" y="12" width="66" height="15" rx="5"></rect>
-              <line class="report-line" x1="43" y1="37" x2="91" y2="37"></line>
-              <line class="report-line" x1="43" y1="45" x2="82" y2="45"></line>
-              <line class="report-line" x1="43" y1="53" x2="88" y2="53"></line>
-              <rect class="report-bar-red" x="44" y="78" width="10" height="16"></rect>
-              <rect class="report-bar-gold" x="58" y="70" width="10" height="24"></rect>
-              <rect class="report-bar-cyan" x="72" y="63" width="10" height="31"></rect>
-              <circle class="polar-grid" cx="38" cy="47" r="13"></circle>
-              <circle class="polar-grid" cx="38" cy="47" r="24"></circle>
-              <line class="polar-axis" x1="38" y1="47" x2="38" y2="88"></line>
-              <line class="polar-axis" x1="14" y1="47" x2="62" y2="47"></line>
-              <path class="polar-fill" d="M38 47 C31 55 23 62 17 72 C12 81 15 87 23 86 C29 86 34 83 36 80 C38 87 42 87 44 80 C48 83 55 86 61 83 C66 80 63 72 58 65 C51 56 44 52 38 47 Z"></path>
-              <path class="polar-curve-blue" d="M38 47 C31 55 23 62 17 72 C13 80 15 86 23 86 C29 86 34 83 36 80 C38 86 42 86 44 80 C48 83 55 86 61 83 C66 80 63 72 58 65 C51 56 44 52 38 47"></path>
-              <path class="polar-curve-red" d="M38 47 C30 55 22 62 16 72 C12 81 15 88 23 87 C29 87 34 84 36 80 C38 88 42 88 44 80 C48 84 56 87 62 83 C67 80 64 72 58 65 C51 56 45 52 38 47"></path>
-              <circle class="polar-origin" cx="38" cy="47" r="2"></circle>
-            </svg>
-          </span>
-          <span>
-            <span class="tag">Tool</span>
-            <h3>IES Report</h3>
-            <p>Read IES files, edit key fields, and print photometric report pages.</p>
-          </span>
-          <span class="tool-arrow">></span>
+        <a class="tool" href="ies-report/">
+          <div><div class="tool-icon">PDF</div><h3>IES Report</h3><p>Read IES files and create editable bilingual photometric report pages for printing or PDF output.</p></div>
+          <span class="open-link">Open report</span>
         </a>
       </div>
     </section>
 
     <section class="section" id="newsletter">
       <div class="section-head">
-        <h2>Newsletter Archive</h2>
-        <p>Email-style pages made for partner updates, business recaps, events and project case storytelling.</p>
+        <div>
+          <div class="section-label">Newsletter Archive</div>
+          <h2>Email-style pages</h2>
+        </div>
+        <p>Partner updates, market recaps, event pages, case features and training announcements.</p>
       </div>
 
       <div class="newsletter-grid">
-        <a class="newsletter" href="cdn-newsletter/202601/">
-          <div><small>January 2026</small><strong>Business Update & Notices</strong><span>Performance, organization, pricing and holiday notices.</span></div>
-          <span class="open-link">Open</span>
-        </a>
-        <a class="newsletter" href="cdn-newsletter/202602/">
-          <div><small>February 2026</small><strong>Operations & Market Updates</strong><span>Back-to-work, HIC Jakarta and regional event plans.</span></div>
-          <span class="open-link">Open</span>
-        </a>
-        <a class="newsletter" href="cdn-newsletter/202605/">
-          <div><small>May 2026</small><strong>Business & Brand Evolution</strong><span>Performance update, price adjustment and brand logo upgrade.</span></div>
-          <span class="open-link">Open</span>
-        </a>
-        <a class="newsletter" href="cdn-newsletter/202606/">
-          <div><small>June 2026</small><strong>Menara Mandiri Case</strong><span>Facade lighting as an urban beacon in Jakarta.</span></div>
-          <span class="open-link">Open</span>
-        </a>
-        <a class="newsletter" href="cdn-newsletter/202606-hskc/">
-          <div><small>June 2026</small><strong>HSKC2026 Seoul</strong><span>Hospitality South Korea Conference event recap.</span></div>
-          <span class="open-link">Open</span>
-        </a>
-        <a class="newsletter" href="cdn-newsletter/Mayalit/202607/">
-          <div><small>July 2026</small><strong>Mayalit Online Training</strong><span>Museum lighting training invitation for CDN Lighting partners.</span></div>
-          <span class="open-link">Open</span>
-        </a>
+        <a class="newsletter" href="cdn-newsletter/202601/"><div><small>January 2026</small><strong>Business Update & Notices</strong><span>Performance, organization, pricing and holiday notices.</span></div><span class="open-link">Open</span></a>
+        <a class="newsletter" href="cdn-newsletter/202602/"><div><small>February 2026</small><strong>Operations & Market Updates</strong><span>Back-to-work, HIC Jakarta and regional event plans.</span></div><span class="open-link">Open</span></a>
+        <a class="newsletter" href="cdn-newsletter/202605/"><div><small>May 2026</small><strong>Business & Brand Evolution</strong><span>Performance update, price adjustment and brand logo upgrade.</span></div><span class="open-link">Open</span></a>
+        <a class="newsletter" href="cdn-newsletter/202606/"><div><small>June 2026</small><strong>Menara Mandiri Case</strong><span>Facade lighting as an urban beacon in Jakarta.</span></div><span class="open-link">Open</span></a>
+        <a class="newsletter" href="cdn-newsletter/202606-hskc/"><div><small>June 2026</small><strong>HSKC2026 Seoul</strong><span>Hospitality South Korea Conference event recap.</span></div><span class="open-link">Open</span></a>
+        <a class="newsletter" href="cdn-newsletter/Mayalit/202607/"><div><small>July 2026</small><strong>Mayalit Online Training</strong><span>Museum lighting training invitation for CDN Lighting partners.</span></div><span class="open-link">Open</span></a>
       </div>
     </section>
-
   </main>
 
   <footer class="footer">
@@ -1377,5 +858,33 @@
     <span>Lighting stories, product pages, browser tools, and newsletter archives.</span>
   </footer>
 </div>
+
+<script>
+  const reveal = document.querySelector(".reveal");
+  if (reveal) {
+    const setPoint = (clientX, clientY) => {
+      const rect = reveal.getBoundingClientRect();
+      reveal.style.setProperty("--mx", `${clientX - rect.left}px`);
+      reveal.style.setProperty("--my", `${clientY - rect.top}px`);
+    };
+    reveal.addEventListener("pointermove", (event) => setPoint(event.clientX, event.clientY), { passive: true });
+    reveal.addEventListener("pointerenter", (event) => setPoint(event.clientX, event.clientY), { passive: true });
+  }
+
+  const videos = document.querySelectorAll("video");
+  if ("IntersectionObserver" in window) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        const video = entry.target;
+        if (entry.isIntersecting) {
+          video.play().catch(() => {});
+        } else {
+          video.pause();
+        }
+      });
+    }, { threshold: 0.25 });
+    videos.forEach((video) => observer.observe(video));
+  }
+</script>
 </body>
 </html>
