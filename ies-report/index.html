@@ -11,19 +11,30 @@
     min-height: 100vh;
     display: grid;
     place-items: center;
-    background: linear-gradient(135deg, #08090b 0%, #111820 58%, #15120d 100%);
+    background:
+      radial-gradient(ellipse at 72% 22%, rgba(228,184,91,.18), transparent 36%),
+      radial-gradient(ellipse at 20% 80%, rgba(104,216,255,.12), transparent 38%),
+      linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px),
+      url("../assets/home/moss-wood.jpg") center/cover no-repeat,
+      #050505;
+    background-size: auto, auto, 48px 48px, 48px 48px, cover, auto;
     color: #f5f2ea;
     font-family: Inter, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
   }
   .loader {
     max-width: 620px;
-    padding: 28px 32px;
+    margin: 24px;
+    padding: 30px 34px;
     border: 1px solid rgba(255,255,255,.16);
-    background: rgba(20,25,31,.86);
+    border-radius: 8px;
+    background: linear-gradient(145deg, rgba(255,255,255,.085), rgba(255,255,255,.035));
+    box-shadow: 0 26px 90px rgba(0,0,0,.46);
+    backdrop-filter: blur(18px);
     line-height: 1.7;
   }
-  .loader strong { display:block; font-size: 18px; margin-bottom: 8px; }
-  .loader p { margin: 0; color: #aeb7c2; font-size: 13px; }
+  .loader strong { display:block; font-family: Georgia, "Times New Roman", serif; font-size: 30px; font-weight: 500; line-height: 1.1; margin-bottom: 10px; }
+  .loader p { margin: 0; color: rgba(235,239,245,.7); font-size: 13px; }
 </style>
 </head>
 <body>
@@ -44,12 +55,88 @@
     'report-candela-pagination.js?v=20260627'
   ];
 
+  const visualRefreshStyle = `
+<style id="codex-report-shell-refresh">
+  @media screen {
+    body {
+      background:
+        radial-gradient(ellipse at 72% 22%, rgba(228,184,91,.15), transparent 36%),
+        radial-gradient(ellipse at 20% 80%, rgba(104,216,255,.1), transparent 38%),
+        url("../assets/home/dark-wood.jpg") center/cover fixed no-repeat,
+        #050505 !important;
+      color: #f7f1e7 !important;
+    }
+    .topbar {
+      background: linear-gradient(to bottom, rgba(0,0,0,.84), rgba(0,0,0,.48)) !important;
+      border-bottom: 1px solid rgba(255,255,255,.12) !important;
+      backdrop-filter: blur(18px);
+    }
+    .panel,
+    aside {
+      background: linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.035)) !important;
+      border-color: rgba(255,255,255,.15) !important;
+      box-shadow: 0 26px 90px rgba(0,0,0,.42) !important;
+      backdrop-filter: blur(18px);
+    }
+    button,
+    .primary,
+    input,
+    select,
+    textarea {
+      border-radius: 8px !important;
+    }
+    button.primary,
+    .primary {
+      border-color: rgba(228,184,91,.72) !important;
+      background: linear-gradient(135deg,#e4b85b,#ff6b25) !important;
+      color: #120d08 !important;
+      font-weight: 800 !important;
+    }
+    input,
+    select,
+    textarea {
+      background: rgba(0,0,0,.42) !important;
+      border-color: rgba(255,255,255,.16) !important;
+      color: #f7f1e7 !important;
+    }
+    .paper,
+    .paper * {
+      filter: none !important;
+      text-shadow: none !important;
+    }
+    .paper {
+      background: #fff !important;
+      color: #111 !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+    }
+    .paper .report-head,
+    .paper .report-head *,
+    .paper header,
+    .paper header *,
+    .paper .lab,
+    .paper .logo,
+    .paper .cdn-logo,
+    .paper .report-logo,
+    .paper .page-no {
+      background: transparent !important;
+      box-shadow: none !important;
+      filter: none !important;
+      text-shadow: none !important;
+      backdrop-filter: none !important;
+    }
+  }
+  </style>`;
+
   function moduleTags() {
     return modules.map((src) => `<script src="${src}"></` + `script>`).join('\n');
   }
 
   function patchReportHtml(html) {
-    const patched = html.replace(/<\/body>\s*<\/html>\s*$/i, `${moduleTags()}\n</body>\n</html>`);
+    const withStyle = html.includes('codex-report-shell-refresh')
+      ? html
+      : html.replace(/<\/head>/i, `${visualRefreshStyle}\n</head>`);
+    const patched = withStyle.replace(/<\/body>\s*<\/html>\s*$/i, `${moduleTags()}\n</body>\n</html>`);
     return patched.includes('report-fixed-footer-layout.js') ? patched : html + moduleTags();
   }
 
