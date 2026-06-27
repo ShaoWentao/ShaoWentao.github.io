@@ -18,13 +18,6 @@
       pillCurve: 'Type C curve preview',
       pillExport: 'IES text export',
       pillReport: 'Indoor report output',
-      workflow: 'Workflow',
-      stepDefine: 'Define',
-      stepDefineDesc: 'Enter luminaire geometry and flux data.',
-      stepPreview: 'Preview',
-      stepPreviewDesc: 'Inspect the polar curve and generated text.',
-      stepExport: 'Export',
-      stepExportDesc: 'Download IES/LDT or create the report.',
       generatorTitle: 'Generator Inputs',
       generatorBadge: 'CDN default',
       manufacturer: 'Luminaire manufacturer',
@@ -80,13 +73,6 @@
       pillCurve: 'Type C 曲线预览',
       pillExport: 'IES 文本导出',
       pillReport: '室内报告输出',
-      workflow: '工作流',
-      stepDefine: '定义',
-      stepDefineDesc: '输入灯具结构与光通量数据。',
-      stepPreview: '预览',
-      stepPreviewDesc: '检查极坐标曲线和生成文本。',
-      stepExport: '导出',
-      stepExportDesc: '下载 IES/LDT 或生成报告。',
       generatorTitle: '生成参数',
       generatorBadge: 'CDN 默认',
       manufacturer: '灯具制造商',
@@ -164,20 +150,6 @@
     if (heroPills[0]) heroPills[0].textContent = t(finalLang, 'pillCurve');
     if (heroPills[1]) heroPills[1].textContent = t(finalLang, 'pillExport');
     if (heroPills[2]) heroPills[2].textContent = t(finalLang, 'pillReport');
-    setText('.console-title', t(finalLang, 'workflow'));
-    const consoleSteps = document.querySelectorAll('.console-step');
-    if (consoleSteps[0]) {
-      consoleSteps[0].querySelector('strong').textContent = t(finalLang, 'stepDefine');
-      consoleSteps[0].querySelector('span span').textContent = t(finalLang, 'stepDefineDesc');
-    }
-    if (consoleSteps[1]) {
-      consoleSteps[1].querySelector('strong').textContent = t(finalLang, 'stepPreview');
-      consoleSteps[1].querySelector('span span').textContent = t(finalLang, 'stepPreviewDesc');
-    }
-    if (consoleSteps[2]) {
-      consoleSteps[2].querySelector('strong').textContent = t(finalLang, 'stepExport');
-      consoleSteps[2].querySelector('span span').textContent = t(finalLang, 'stepExportDesc');
-    }
     setText('aside.panel .panel-head h2', t(finalLang, 'generatorTitle'));
     setText('aside.panel .panel-head span', t(finalLang, 'generatorBadge'));
 
