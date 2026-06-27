@@ -26,14 +26,17 @@
   .language-control { display:flex; align-items:center; gap:8px; margin-left:auto; color:#d9dee5; font-size:12px; white-space:nowrap; }
   .language-control label { color:#d9dee5; font-size:12px; }
   .language-control select { min-height:34px; width:auto; border:1px solid rgba(255,255,255,.2); border-radius:999px; background:#0e1216; color:#fff; padding:6px 28px 6px 10px; font:inherit; font-size:12px; outline:none; }
-  .hero { padding:clamp(34px,5vw,68px) clamp(18px,5vw,64px) 12px; }
-  .hero-inner { max-width:980px; }
+  .hero { padding:clamp(38px,5.4vw,72px) clamp(18px,5vw,64px) 10px; }
+  .hero-inner { max-width:760px; }
   .eyebrow { display:inline-flex; align-items:center; gap:9px; color:#f0d89f; font-size:12px; text-transform:uppercase; letter-spacing:.14em; }
   .eyebrow::before { content:""; width:32px; height:1px; background:var(--gold); }
-  h1 { margin:18px 0 0; max-width:820px; font-family:Georgia,"Times New Roman","Songti SC",serif; font-size:clamp(42px,6.2vw,86px); font-weight:500; line-height:.96; text-shadow:0 0 34px rgba(104,216,255,.24),0 0 80px rgba(228,184,91,.16); }
-  .hero p { margin:20px 0 0; max-width:680px; color:#d5dbe3; font-size:clamp(15px,1.4vw,18px); line-height:1.7; }
-  .hero-pills { display:flex; flex-wrap:wrap; gap:10px; margin-top:22px; }
-  .hero-pills span { display:inline-flex; align-items:center; min-height:30px; padding:6px 10px; border:1px solid rgba(255,255,255,.16); border-radius:999px; background:rgba(255,255,255,.06); color:#dce4eb; font-size:12px; }
+  h1 { margin:18px 0 0; max-width:720px; font-family:Georgia,"Times New Roman","Songti SC",serif; font-size:clamp(44px,5.3vw,72px); font-weight:500; line-height:.98; text-shadow:0 0 34px rgba(104,216,255,.18),0 0 80px rgba(228,184,91,.13); }
+  .hero p { margin:20px 0 0; max-width:640px; color:#d5dbe3; font-size:clamp(15px,1.35vw,18px); line-height:1.72; }
+  .hero-actions { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-top:26px; }
+  .hero-actions a { min-height:42px; display:inline-flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,.17); border-radius:var(--radius); padding:10px 15px; background:rgba(255,255,255,.075); color:#f4f8fb; font-size:13px; font-weight:700; transition:transform .18s ease,border-color .18s ease,background .18s ease; }
+  .hero-actions a:first-child { border-color:rgba(228,184,91,.72); background:linear-gradient(135deg,var(--gold),var(--ember)); color:#120d08; box-shadow:0 14px 36px rgba(228,184,91,.18); }
+  .hero-actions a:hover { transform:translateY(-1px); border-color:rgba(228,184,91,.7); background:rgba(228,184,91,.12); }
+  .hero-actions a:first-child:hover { background:linear-gradient(135deg,#f2c96f,#ff7a33); }
   .workspace { display:grid; grid-template-columns:minmax(300px,400px) minmax(0,1fr); gap:16px; padding:16px clamp(18px,5vw,64px) clamp(38px,6vw,72px); align-items:start; }
   .workspace > aside.panel { position:sticky; top:88px; max-height:calc(100vh - 108px); overflow:auto; }
   .panel { min-width:0; border:1px solid var(--line); border-radius:var(--radius); background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.035)); box-shadow:var(--shadow); overflow:hidden; backdrop-filter:blur(18px); }
@@ -93,6 +96,8 @@
     .eyebrow::before { width:24px; }
     h1 { font-size:34px; line-height:1.04; }
     .hero p { font-size:14px; line-height:1.65; }
+    .hero-actions { display:grid; grid-template-columns:1fr; gap:10px; margin-top:20px; }
+    .hero-actions a { width:100%; }
     .workspace { display:block; padding:12px 12px 38px; }
     .workspace > .panel, .main-grid > .panel { margin-bottom:12px; }
     .panel-head { align-items:flex-start; flex-direction:column; gap:6px; padding:14px; }
@@ -138,13 +143,13 @@
   <main>
     <section class="hero">
       <div class="hero-inner">
-        <div class="eyebrow">Photometric file generator</div>
-        <h1>Generate, inspect and export IES files.</h1>
-        <p>Input luminaire parameters, build a photometric file, preview the curve, and generate indoor report pages only after you ask for them.</p>
-        <div class="hero-pills" aria-label="IES editor capabilities">
-          <span>Type C curve preview</span>
-          <span>IES text export</span>
-          <span>Indoor report output</span>
+        <div class="eyebrow">IES tools</div>
+        <h1>IES File Generator</h1>
+        <p>Generate a photometric file from luminaire parameters, preview Type C distribution curves, and export clean report pages when needed.</p>
+        <div class="hero-actions" aria-label="IES editor shortcuts">
+          <a href="#generator">Generate IES</a>
+          <a href="#preview">Preview Curve</a>
+          <a href="../ies-report/">Open Report Tool</a>
         </div>
       </div>
     </section>
