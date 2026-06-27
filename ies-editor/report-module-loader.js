@@ -1,5 +1,6 @@
 (() => {
   const REPORT_MODULES = [
+    '../ies-report/report-fixed-footer-layout.js',
     '../ies-report/report-candela-pagination.js'
   ];
 
