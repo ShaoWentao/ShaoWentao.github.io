@@ -64,8 +64,8 @@
     const verticalCount = Math.round(nums[i++]);
     const horizontalCount = Math.round(nums[i++]);
     const photometricType = Math.round(nums[i++]);
-    i += 4; // units, width, length, height
-    i += 3; // ballast factor, future use, input watts
+    i += 4;
+    i += 3;
     if (verticalCount <= 0 || horizontalCount <= 0) return null;
     const verticalAngles = nums.slice(i, i + verticalCount); i += verticalCount;
     const horizontalAngles = nums.slice(i, i + horizontalCount); i += horizontalCount;
@@ -165,6 +165,11 @@
     return node ? node.outerHTML : '';
   }
 
+  function buildFallbackFooter() {
+    const first = $('.footer-data');
+    return first ? first.outerHTML : '<footer class="footer-data report-footer-data"></footer>';
+  }
+
   function buildCandelaTable(data, gammaRows, planes, pageIndex, pageCount) {
     const blankCount = Math.max(0, 14 - planes.length);
     const blankHeads = Array.from({ length: blankCount }, () => '<th class="blank-col"></th>').join('');
@@ -173,16 +178,15 @@
       const cells = planes.map((target) => `<td>${candelaCellValue(intensityAt(data, target, angle))}</td>`).join('');
       return `<tr><td class="gamma-col">${fmt(angle, Math.abs(angle % 1) > 0.001 ? 1 : 0)}</td>${cells}${emptyCells}</tr>`;
     }).join('');
-    const filler = Array.from({ length: Math.max(0, 28 - gammaRows.length) }, () =>
-      `<tr><td class="gamma-col"></td>${Array.from({ length: planes.length + blankCount }, () => '<td></td>').join('')}</tr>`
-    ).join('');
     return `
       <div class="candela-caption-row"><span>Table--${pageIndex}${pageCount > 1 ? ` / ${pageCount}` : ''}</span><span>UNIT:&nbsp; cd</span></div>
-      <table class="simple-table candela-distribution-table candela-auto-table">
-        <tr><th class="gamma-col">C(DEG)</th>${planes.map((target) => `<th>${fmt(target, Math.abs(target % 1) > 0.001 ? 1 : 0)}</th>`).join('')}${blankHeads}</tr>
-        <tr><th class="gamma-col">γ (DEG)</th>${Array.from({ length: planes.length + blankCount }, () => '<th></th>').join('')}</tr>
-        ${rows}${filler}
-      </table>`;
+      <div class="candela-table-frame">
+        <table class="simple-table candela-distribution-table candela-auto-table">
+          <tr><th class="gamma-col">C(DEG)</th>${planes.map((target) => `<th>${fmt(target, Math.abs(target % 1) > 0.001 ? 1 : 0)}</th>`).join('')}${blankHeads}</tr>
+          <tr><th class="gamma-col">γ (DEG)</th>${Array.from({ length: planes.length + blankCount }, () => '<th></th>').join('')}</tr>
+          ${rows}
+        </table>
+      </div>`;
   }
 
   function getCandelaSourceData(sourcePage) {
@@ -210,6 +214,12 @@
     });
   }
 
+  function rowsPerCandelaPage(planes) {
+    if (planes.length > 18) return 24;
+    if (planes.length > 12) return 28;
+    return 32;
+  }
+
   function paginateCandelaTable() {
     if (STATE.running) return;
     const sourcePage = $('.candela-page:not(.candela-auto-page)');
@@ -224,13 +234,12 @@
     if (sourcePage.dataset.candelaPaginated === signature) return;
     STATE.running = true;
     try {
-      const previousAutoPages = $all('.candela-auto-page');
-      previousAutoPages.forEach((page) => page.remove());
+      $all('.candela-auto-page').forEach((page) => page.remove());
       const header = cloneOuter('.report-head', sourcePage);
       const info = cloneOuter('.luminance-info-table', sourcePage);
-      const footer = cloneOuter('.report-footer-data', sourcePage) || cloneOuter('.footer-data', sourcePage);
+      const footer = cloneOuter('.report-footer-data', sourcePage) || cloneOuter('.footer-data', sourcePage) || buildFallbackFooter();
       const titleText = $('.page-title', sourcePage)?.textContent || 'LUMINOUS DISTRIBUTION INTENSITY DATA';
-      const rowsPerPage = planes.length > 12 ? 38 : 42;
+      const rowsPerPage = rowsPerCandelaPage(planes);
       const chunks = [];
       for (let i = 0; i < gammas.length; i += rowsPerPage) chunks.push(gammas.slice(i, i + rowsPerPage));
       const pages = chunks.map((chunk, index) => {
@@ -239,7 +248,9 @@
           ${header}
           <h2 class="page-title">${titleText}${continuation}</h2>
           ${info}
-          ${buildCandelaTable(data, chunk, planes, index + 1, chunks.length)}
+          <div class="candela-auto-content">
+            ${buildCandelaTable(data, chunk, planes, index + 1, chunks.length)}
+          </div>
           ${footer}
         </article>`;
       }).join('');
@@ -295,20 +306,29 @@
     const style = document.createElement('style');
     style.id = 'candela-pagination-style';
     style.textContent = `
-      .candela-auto-page { position: relative; }
-      .candela-auto-page .page-title { margin: 24px 0 12px; font-size: 18px; letter-spacing: 0; text-indent: 0; white-space: nowrap; }
-      .candela-auto-page .luminance-info-table { margin-bottom: 8px; }
-      .candela-auto-page .report-footer-data, .candela-auto-page .footer-data { margin-top: 10px; }
-      .candela-continuation { font-size: 12px; letter-spacing: 0; }
-      .candela-auto-table { table-layout: fixed; font-family: "Courier New", Courier, monospace; font-size: 7.4px; line-height: 1.02; border: 1.2px solid #000; }
-      .candela-auto-table th, .candela-auto-table td { border: 1px solid #000; padding: 1.2px 1px; height: 12.7px; text-align: center; vertical-align: middle; white-space: nowrap; }
-      .candela-auto-table .gamma-col { width: 54px; }
-      .candela-auto-table .blank-col { color: transparent; }
+      .candela-auto-page { position: relative; display:flex; flex-direction:column; height:1358px; min-height:1358px; max-height:1358px; overflow:hidden; }
+      .candela-auto-page .report-head { flex:0 0 auto; }
+      .candela-auto-page .page-title { flex:0 0 auto; margin:18px 0 9px; font-size:17px; letter-spacing:0; text-indent:0; white-space:nowrap; }
+      .candela-auto-page .luminance-info-table { flex:0 0 auto; margin-bottom:6px; font-size:8px; }
+      .candela-auto-page .luminance-info-table td { padding:3px 5px; }
+      .candela-auto-content { flex:1 1 auto; min-height:0; overflow:hidden; display:flex; flex-direction:column; }
+      .candela-caption-row { flex:0 0 auto; margin:0 0 3px; }
+      .candela-table-frame { flex:1 1 auto; min-height:0; overflow:hidden; }
+      .candela-auto-page .report-footer-data, .candela-auto-page .footer-data { flex:0 0 auto; margin-top:auto; padding-top:8px; font-size:9.5px; line-height:1.18; }
+      .candela-continuation { font-size:12px; letter-spacing:0; }
+      .candela-auto-table { table-layout:fixed; font-family:"Courier New", Courier, monospace; font-size:7.0px; line-height:1.0; border:1.2px solid #000; }
+      .candela-auto-table th, .candela-auto-table td { border:1px solid #000; padding:1px 0.8px; height:11.2px; text-align:center; vertical-align:middle; white-space:nowrap; }
+      .candela-auto-table .gamma-col { width:48px; }
+      .candela-auto-table .blank-col { color:transparent; }
       @media print {
-        .candela-auto-page { height: 297mm !important; max-height: 297mm !important; overflow: hidden !important; page-break-inside: avoid !important; break-inside: avoid-page !important; }
-        .candela-auto-page .report-footer-data, .candela-auto-page .footer-data { margin-top: 8px !important; }
-        .candela-auto-table { font-size: 6.8px !important; line-height: 1.0 !important; }
-        .candela-auto-table th, .candela-auto-table td { padding: 1px 0.8px !important; height: 12px !important; }
+        .paper.candela-auto-page { box-sizing:border-box !important; display:flex !important; flex-direction:column !important; width:210mm !important; height:297mm !important; min-height:297mm !important; max-height:297mm !important; overflow:hidden !important; page-break-inside:avoid !important; break-inside:avoid-page !important; }
+        .candela-auto-page .page-title { margin:12px 0 7px !important; font-size:14px !important; }
+        .candela-auto-page .luminance-info-table { margin-bottom:5px !important; font-size:7.2px !important; }
+        .candela-auto-page .luminance-info-table td { padding:2.2px 4px !important; }
+        .candela-caption-row { margin-bottom:2px !important; }
+        .candela-auto-page .report-footer-data, .candela-auto-page .footer-data { margin-top:auto !important; padding-top:6px !important; font-size:8.4px !important; line-height:1.12 !important; }
+        .candela-auto-table { font-size:6.25px !important; line-height:1 !important; }
+        .candela-auto-table th, .candela-auto-table td { padding:0.7px 0.5px !important; height:9.65px !important; }
       }
     `;
     document.head.appendChild(style);
