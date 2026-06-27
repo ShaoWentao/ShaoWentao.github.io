@@ -4,6 +4,8 @@
   let lastFrameHeight = 0;
   let lastScale = 0;
   let lastPaperWidth = 0;
+  let reportObserver = null;
+  let resizeTimer = 0;
 
   function $(id) {
     return document.getElementById(id);
@@ -94,11 +96,8 @@
     $('fullReportPrintBtn').addEventListener('click', () => {
       const frame = $('fullReportFrame');
       if (frame && frame.contentWindow) {
-        preparePrintLayout(frame);
-        setTimeout(() => {
-          frame.contentWindow.focus();
-          frame.contentWindow.print();
-        }, 80);
+        frame.contentWindow.focus();
+        frame.contentWindow.print();
       }
     });
     $('fullReportReloadBtn').addEventListener('click', () => loadFullReport());
@@ -159,15 +158,6 @@
         .editor-report-scale-shell { width:var(--editor-paper-width, 960px); transform:translateZ(0) scale(var(--editor-report-scale, 1)); transform-origin:top left; overflow:visible !important; will-change:transform; }
         .editor-report-scale-shell .paper { margin:0 0 24px !important; }
       }
-      @media print {
-        @page { size:A4; margin:0; }
-        html, body { width:210mm !important; min-width:210mm !important; height:auto !important; margin:0 !important; padding:0 !important; overflow:visible !important; background:#fff !important; }
-        .topbar, .panel { display:none !important; }
-        .layout, .paper-wrap, .editor-report-scale-holder, .editor-report-scale-shell, #extraPages { display:block !important; width:210mm !important; max-width:210mm !important; height:auto !important; margin:0 !important; padding:0 !important; border:0 !important; overflow:visible !important; background:#fff !important; transform:none !important; }
-        .paper { width:210mm !important; height:297mm !important; min-height:297mm !important; max-height:297mm !important; margin:0 !important; padding:12mm 14mm 10mm !important; box-shadow:none !important; overflow:hidden !important; contain:none !important; content-visibility:visible !important; break-inside:avoid-page !important; page-break-inside:avoid !important; break-after:page !important; page-break-after:always !important; }
-        .paper:last-child, #extraPages .paper:last-child { break-after:auto !important; page-break-after:auto !important; }
-        .render-progress { display:none !important; }
-      }
     `;
     doc.head.appendChild(style);
   }
@@ -200,7 +190,7 @@
     const paperWidth = Math.max(1, Math.ceil((paper && paper.offsetWidth) || 960));
     const available = Math.max(280, Math.floor(frame.clientWidth || frame.getBoundingClientRect().width || 360));
     const scale = Math.min(1, Math.max(0.28, (available - 2) / paperWidth));
-    const contentHeight = Math.max(680, Math.ceil(shell.scrollHeight || 1358));
+    const contentHeight = Math.max(680, Math.ceil(shell.scrollHeight || shell.getBoundingClientRect().height || 1358));
     const holderWidth = Math.ceil(paperWidth * scale);
     const holderHeight = Math.ceil(contentHeight * scale);
 
@@ -217,28 +207,6 @@
     return true;
   }
 
-  function preparePrintLayout(frame) {
-    try {
-      const doc = frame.contentDocument;
-      if (!doc) return;
-      injectEmbeddedStyle(doc);
-      ensureReportScaleWrapper(doc);
-      const papers = Array.from(doc.querySelectorAll('.editor-report-scale-shell .paper'));
-      papers.forEach((paper, index) => {
-        const isLast = index === papers.length - 1;
-        paper.style.width = '210mm';
-        paper.style.height = '297mm';
-        paper.style.minHeight = '297mm';
-        paper.style.maxHeight = '297mm';
-        paper.style.margin = '0';
-        paper.style.breakInside = 'avoid-page';
-        paper.style.pageBreakInside = 'avoid';
-        paper.style.breakAfter = isLast ? 'auto' : 'page';
-        paper.style.pageBreakAfter = isLast ? 'auto' : 'always';
-      });
-    } catch (error) {}
-  }
-
   function resizeFrame(frame) {
     try {
       const doc = frame.contentDocument;
@@ -247,7 +215,7 @@
       applyReportScale(frame);
       const holder = doc.querySelector('.editor-report-scale-holder');
       const targetHeight = Math.max(680, Math.ceil((holder ? holder.offsetHeight : 0) + 36));
-      if (Math.abs(targetHeight - lastFrameHeight) > 16) {
+      if (Math.abs(targetHeight - lastFrameHeight) > 12) {
         frame.style.height = `${targetHeight}px`;
         lastFrameHeight = targetHeight;
       }
@@ -256,13 +224,35 @@
     } catch (error) {}
   }
 
-  function scheduleResize(frame, token, delays = [120, 320, 700, 1300, 2200]) {
+  function scheduleResize(frame, token, delay = 120) {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      if (token !== frameLoadToken) return;
+      requestAnimationFrame(() => resizeFrame(frame));
+    }, delay);
+  }
+
+  function scheduleResizeSeries(frame, token, delays = [120, 320, 700, 1300, 2200, 4000, 7000, 10000]) {
     delays.forEach((delay) => {
       setTimeout(() => {
         if (token !== frameLoadToken) return;
         requestAnimationFrame(() => resizeFrame(frame));
       }, delay);
     });
+  }
+
+  function observeReport(frame, token) {
+    try {
+      if (reportObserver) reportObserver.disconnect();
+      reportObserver = null;
+      const doc = frame.contentDocument;
+      const win = frame.contentWindow;
+      if (!doc || !win) return;
+      const root = doc.querySelector('.paper-wrap') || doc.body;
+      reportObserver = new win.MutationObserver(() => scheduleResize(frame, token, 160));
+      reportObserver.observe(root, { childList: true, subtree: true, attributes: true });
+      win.addEventListener('resize', () => scheduleResize(frame, token, 120));
+    } catch (error) {}
   }
 
   function pushIESToReportFrame(frame, iesText, fileName, token) {
@@ -272,6 +262,7 @@
       if (!win || !doc) throw new Error('iframe not ready');
       injectEmbeddedStyle(doc);
       ensureReportScaleWrapper(doc);
+      observeReport(frame, token);
       syncReportLanguage(doc);
       const input = doc.getElementById('iesFile');
       if (!input) throw new Error('IES input not found');
@@ -281,7 +272,7 @@
       input.files = dt.files;
       input.dispatchEvent(new win.Event('change', { bubbles: true }));
       setStatus('ready');
-      scheduleResize(frame, token);
+      scheduleResizeSeries(frame, token);
     } catch (error) {
       setStatus(label('failed') + ` ${error.message || error}`, true);
     }
@@ -301,6 +292,8 @@
     lastFrameHeight = 0;
     lastScale = 0;
     lastPaperWidth = 0;
+    if (reportObserver) reportObserver.disconnect();
+    reportObserver = null;
     setStatus('loading');
     const frame = $('fullReportFrame');
     const token = ++frameLoadToken;
@@ -337,12 +330,12 @@
       const frame = $('fullReportFrame');
       if (frame && frame.contentDocument) {
         syncReportLanguage(frame.contentDocument);
-        scheduleResize(frame, frameLoadToken, [80, 300, 700]);
+        scheduleResizeSeries(frame, frameLoadToken, [80, 300, 700, 1300]);
       }
     });
     window.addEventListener('resize', () => {
       const frame = $('fullReportFrame');
-      if (frame && frame.contentDocument) scheduleResize(frame, frameLoadToken, [120, 380]);
+      if (frame && frame.contentDocument) scheduleResizeSeries(frame, frameLoadToken, [120, 380, 900]);
     });
   });
 })();
