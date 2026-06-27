@@ -15,6 +15,16 @@
       eyebrow: 'Photometric file generator',
       heroTitle: 'Generate, inspect and export IES files.',
       heroDesc: 'Input luminaire parameters, build a photometric file, preview the curve, and generate indoor report pages only after you ask for them.',
+      pillCurve: 'Type C curve preview',
+      pillExport: 'IES text export',
+      pillReport: 'Indoor report output',
+      workflow: 'Workflow',
+      stepDefine: 'Define',
+      stepDefineDesc: 'Enter luminaire geometry and flux data.',
+      stepPreview: 'Preview',
+      stepPreviewDesc: 'Inspect the polar curve and generated text.',
+      stepExport: 'Export',
+      stepExportDesc: 'Download IES/LDT or create the report.',
       generatorTitle: 'Generator Inputs',
       generatorBadge: 'CDN default',
       manufacturer: 'Luminaire manufacturer',
@@ -26,8 +36,10 @@
       efficiency: 'Luminaire efficiency',
       beamAngle: 'Beam angle',
       power: 'Power of luminaire (W)',
+      surfaceShape: 'Luminous surface shape',
       length: 'Length of luminous surface (m)',
       width: 'Width of luminous surface (m)',
+      diameter: 'Diameter of luminous surface (m)',
       height: 'Height of luminous surface (m)',
       notes: 'Description / keywords',
       generateReport: 'Generate IES Report',
@@ -63,8 +75,18 @@
       navPreview: '预览',
       navReport: 'IES 报告',
       eyebrow: '配光文件生成器',
-      heroTitle: '生成、查看并导出 IES 文件。',
+      heroTitle: '生成、检查并导出 IES 文件。',
       heroDesc: '输入灯具参数，生成配光文件，预览配光曲线，并在需要时生成室内照明报告页面。',
+      pillCurve: 'Type C 曲线预览',
+      pillExport: 'IES 文本导出',
+      pillReport: '室内报告输出',
+      workflow: '工作流',
+      stepDefine: '定义',
+      stepDefineDesc: '输入灯具结构与光通量数据。',
+      stepPreview: '预览',
+      stepPreviewDesc: '检查极坐标曲线和生成文本。',
+      stepExport: '导出',
+      stepExportDesc: '下载 IES/LDT 或生成报告。',
       generatorTitle: '生成参数',
       generatorBadge: 'CDN 默认',
       manufacturer: '灯具制造商',
@@ -75,10 +97,12 @@
       singleFlux: '单颗 LED 光通量',
       efficiency: '灯具效率',
       beamAngle: '光束角',
-      power: '灯具功率（W）',
-      length: '发光面长度（m）',
-      width: '发光面宽度（m）',
-      height: '发光面高度（m）',
+      power: '灯具功率 (W)',
+      surfaceShape: '发光面形状',
+      length: '发光面长度 (m)',
+      width: '发光面宽度 (m)',
+      diameter: '发光面直径 (m)',
+      height: '发光面高度 (m)',
       notes: '描述 / 关键词',
       generateReport: '生成 IES 报告',
       download: '下载 IES',
@@ -136,6 +160,24 @@
     setText('.eyebrow', t(finalLang, 'eyebrow'));
     setText('.hero h1', t(finalLang, 'heroTitle'));
     setText('.hero p', t(finalLang, 'heroDesc'));
+    const heroPills = document.querySelectorAll('.hero-pills span');
+    if (heroPills[0]) heroPills[0].textContent = t(finalLang, 'pillCurve');
+    if (heroPills[1]) heroPills[1].textContent = t(finalLang, 'pillExport');
+    if (heroPills[2]) heroPills[2].textContent = t(finalLang, 'pillReport');
+    setText('.console-title', t(finalLang, 'workflow'));
+    const consoleSteps = document.querySelectorAll('.console-step');
+    if (consoleSteps[0]) {
+      consoleSteps[0].querySelector('strong').textContent = t(finalLang, 'stepDefine');
+      consoleSteps[0].querySelector('span span').textContent = t(finalLang, 'stepDefineDesc');
+    }
+    if (consoleSteps[1]) {
+      consoleSteps[1].querySelector('strong').textContent = t(finalLang, 'stepPreview');
+      consoleSteps[1].querySelector('span span').textContent = t(finalLang, 'stepPreviewDesc');
+    }
+    if (consoleSteps[2]) {
+      consoleSteps[2].querySelector('strong').textContent = t(finalLang, 'stepExport');
+      consoleSteps[2].querySelector('span span').textContent = t(finalLang, 'stepExportDesc');
+    }
     setText('aside.panel .panel-head h2', t(finalLang, 'generatorTitle'));
     setText('aside.panel .panel-head span', t(finalLang, 'generatorBadge'));
 
@@ -148,8 +190,10 @@
     setLabel('efficiency', t(finalLang, 'efficiency'));
     setLabel('beamAngle', t(finalLang, 'beamAngle'));
     setLabel('power', t(finalLang, 'power'));
+    setLabel('surfaceShape', t(finalLang, 'surfaceShape'));
     setLabel('length', t(finalLang, 'length'));
     setLabel('width', t(finalLang, 'width'));
+    setLabel('diameter', t(finalLang, 'diameter'));
     setLabel('height', t(finalLang, 'height'));
     setLabel('notes', t(finalLang, 'notes'));
     setLabel('upload', t(finalLang, 'upload'));
@@ -177,8 +221,8 @@
     setText('.report-title h2', t(finalLang, 'reportTitle'));
     const reportFileLabel = document.querySelector('.report-title span');
     const reportFileName = document.getElementById('reportFileName');
-    if (reportFileLabel && reportFileName) {
-      reportFileLabel.firstChild && (reportFileLabel.firstChild.textContent = t(finalLang, 'reportFile') + ' ');
+    if (reportFileLabel && reportFileName && reportFileLabel.firstChild) {
+      reportFileLabel.firstChild.textContent = `${t(finalLang, 'reportFile')} `;
     }
     const reportHeadings = document.querySelectorAll('.report-page h3');
     if (reportHeadings[0]) reportHeadings[0].textContent = t(finalLang, 'descInfo');

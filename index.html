@@ -16,6 +16,9 @@
     --cyan: #62d4ff;
     --green: #8bd67c;
     --panel: rgba(255, 255, 255, 0.075);
+    --panel-strong: rgba(255, 255, 255, 0.12);
+    --radius: 8px;
+    --shadow: 0 28px 90px rgba(0, 0, 0, 0.42);
   }
 
   * { box-sizing: border-box; }
@@ -27,9 +30,10 @@
   body {
     margin: 0;
     background:
-      radial-gradient(circle at 18% 0%, rgba(215, 25, 32, 0.22), transparent 28%),
-      radial-gradient(circle at 85% 16%, rgba(98, 212, 255, 0.18), transparent 30%),
+      linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
       linear-gradient(135deg, #090a0d 0%, #11151b 46%, #15120e 100%);
+    background-size: 42px 42px, 42px 42px, auto;
     color: var(--ink);
     font-family: Inter, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
     letter-spacing: 0;
@@ -38,6 +42,12 @@
   a {
     color: inherit;
     text-decoration: none;
+  }
+
+  a:focus-visible,
+  button:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 4px;
   }
 
   img {
@@ -59,7 +69,7 @@
     justify-content: space-between;
     gap: 20px;
     padding: 18px clamp(20px, 4vw, 56px);
-    background: rgba(9, 10, 13, 0.72);
+    background: rgba(9, 10, 13, 0.8);
     border-bottom: 1px solid var(--line);
     backdrop-filter: blur(18px);
   }
@@ -77,7 +87,9 @@
     display: grid;
     place-items: center;
     border: 1px solid rgba(255,255,255,0.25);
+    border-radius: var(--radius);
     background: linear-gradient(135deg, rgba(215,25,32,0.95), rgba(217,164,65,0.85));
+    box-shadow: 0 12px 30px rgba(215, 25, 32, 0.24);
     font-weight: 800;
     font-size: 15px;
   }
@@ -107,25 +119,41 @@
   }
 
   .nav-links a {
-    border-bottom: 1px solid transparent;
+    padding: 7px 9px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    transition: background 180ms ease, border-color 180ms ease, color 180ms ease;
   }
 
   .nav-links a:hover {
-    border-color: var(--gold);
+    border-color: rgba(217,164,65,0.48);
+    background: rgba(217,164,65,0.1);
     color: #fff;
   }
 
   .hero {
     position: relative;
     display: grid;
-    grid-template-columns: minmax(0, 0.95fr) minmax(360px, 1.05fr);
-    gap: clamp(28px, 5vw, 70px);
-    align-items: center;
-    padding: clamp(48px, 7vw, 92px) clamp(20px, 5vw, 72px) clamp(42px, 7vw, 92px);
+    grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+    gap: clamp(24px, 4vw, 56px);
+    align-items: stretch;
+    min-height: calc(100vh - 74px);
+    padding: clamp(44px, 6vw, 76px) clamp(20px, 5vw, 72px) clamp(38px, 5vw, 64px);
+  }
+
+  .hero::after {
+    content: "";
+    position: absolute;
+    left: clamp(20px, 5vw, 72px);
+    right: clamp(20px, 5vw, 72px);
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent);
   }
 
   .hero-copy {
-    max-width: 680px;
+    max-width: 760px;
+    align-self: center;
   }
 
   .eyebrow {
@@ -148,8 +176,8 @@
 
   h1 {
     margin: 0;
-    max-width: 720px;
-    font-size: clamp(42px, 7vw, 92px);
+    max-width: 820px;
+    font-size: clamp(54px, 8.3vw, 132px);
     line-height: 0.95;
     letter-spacing: 0;
   }
@@ -169,6 +197,25 @@
     margin-top: 30px;
   }
 
+  .hero-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 22px;
+  }
+
+  .hero-tags span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    padding: 6px 10px;
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 999px;
+    background: rgba(255,255,255,0.06);
+    color: #dce4eb;
+    font-size: 12px;
+  }
+
   .btn {
     display: inline-flex;
     align-items: center;
@@ -176,6 +223,7 @@
     min-height: 44px;
     padding: 12px 16px;
     border: 1px solid rgba(255,255,255,0.22);
+    border-radius: var(--radius);
     background: rgba(255,255,255,0.08);
     color: #fff;
     font-size: 14px;
@@ -190,25 +238,139 @@
 
   .btn.primary {
     border-color: rgba(215,25,32,0.95);
-    background: #d71920;
+    background: linear-gradient(135deg, #d71920, #ef5b2a);
+    box-shadow: 0 14px 36px rgba(215, 25, 32, 0.25);
   }
 
   .hero-board {
     position: relative;
+    display: grid;
+    align-content: stretch;
     min-height: 560px;
   }
 
+  .hero-directory {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: 18px;
+    height: 100%;
+    padding: clamp(18px, 2vw, 24px);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.045)),
+      rgba(10,12,16,0.72);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(16px);
+  }
+
+  .directory-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .directory-head strong {
+    display: block;
+    font-size: clamp(24px, 3vw, 42px);
+    line-height: 0.95;
+  }
+
+  .directory-head span {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .directory-badge {
+    flex: 0 0 auto;
+    padding: 7px 10px;
+    border: 1px solid rgba(217,164,65,0.38);
+    border-radius: 999px;
+    color: #f5d99b;
+    background: rgba(217,164,65,0.1);
+    font-size: 12px;
+  }
+
+  .directory-list {
+    display: grid;
+    gap: 10px;
+  }
+
+  .directory-item {
+    display: grid;
+    grid-template-columns: 44px 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: var(--radius);
+    background: rgba(255,255,255,0.055);
+    transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+  }
+
+  .directory-item:hover {
+    transform: translateX(4px);
+    border-color: rgba(217,164,65,0.45);
+    background: rgba(217,164,65,0.09);
+  }
+
+  .directory-index {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius);
+    background: #f4f1ea;
+    color: #111;
+    font-weight: 800;
+  }
+
+  .directory-item strong {
+    display: block;
+    font-size: 15px;
+    line-height: 1.2;
+  }
+
+  .directory-item span {
+    display: block;
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .directory-arrow {
+    color: var(--gold);
+    font-weight: 800;
+  }
+
   .feature-stack {
-    position: absolute;
-    inset: 0;
+    position: relative;
+    min-height: 210px;
+    border-radius: var(--radius);
+    overflow: hidden;
   }
 
   .feature-card {
     position: absolute;
     overflow: hidden;
     border: 1px solid var(--line);
+    border-radius: var(--radius);
     background: #111;
-    box-shadow: 0 28px 80px rgba(0,0,0,0.36);
+    box-shadow: var(--shadow);
+  }
+
+  .feature-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: inherit;
+    pointer-events: none;
   }
 
   .feature-card img {
@@ -218,36 +380,36 @@
   }
 
   .feature-card.large {
-    left: 4%;
-    right: 8%;
-    top: 10%;
-    height: 54%;
+    left: 0;
+    right: 34%;
+    top: 0;
+    height: 68%;
   }
 
   .feature-card.small-a {
-    left: 0;
-    bottom: 4%;
-    width: 42%;
-    height: 30%;
+    left: 42%;
+    bottom: 0;
+    width: 31%;
+    height: 42%;
   }
 
   .feature-card.small-b {
     right: 0;
     bottom: 0;
-    width: 50%;
-    height: 36%;
+    width: 33%;
+    height: 100%;
   }
 
   .stat-strip {
-    position: absolute;
-    left: 10%;
-    right: 6%;
-    bottom: 32%;
+    position: static;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     border: 1px solid var(--line);
+    border-radius: var(--radius);
     background: rgba(10, 12, 16, 0.78);
+    box-shadow: 0 20px 54px rgba(0,0,0,0.34);
     backdrop-filter: blur(14px);
+    overflow: hidden;
   }
 
   .stat {
@@ -303,7 +465,7 @@
 
   .grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 16px;
   }
 
@@ -312,19 +474,44 @@
     display: grid;
     grid-template-rows: 210px 1fr;
     border: 1px solid var(--line);
+    border-radius: var(--radius);
     background: var(--panel);
+    box-shadow: 0 16px 44px rgba(0,0,0,0.16);
+    overflow: hidden;
     transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
   }
+
+  .project.featured {
+    grid-column: span 2;
+    grid-row: span 2;
+    grid-template-rows: 360px 1fr;
+    min-height: 620px;
+  }
+
+  .project.featured h3 {
+    font-size: clamp(28px, 3vw, 44px);
+  }
+
 
   .project:hover {
     transform: translateY(-4px);
     border-color: rgba(255,255,255,0.34);
-    background: rgba(255,255,255,0.11);
+    background: var(--panel-strong);
+    box-shadow: 0 26px 64px rgba(0,0,0,0.26);
   }
 
   .project-media {
+    position: relative;
     overflow: hidden;
     background: #111;
+  }
+
+  .project-media::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 52%, rgba(0,0,0,0.28));
+    pointer-events: none;
   }
 
   .project-media img {
@@ -378,12 +565,313 @@
     padding: 18px;
   }
 
+  .tool-strip {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .tool-link {
+    display: grid;
+    grid-template-columns: 120px 1fr auto;
+    align-items: center;
+    gap: 18px;
+    min-height: 150px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background:
+      linear-gradient(135deg, rgba(98,212,255,0.1), rgba(217,164,65,0.055)),
+      rgba(255,255,255,0.055);
+    transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+  }
+
+  .tool-link:hover {
+    transform: translateY(-3px);
+    border-color: rgba(98,212,255,0.36);
+    background:
+      linear-gradient(135deg, rgba(98,212,255,0.14), rgba(217,164,65,0.08)),
+      rgba(255,255,255,0.075);
+  }
+
+  .tool-visual-small {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 120px;
+    height: 110px;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: var(--radius);
+    background:
+      linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px),
+      linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
+      #10151b;
+    background-size: 20px 20px;
+    overflow: hidden;
+  }
+
+  .polar-svg,
+  .report-svg {
+    display: block;
+    width: 104px;
+    height: 104px;
+  }
+
+  .polar-grid {
+    fill: none;
+    stroke: rgba(98,212,255,0.22);
+    stroke-width: 1;
+  }
+
+  .polar-axis {
+    stroke: rgba(98,212,255,0.22);
+    stroke-width: 1;
+  }
+
+  .polar-label-svg {
+    fill: rgba(244,241,234,0.62);
+    font-family: Consolas, monospace;
+    font-size: 9px;
+  }
+
+  .polar-curve-red {
+    fill: none;
+    stroke: #ff3131;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 4px rgba(255,49,49,0.55));
+  }
+
+  .polar-curve-blue {
+    fill: none;
+    stroke: #62d4ff;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    opacity: 0.85;
+  }
+
+  .polar-fill {
+    fill: rgba(255,232,72,0.72);
+    stroke: rgba(217,164,65,0.68);
+    stroke-width: 1;
+  }
+
+  .polar-scale {
+    fill: rgba(244,241,234,0.48);
+    font-family: Consolas, monospace;
+    font-size: 8px;
+  }
+
+  .polar-origin {
+    fill: #fff7ce;
+    filter: drop-shadow(0 0 5px rgba(255,247,206,0.8));
+  }
+
+  .photometry-thumb {
+    position: relative;
+    width: 86px;
+    height: 86px;
+    border-radius: 50%;
+    background: #0d151d;
+    box-shadow: inset 0 0 22px rgba(98,212,255,0.1), 0 0 24px rgba(98,212,255,0.1);
+  }
+
+  .photometry-thumb::before {
+    content: "";
+    position: absolute;
+    inset: 5px;
+    border: 1px solid rgba(98,212,255,0.42);
+    border-radius: 50%;
+    background:
+      radial-gradient(circle, transparent 0 21%, rgba(98,212,255,0.18) 22% 23%, transparent 24% 42%, rgba(98,212,255,0.18) 43% 44%, transparent 45% 63%, rgba(98,212,255,0.2) 64% 65%, transparent 66%),
+      linear-gradient(0deg, transparent 49%, rgba(98,212,255,0.22) 50%, transparent 51%),
+      linear-gradient(45deg, transparent 49%, rgba(98,212,255,0.14) 50%, transparent 51%),
+      linear-gradient(90deg, transparent 49%, rgba(98,212,255,0.22) 50%, transparent 51%),
+      linear-gradient(135deg, transparent 49%, rgba(98,212,255,0.14) 50%, transparent 51%);
+  }
+
+  .photometry-thumb::after {
+    content: "0";
+    position: absolute;
+    left: 50%;
+    bottom: 3px;
+    transform: translateX(-50%);
+    color: rgba(244,241,234,0.72);
+    font-size: 9px;
+    font-family: Consolas, monospace;
+  }
+
+  .polar-label {
+    position: absolute;
+    color: rgba(244,241,234,0.58);
+    font-size: 8px;
+    font-family: Consolas, monospace;
+    line-height: 1;
+  }
+
+  .polar-label.left { left: 4px; top: 48%; }
+  .polar-label.right { right: 4px; top: 48%; }
+  .polar-label.top { left: 50%; top: 3px; transform: translateX(-50%); }
+
+  .polar-curve {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform-origin: 50% 0;
+    pointer-events: none;
+  }
+
+  .polar-curve.c0 {
+    width: 34px;
+    height: 47px;
+    transform: translateX(-50%) translateY(-1px);
+    border: 3px solid #ff3131;
+    border-top: 0;
+    border-radius: 0 0 24px 24px;
+    filter: drop-shadow(0 0 5px rgba(255,49,49,0.45));
+  }
+
+  .polar-curve.c90 {
+    width: 51px;
+    height: 36px;
+    transform: translateX(-50%) translateY(9px);
+    border: 2px solid #62d4ff;
+    border-top: 0;
+    border-radius: 0 0 30px 30px;
+    opacity: 0.82;
+  }
+
+  .polar-center {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 5px;
+    height: 5px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: #fff7ce;
+    box-shadow: 0 0 8px rgba(255,247,206,0.8);
+  }
+
+  .report-thumb {
+    position: relative;
+    width: 86px;
+    height: 86px;
+  }
+
+  .report-page-mini {
+    position: absolute;
+    inset: 3px 5px 3px 20px;
+    border: 1px solid rgba(244,241,234,0.34);
+    border-radius: 5px;
+    background:
+      linear-gradient(#f6f1e7 0 12px, transparent 12px),
+      linear-gradient(90deg, rgba(20,26,32,0.12) 1px, transparent 1px),
+      linear-gradient(rgba(20,26,32,0.12) 1px, transparent 1px),
+      #d9e0e5;
+    background-size: auto, 13px 13px, 13px 13px, auto;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.28);
+  }
+
+  .report-page-mini::before {
+    content: "";
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    height: 18px;
+    background:
+      linear-gradient(90deg, #d71920 0 16%, transparent 16% 24%, #d9a441 24% 43%, transparent 43% 51%, #62d4ff 51% 74%, transparent 74% 81%, #8bd67c 81%);
+    border-radius: 2px;
+  }
+
+  .report-polar-mini {
+    position: absolute;
+    left: 0;
+    top: 17px;
+    width: 50px;
+    height: 50px;
+    border: 1px solid rgba(98,212,255,0.44);
+    border-radius: 50%;
+    background:
+      radial-gradient(circle, transparent 0 22%, rgba(98,212,255,0.16) 23% 24%, transparent 25% 52%, rgba(98,212,255,0.18) 53% 54%, transparent 55%),
+      linear-gradient(0deg, transparent 49%, rgba(98,212,255,0.22) 50%, transparent 51%),
+      linear-gradient(90deg, transparent 49%, rgba(98,212,255,0.22) 50%, transparent 51%),
+      #111a22;
+  }
+
+  .report-polar-mini::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 21px;
+    height: 29px;
+    transform: translateX(-50%);
+    border: 2px solid #ff3131;
+    border-top: 0;
+    border-radius: 0 0 18px 18px;
+    filter: drop-shadow(0 0 4px rgba(255,49,49,0.42));
+  }
+
+  .report-polar-mini::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 31px;
+    height: 22px;
+    transform: translateX(-50%) translateY(6px);
+    border: 1px solid #62d4ff;
+    border-top: 0;
+    border-radius: 0 0 18px 18px;
+  }
+
+  .report-svg .report-sheet {
+    fill: #e9edf0;
+    stroke: rgba(244,241,234,0.36);
+    stroke-width: 1;
+  }
+
+  .report-svg .report-header {
+    fill: #f7f2e7;
+  }
+
+  .report-svg .report-line {
+    stroke: rgba(17,24,32,0.28);
+    stroke-width: 1.3;
+  }
+
+  .report-svg .report-bar-red { fill: #d71920; }
+  .report-svg .report-bar-gold { fill: #d9a441; }
+  .report-svg .report-bar-cyan { fill: #62d4ff; }
+
+  .tool-link h3 {
+    margin: 8px 0 0;
+    font-size: 24px;
+    line-height: 1.1;
+  }
+
+  .tool-link p {
+    margin: 8px 0 0;
+    color: #c7cdd5;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .tool-arrow {
+    color: var(--gold);
+    font-weight: 800;
+    font-size: 22px;
+  }
+
   .tag {
     display: inline-flex;
     width: fit-content;
     color: #0d0e10;
     background: var(--gold);
     padding: 5px 8px;
+    border-radius: 999px;
     font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
@@ -408,6 +896,7 @@
     gap: 8px;
     color: #fff;
     font-size: 13px;
+    font-weight: 700;
   }
 
   .open-link::after {
@@ -427,9 +916,17 @@
     align-content: space-between;
     padding: 16px;
     border: 1px solid var(--line);
+    border-radius: var(--radius);
     background:
       linear-gradient(160deg, rgba(255,255,255,0.11), rgba(255,255,255,0.035)),
       rgba(255,255,255,0.06);
+  }
+
+  .newsletter:hover {
+    border-color: rgba(217,164,65,0.55);
+    background:
+      linear-gradient(160deg, rgba(255,255,255,0.14), rgba(255,255,255,0.055)),
+      rgba(255,255,255,0.08);
   }
 
   .newsletter strong {
@@ -474,6 +971,14 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
+    .project.featured {
+      grid-column: span 2;
+    }
+
+    .tool-strip {
+      grid-template-columns: 1fr;
+    }
+
     .newsletter-grid {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
@@ -496,30 +1001,24 @@
     }
 
     .hero-board {
-      min-height: 380px;
+      min-height: auto;
+    }
+
+    .hero-directory {
+      min-height: 520px;
     }
 
     .feature-card.large {
-      left: 0;
-      right: 0;
-      top: 0;
-      height: 58%;
+      right: 28%;
     }
 
     .feature-card.small-a {
-      width: 45%;
-      bottom: 2%;
+      left: 34%;
+      width: 34%;
     }
 
     .feature-card.small-b {
-      width: 54%;
-      bottom: 0;
-    }
-
-    .stat-strip {
-      left: 0;
-      right: 0;
-      bottom: 32%;
+      width: 30%;
     }
 
     .stat {
@@ -545,6 +1044,50 @@
       grid-template-rows: 190px 1fr;
     }
 
+    .project.featured {
+      grid-column: span 1;
+      grid-row: span 1;
+      grid-template-columns: 1fr;
+      grid-template-rows: 210px 1fr;
+      min-height: 360px;
+    }
+
+    .tool-link {
+      grid-template-columns: 80px 1fr;
+      min-height: 132px;
+    }
+
+    .tool-visual-small {
+      width: 80px;
+      height: 82px;
+    }
+
+    .photometry-thumb,
+    .report-thumb {
+      width: 58px;
+      height: 58px;
+    }
+
+    .polar-svg,
+    .report-svg {
+      width: 66px;
+      height: 66px;
+    }
+
+    .report-page-mini {
+      inset: 3px 3px 2px 13px;
+    }
+
+    .report-polar-mini {
+      width: 33px;
+      height: 33px;
+      top: 14px;
+    }
+
+    .tool-arrow {
+      display: none;
+    }
+
     .footer {
       flex-direction: column;
     }
@@ -563,6 +1106,7 @@
     </a>
     <div class="nav-links">
       <a href="#projects">Projects</a>
+      <a href="#tools">Tools</a>
       <a href="#newsletter">Newsletter</a>
       <a href="ies-editor/">IES Tool</a>
       <a href="ies-report/">IES Report</a>
@@ -580,22 +1124,58 @@
           event newsletters, and case pages. Designed as a fast visual map of the
           public work inside this GitHub Pages repository.
         </p>
+        <div class="hero-tags" aria-label="Portfolio categories">
+          <span>Brand pages</span>
+          <span>Product storytelling</span>
+          <span>IES browser tools</span>
+        </div>
         <div class="cta-row">
           <a class="btn primary" href="#projects">Explore projects</a>
           <a class="btn" href="cdn-newsletter/202606-hskc/">Latest newsletter</a>
         </div>
       </div>
 
-      <div class="hero-board" aria-label="Featured work images">
-        <div class="feature-stack">
-          <div class="feature-card large">
-            <img src="cdn-newsletter/202606-hskc/images/hskc-hero.jpg" alt="HSKC2026 Seoul event">
+      <div class="hero-board" aria-label="Portfolio directory">
+        <div class="hero-directory">
+          <div class="directory-head">
+            <div>
+              <strong>Live Work Index</strong>
+              <span>Fast routes into brand pages, product launches, newsletters and lighting tools.</span>
+            </div>
+            <span class="directory-badge">2026</span>
           </div>
-          <div class="feature-card small-a">
-            <img src="bach-flash/images/01-hero-flash.jpg" alt="BACH Flash lighting product">
+          <div class="directory-list">
+            <a class="directory-item" href="aboutCDN/">
+              <span class="directory-index">01</span>
+              <span><strong>Brand Systems</strong><span>CDN and BACH introduction pages</span></span>
+              <span class="directory-arrow">></span>
+            </a>
+            <a class="directory-item" href="bach-flash/">
+              <span class="directory-index">02</span>
+              <span><strong>Product Stories</strong><span>BACH Flash and 5S product narratives</span></span>
+              <span class="directory-arrow">></span>
+            </a>
+            <a class="directory-item" href="cdn-newsletter/202606-hskc/">
+              <span class="directory-index">03</span>
+              <span><strong>Newsletter Archive</strong><span>Partner updates, events and cases</span></span>
+              <span class="directory-arrow">></span>
+            </a>
+            <a class="directory-item" href="ies-editor/">
+              <span class="directory-index">04</span>
+              <span><strong>IES Tooling</strong><span>Photometric editor and report builder</span></span>
+              <span class="directory-arrow">></span>
+            </a>
           </div>
-          <div class="feature-card small-b">
-            <img src="aboutCDN/images/hero.jpg" alt="CDN Lighting project environment">
+          <div class="feature-stack" aria-label="Featured work images">
+            <div class="feature-card large">
+              <img src="cdn-newsletter/202606-hskc/images/hskc-hero.jpg" alt="HSKC2026 Seoul event">
+            </div>
+            <div class="feature-card small-a">
+              <img src="bach-flash/images/01-hero-flash.jpg" alt="BACH Flash lighting product">
+            </div>
+            <div class="feature-card small-b">
+              <img src="aboutCDN/images/hero.jpg" alt="CDN Lighting project environment">
+            </div>
           </div>
           <div class="stat-strip" aria-label="Repository summary">
             <div class="stat"><strong>12+</strong><span>live pages</span></div>
@@ -613,7 +1193,7 @@
       </div>
 
       <div class="grid">
-        <a class="project" href="aboutCDN/">
+        <a class="project featured" href="aboutCDN/">
           <div class="project-media"><img src="aboutCDN/images/tech-lab.jpg" alt="About CDN"></div>
           <div class="project-body">
             <div>
@@ -685,34 +1265,73 @@
           </div>
         </a>
 
-        <a class="project" href="ies-editor/">
-          <div class="project-media tool-visual">
-            <div class="ies-orbit" aria-hidden="true"></div>
-            <div class="ies-code">IESNA:LM-63-2002<br>TILT=NONE<br>0 5 10 15 20...</div>
-          </div>
-          <div class="project-body">
-            <div>
-              <span class="tag">Tool</span>
-              <h3>IES Editor</h3>
-              <p>A browser tool for creating, previewing, opening and exporting IES photometric files.</p>
-            </div>
-            <span class="open-link">Open tool</span>
-          </div>
-        </a>
+      </div>
+    </section>
 
-        <a class="project" href="ies-report/">
-          <div class="project-media tool-visual">
-            <div class="ies-orbit" aria-hidden="true"></div>
-            <div class="ies-code">室内灯具光度数据<br>光源数据 / 光度数据<br>Print / Save PDF</div>
-          </div>
-          <div class="project-body">
-            <div>
-              <span class="tag">Tool</span>
-              <h3>IES Report</h3>
-              <p>A browser report builder for reading IES files, editing key fields and printing photometric reports.</p>
-            </div>
-            <span class="open-link">Open report</span>
-          </div>
+    <section class="section" id="tools">
+      <div class="section-head">
+        <h2>Lighting Tools</h2>
+        <p>Browser utilities kept separate from the visual portfolio, so the project gallery stays focused on page work.</p>
+      </div>
+      <div class="tool-strip">
+        <a class="tool-link" href="ies-editor/">
+          <span class="tool-visual-small" aria-hidden="true">
+            <svg class="polar-svg" viewBox="0 0 120 120" aria-hidden="true">
+              <circle class="polar-grid" cx="60" cy="16" r="20"></circle>
+              <circle class="polar-grid" cx="60" cy="16" r="38"></circle>
+              <circle class="polar-grid" cx="60" cy="16" r="56"></circle>
+              <circle class="polar-grid" cx="60" cy="16" r="74"></circle>
+              <line class="polar-axis" x1="60" y1="16" x2="60" y2="112"></line>
+              <line class="polar-axis" x1="4" y1="16" x2="116" y2="16"></line>
+              <line class="polar-axis" x1="20" y1="0" x2="100" y2="96"></line>
+              <line class="polar-axis" x1="100" y1="0" x2="20" y2="96"></line>
+              <line class="polar-axis" x1="4" y1="72" x2="116" y2="72"></line>
+              <text class="polar-label-svg" x="60" y="115" text-anchor="middle">0°</text>
+              <text class="polar-label-svg" x="6" y="19">90°</text>
+              <text class="polar-label-svg" x="98" y="19">90°</text>
+              <text class="polar-scale" x="63" y="58">400</text>
+              <text class="polar-scale" x="64" y="80">600</text>
+              <text class="polar-scale" x="64" y="101">800</text>
+              <path class="polar-fill" d="M60 16 C49 29 35 42 23 58 C12 72 10 85 18 91 C29 99 44 93 53 88 C57 97 63 97 67 88 C76 93 91 99 102 91 C110 85 108 72 97 58 C85 42 71 29 60 16 Z"></path>
+              <path class="polar-curve-blue" d="M60 16 C50 29 36 43 24 59 C14 72 12 84 19 90 C29 97 44 92 53 87 C57 95 63 95 67 87 C76 92 91 97 101 90 C108 84 106 72 96 59 C84 43 70 29 60 16"></path>
+              <path class="polar-curve-red" d="M60 16 C48 30 35 43 23 58 C12 72 10 85 18 91 C28 100 44 94 53 88 C56 99 64 99 67 88 C76 94 92 100 102 91 C110 85 108 72 97 58 C85 43 72 30 60 16"></path>
+              <circle class="polar-origin" cx="60" cy="16" r="3"></circle>
+            </svg>
+          </span>
+          <span>
+            <span class="tag">Tool</span>
+            <h3>IES Editor</h3>
+            <p>Create, preview, open and export IES photometric files directly in the browser.</p>
+          </span>
+          <span class="tool-arrow">></span>
+        </a>
+        <a class="tool-link" href="ies-report/">
+          <span class="tool-visual-small" aria-hidden="true">
+            <svg class="report-svg" viewBox="0 0 120 120" aria-hidden="true">
+              <rect class="report-sheet" x="34" y="12" width="66" height="92" rx="5"></rect>
+              <rect class="report-header" x="34" y="12" width="66" height="15" rx="5"></rect>
+              <line class="report-line" x1="43" y1="37" x2="91" y2="37"></line>
+              <line class="report-line" x1="43" y1="45" x2="82" y2="45"></line>
+              <line class="report-line" x1="43" y1="53" x2="88" y2="53"></line>
+              <rect class="report-bar-red" x="44" y="78" width="10" height="16"></rect>
+              <rect class="report-bar-gold" x="58" y="70" width="10" height="24"></rect>
+              <rect class="report-bar-cyan" x="72" y="63" width="10" height="31"></rect>
+              <circle class="polar-grid" cx="38" cy="47" r="13"></circle>
+              <circle class="polar-grid" cx="38" cy="47" r="24"></circle>
+              <line class="polar-axis" x1="38" y1="47" x2="38" y2="88"></line>
+              <line class="polar-axis" x1="14" y1="47" x2="62" y2="47"></line>
+              <path class="polar-fill" d="M38 47 C31 55 23 62 17 72 C12 81 15 87 23 86 C29 86 34 83 36 80 C38 87 42 87 44 80 C48 83 55 86 61 83 C66 80 63 72 58 65 C51 56 44 52 38 47 Z"></path>
+              <path class="polar-curve-blue" d="M38 47 C31 55 23 62 17 72 C13 80 15 86 23 86 C29 86 34 83 36 80 C38 86 42 86 44 80 C48 83 55 86 61 83 C66 80 63 72 58 65 C51 56 44 52 38 47"></path>
+              <path class="polar-curve-red" d="M38 47 C30 55 22 62 16 72 C12 81 15 88 23 87 C29 87 34 84 36 80 C38 88 42 88 44 80 C48 84 56 87 62 83 C67 80 64 72 58 65 C51 56 45 52 38 47"></path>
+              <circle class="polar-origin" cx="38" cy="47" r="2"></circle>
+            </svg>
+          </span>
+          <span>
+            <span class="tag">Tool</span>
+            <h3>IES Report</h3>
+            <p>Read IES files, edit key fields, and print photometric report pages.</p>
+          </span>
+          <span class="tool-arrow">></span>
         </a>
       </div>
     </section>

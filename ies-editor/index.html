@@ -6,65 +6,81 @@
 <title>IES Editor | Shao Wentao</title>
 <meta name="description" content="View, edit and generate IES photometric files in the browser.">
 <style>
-  :root { --bg:#0a0c0f; --panel:#12161b; --ink:#f5f2ea; --muted:#aeb7c2; --line:rgba(255,255,255,.14); --red:#d71920; --gold:#dca642; --cyan:#58d7ff; }
+  :root { --bg:#0a0c0f; --panel:#12161b; --ink:#f5f2ea; --muted:#aeb7c2; --line:rgba(255,255,255,.14); --red:#d71920; --gold:#dca642; --cyan:#58d7ff; --radius:8px; --shadow:0 26px 80px rgba(0,0,0,.34); }
   * { box-sizing:border-box; }
   html { -webkit-text-size-adjust:100%; }
-  body { margin:0; overflow-x:hidden; background:radial-gradient(circle at 18% 8%, rgba(215,25,32,.22), transparent 26%), radial-gradient(circle at 88% 20%, rgba(88,215,255,.14), transparent 28%), linear-gradient(135deg,#08090b 0%,#10151b 52%,#15120d 100%); color:var(--ink); font-family:Inter,"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif; }
+  body { margin:0; overflow-x:hidden; background:linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px), linear-gradient(135deg,#08090b 0%,#10151b 52%,#15120d 100%); background-size:42px 42px,42px 42px,auto; color:var(--ink); font-family:Inter,"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif; }
   a { color:inherit; text-decoration:none; }
+  a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible { outline:2px solid var(--gold); outline-offset:3px; }
   .topbar { position:sticky; top:0; z-index:5; display:flex; align-items:center; justify-content:space-between; gap:18px; padding:16px clamp(18px,4vw,48px); border-bottom:1px solid var(--line); background:rgba(8,10,13,.82); backdrop-filter:blur(18px); }
   .brand { display:flex; align-items:center; gap:12px; min-width:0; }
-  .mark { width:38px; height:38px; flex:0 0 38px; display:grid; place-items:center; border:1px solid rgba(255,255,255,.22); background:linear-gradient(135deg,var(--red),var(--gold)); font-weight:800; font-size:14px; }
+  .mark { width:38px; height:38px; flex:0 0 38px; display:grid; place-items:center; border:1px solid rgba(255,255,255,.22); border-radius:var(--radius); background:linear-gradient(135deg,var(--red),var(--gold)); box-shadow:0 12px 30px rgba(215,25,32,.24); font-weight:800; font-size:14px; }
   .brand strong,.brand span { display:block; }
   .brand strong { font-size:14px; line-height:18px; white-space:nowrap; }
   .brand span { color:var(--muted); font-size:12px; line-height:16px; }
   .nav { display:flex; gap:14px; color:#d9dee5; font-size:13px; white-space:nowrap; }
-  .nav a { border-bottom:1px solid transparent; }
-  .nav a:hover { color:#fff; border-color:var(--gold); }
+  .nav a { padding:7px 9px; border:1px solid transparent; border-radius:999px; transition:background .18s ease,border-color .18s ease,color .18s ease; }
+  .nav a:hover { color:#fff; border-color:rgba(220,166,66,.52); background:rgba(220,166,66,.1); }
   .language-control { display:flex; align-items:center; gap:8px; margin-left:auto; color:#d9dee5; font-size:12px; white-space:nowrap; }
   .language-control label { color:#d9dee5; font-size:12px; }
-  .language-control select { min-height:34px; width:auto; border:1px solid rgba(255,255,255,.2); background:#0e1216; color:#fff; padding:6px 28px 6px 9px; font:inherit; font-size:12px; outline:none; }
-  .hero { padding:clamp(28px,5vw,58px) clamp(18px,5vw,64px) 20px; }
-  .hero-inner { max-width:920px; }
+  .language-control select { min-height:34px; width:auto; border:1px solid rgba(255,255,255,.2); border-radius:999px; background:#0e1216; color:#fff; padding:6px 28px 6px 10px; font:inherit; font-size:12px; outline:none; }
+  .hero { display:grid; grid-template-columns:minmax(0,1fr) minmax(300px,.55fr); gap:22px; padding:clamp(28px,5vw,58px) clamp(18px,5vw,64px) 18px; }
+  .hero-inner { max-width:980px; align-self:center; }
   .eyebrow { display:inline-flex; align-items:center; gap:9px; color:#f0d89f; font-size:12px; text-transform:uppercase; letter-spacing:.14em; }
   .eyebrow::before { content:""; width:32px; height:1px; background:var(--gold); }
   h1 { margin:18px 0 0; max-width:760px; font-size:clamp(34px,5.4vw,68px); line-height:1; }
   .hero p { margin:20px 0 0; max-width:680px; color:#d5dbe3; font-size:clamp(15px,1.4vw,18px); line-height:1.7; }
-  .workspace { display:grid; grid-template-columns:minmax(280px,420px) minmax(0,1fr); gap:16px; padding:16px clamp(18px,5vw,64px) clamp(38px,6vw,72px); }
-  .panel { min-width:0; border:1px solid var(--line); background:rgba(18,22,27,.82); }
-  .panel-head { display:flex; justify-content:space-between; gap:16px; align-items:center; padding:16px 18px; border-bottom:1px solid var(--line); }
+  .hero-pills { display:flex; flex-wrap:wrap; gap:10px; margin-top:22px; }
+  .hero-pills span { display:inline-flex; align-items:center; min-height:30px; padding:6px 10px; border:1px solid rgba(255,255,255,.16); border-radius:999px; background:rgba(255,255,255,.06); color:#dce4eb; font-size:12px; }
+  .hero-console { display:grid; align-content:space-between; gap:18px; padding:18px; border:1px solid var(--line); border-radius:var(--radius); background:linear-gradient(180deg,rgba(255,255,255,.11),rgba(255,255,255,.045)); box-shadow:var(--shadow); }
+  .console-title { color:#f0d89f; font-size:12px; text-transform:uppercase; letter-spacing:.12em; }
+  .console-steps { display:grid; gap:10px; }
+  .console-step { display:grid; grid-template-columns:32px 1fr; gap:10px; align-items:center; padding:10px; border:1px solid rgba(255,255,255,.13); border-radius:var(--radius); background:rgba(0,0,0,.18); }
+  .console-step b { display:grid; place-items:center; width:32px; height:32px; border-radius:50%; background:#f5f2ea; color:#111; font-size:13px; }
+  .console-step strong { display:block; font-size:14px; line-height:1.2; }
+  .console-step span { display:block; margin-top:3px; color:var(--muted); font-size:12px; line-height:1.35; }
+  .console-status { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .console-status span { padding:10px; border:1px solid rgba(88,215,255,.18); border-radius:var(--radius); background:rgba(88,215,255,.07); color:#dce4eb; font-size:12px; line-height:1.3; }
+  .console-status strong { display:block; color:#fff; font-size:18px; line-height:1; margin-bottom:4px; }
+  .workspace { display:grid; grid-template-columns:minmax(300px,400px) minmax(0,1fr); gap:16px; padding:16px clamp(18px,5vw,64px) clamp(38px,6vw,72px); align-items:start; }
+  .workspace > aside.panel { position:sticky; top:88px; max-height:calc(100vh - 108px); overflow:auto; }
+  .panel { min-width:0; border:1px solid var(--line); border-radius:var(--radius); background:rgba(18,22,27,.84); box-shadow:var(--shadow); overflow:hidden; }
+  .panel-head { display:flex; justify-content:space-between; gap:16px; align-items:center; padding:16px 18px; border-bottom:1px solid var(--line); background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.025)); }
   .panel-head h2 { margin:0; font-size:18px; line-height:1.2; }
-  .panel-head span { color:#cdd8ff; font-size:12px; line-height:1.45; }
+  .panel-head span { display:inline-flex; align-items:center; min-height:26px; padding:5px 8px; border:1px solid rgba(88,215,255,.25); border-radius:999px; color:#cdd8ff; background:rgba(88,215,255,.08); font-size:12px; line-height:1.45; }
   .form { display:grid; gap:14px; padding:18px; }
   .field { display:grid; gap:7px; min-width:0; }
-  label { color:#d8dee6; font-size:13px; }
-  input,textarea,select { width:100%; min-height:40px; border:1px solid rgba(255,255,255,.15); border-radius:0; background:#0e1216; color:var(--ink); padding:10px 11px; font:inherit; font-size:14px; outline:none; }
+  label { color:#d8dee6; font-size:13px; font-weight:600; }
+  input,textarea,select { width:100%; min-height:40px; border:1px solid rgba(255,255,255,.15); border-radius:6px; background:rgba(10,13,17,.9); color:var(--ink); padding:10px 11px; font:inherit; font-size:14px; outline:none; transition:border-color .18s ease,box-shadow .18s ease,background .18s ease; }
   textarea { min-height:92px; resize:vertical; line-height:1.5; }
-  input:focus,textarea:focus,select:focus { border-color:rgba(220,166,66,.72); }
+  input:focus,textarea:focus,select:focus { border-color:rgba(220,166,66,.72); background:#0d1116; box-shadow:0 0 0 3px rgba(220,166,66,.13); }
   .fields-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   [hidden] { display:none !important; }
   .actions { display:flex; flex-wrap:wrap; gap:10px; padding-top:4px; }
-  button { min-height:42px; display:inline-flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,.18); border-radius:0; background:rgba(255,255,255,.08); color:#fff; padding:10px 14px; font:inherit; font-size:14px; cursor:pointer; }
-  button.primary { border-color:var(--red); background:var(--red); }
-  button:hover { border-color:rgba(220,166,66,.72); }
-  .main-grid { display:grid; grid-template-columns:minmax(0,.95fr) minmax(320px,1.05fr); gap:16px; min-width:0; }
+  button { min-height:42px; display:inline-flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,.18); border-radius:var(--radius); background:rgba(255,255,255,.08); color:#fff; padding:10px 14px; font:inherit; font-size:14px; cursor:pointer; transition:transform .18s ease,border-color .18s ease,background .18s ease; }
+  button.primary { border-color:var(--red); background:linear-gradient(135deg,var(--red),#ef5b2a); box-shadow:0 14px 36px rgba(215,25,32,.22); }
+  button:hover { transform:translateY(-1px); border-color:rgba(220,166,66,.72); background:rgba(220,166,66,.12); }
+  .main-grid { display:grid; grid-template-columns:1fr; gap:16px; min-width:0; }
+  .main-grid .panel:first-child { display:grid; grid-template-rows:auto auto; }
   .chart-wrap { padding:18px; }
-  canvas { width:100%; height:auto; max-width:100%; aspect-ratio:1; display:block; background:#0e1216; border:1px solid rgba(255,255,255,.1); }
-  .stats { display:grid; grid-template-columns:repeat(4,1fr); border-top:1px solid var(--line); }
+  #curveCanvas { width:min(100%,560px); margin:auto; }
+  canvas { width:100%; height:auto; max-width:100%; aspect-ratio:1; display:block; background:#0e1216; border:1px solid rgba(255,255,255,.1); border-radius:6px; }
+  .stats { display:grid; grid-template-columns:repeat(4,1fr); border-top:1px solid var(--line); background:rgba(255,255,255,.035); }
   .stat { min-height:86px; padding:14px; border-right:1px solid var(--line); }
   .stat:last-child { border-right:0; }
   .stat strong { display:block; font-size:22px; line-height:1.15; }
   .stat span { display:block; margin-top:5px; color:var(--muted); font-size:12px; line-height:1.35; }
-  .preview { height:596px; margin:0; padding:16px; overflow:auto; color:#dbe3ea; background:#080a0d; border:0; font-family:"Cascadia Mono",Consolas,monospace; font-size:12px; line-height:1.55; white-space:pre; }
+  .preview { height:420px; margin:0; padding:16px; overflow:auto; color:#dbe3ea; background:linear-gradient(180deg,#080a0d,#0b0f14); border:0; font-family:"Cascadia Mono",Consolas,monospace; font-size:12px; line-height:1.55; white-space:pre; tab-size:2; }
   .upload { padding:18px; border-top:1px solid var(--line); }
   .upload input { min-height:auto; padding:11px; }
-  .notes { color:var(--muted); font-size:12px; line-height:1.55; padding:0 18px 18px; }
+  .notes { margin:0; color:var(--muted); font-size:12px; line-height:1.55; padding:0 18px 18px; }
   .report { padding:0 clamp(18px,5vw,64px) 72px; }
   .report.hidden { display:none; }
-  .report-shell { background:#f7f7f5; color:#111; border:1px solid rgba(0,0,0,.12); padding:26px; display:grid; gap:22px; }
+  .report-shell { background:#f7f7f5; color:#111; border:1px solid rgba(0,0,0,.12); border-radius:var(--radius); padding:26px; display:grid; gap:22px; box-shadow:0 24px 60px rgba(0,0,0,.28); }
   .report-title { display:flex; justify-content:space-between; gap:18px; align-items:flex-start; border-bottom:2px solid #111; padding-bottom:14px; }
   .report-title h2 { margin:0; font-size:22px; }
   .report-title span { font-size:13px; color:#333; text-align:right; overflow-wrap:anywhere; }
-  .report-page { background:#fff; border:1px solid #d8d8d8; padding:20px; min-height:260px; overflow:hidden; }
+  .report-page { background:#fff; border:1px solid #d8d8d8; border-radius:6px; padding:20px; min-height:260px; overflow:hidden; }
   .report-page h3 { margin:0 0 14px; font-size:16px; letter-spacing:.02em; }
   .report-page pre { margin:0; white-space:pre-wrap; overflow-wrap:anywhere; font-family:Consolas,"Courier New",monospace; font-size:12px; line-height:1.45; }
   .report-page table { width:100%; border-collapse:collapse; font-size:13px; }
@@ -72,7 +88,7 @@
   .table-scroll { overflow:auto; max-height:520px; border:1px solid #e5e5e5; -webkit-overflow-scrolling:touch; }
   .wide-table { min-width:560px; }
   #reportPolar { background:#fff; border:1px solid #222; }
-  @media (max-width:1120px) { .workspace,.main-grid { grid-template-columns:1fr; } }
+  @media (max-width:1120px) { .hero,.workspace,.main-grid { grid-template-columns:1fr; } .workspace > aside.panel { position:static; max-height:none; } }
   @media (max-width:860px) { .topbar { flex-wrap:wrap; } .language-control { margin-left:0; } }
   @media (max-width:700px) {
     .topbar { align-items:flex-start; flex-direction:column; padding:14px 16px; gap:12px; }
@@ -81,6 +97,8 @@
     .language-control { width:100%; justify-content:space-between; }
     .language-control select { min-width:120px; }
     .hero { padding:26px 16px 12px; }
+    .hero-console { padding:14px; }
+    .console-status { grid-template-columns:1fr; }
     .eyebrow { font-size:11px; letter-spacing:.1em; }
     .eyebrow::before { width:24px; }
     h1 { font-size:34px; line-height:1.04; }
@@ -129,7 +147,29 @@
   </header>
   <main>
     <section class="hero">
-      <div class="hero-inner"><div class="eyebrow">Photometric file generator</div><h1>Generate, inspect and export IES files.</h1><p>Input luminaire parameters, build a photometric file, preview the curve, and generate indoor report pages only after you ask for them.</p></div>
+      <div class="hero-inner">
+        <div class="eyebrow">Photometric file generator</div>
+        <h1>Generate, inspect and export IES files.</h1>
+        <p>Input luminaire parameters, build a photometric file, preview the curve, and generate indoor report pages only after you ask for them.</p>
+        <div class="hero-pills" aria-label="IES editor capabilities">
+          <span>Type C curve preview</span>
+          <span>IES text export</span>
+          <span>Indoor report output</span>
+        </div>
+      </div>
+      <aside class="hero-console" aria-label="IES editor workflow">
+        <div class="console-title">Workflow</div>
+        <div class="console-steps">
+          <div class="console-step"><b>1</b><span><strong>Define</strong><span>Enter luminaire geometry and flux data.</span></span></div>
+          <div class="console-step"><b>2</b><span><strong>Preview</strong><span>Inspect the polar curve and generated text.</span></span></div>
+          <div class="console-step"><b>3</b><span><strong>Export</strong><span>Download IES/LDT or create the report.</span></span></div>
+        </div>
+        <div class="console-status">
+          <span><strong>Type C</strong>default</span>
+          <span><strong>1 deg</strong>resolution</span>
+          <span><strong>PDF</strong>report ready</span>
+        </div>
+      </aside>
     </section>
     <section class="workspace" id="generator">
       <aside class="panel">
