@@ -67,6 +67,14 @@
     }
   }
 
+  function loadOneDegreeGenerator() {
+    if (document.querySelector('script[data-generator-one-degree="true"]')) return;
+    const script = document.createElement('script');
+    script.src = 'generator-1deg.js';
+    script.dataset.generatorOneDegree = 'true';
+    document.body.appendChild(script);
+  }
+
   function bind() {
     const shape = $('surfaceShape');
     const diameter = $('diameter');
@@ -74,6 +82,7 @@
     if (diameter) diameter.addEventListener('input', () => syncDimensionsFromShape(true));
     applyLanguage();
     syncDimensionsFromShape(false);
+    loadOneDegreeGenerator();
   }
 
   window.addEventListener('DOMContentLoaded', bind);
