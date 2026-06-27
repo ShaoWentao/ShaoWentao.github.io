@@ -94,8 +94,11 @@
     $('fullReportPrintBtn').addEventListener('click', () => {
       const frame = $('fullReportFrame');
       if (frame && frame.contentWindow) {
-        frame.contentWindow.focus();
-        frame.contentWindow.print();
+        preparePrintLayout(frame);
+        setTimeout(() => {
+          frame.contentWindow.focus();
+          frame.contentWindow.print();
+        }, 80);
       }
     });
     $('fullReportReloadBtn').addEventListener('click', () => loadFullReport());
@@ -157,8 +160,13 @@
         .editor-report-scale-shell .paper { margin:0 0 24px !important; }
       }
       @media print {
-        .editor-report-scale-holder { width:auto !important; height:auto !important; margin:0 !important; overflow:visible !important; }
-        .editor-report-scale-shell { width:auto !important; transform:none !important; }
+        @page { size:A4; margin:0; }
+        html, body { width:210mm !important; min-width:210mm !important; height:auto !important; margin:0 !important; padding:0 !important; overflow:visible !important; background:#fff !important; }
+        .topbar, .panel { display:none !important; }
+        .layout, .paper-wrap, .editor-report-scale-holder, .editor-report-scale-shell, #extraPages { display:block !important; width:210mm !important; max-width:210mm !important; height:auto !important; margin:0 !important; padding:0 !important; border:0 !important; overflow:visible !important; background:#fff !important; transform:none !important; }
+        .paper { width:210mm !important; height:297mm !important; min-height:297mm !important; max-height:297mm !important; margin:0 !important; padding:12mm 14mm 10mm !important; box-shadow:none !important; overflow:hidden !important; contain:none !important; content-visibility:visible !important; break-inside:avoid-page !important; page-break-inside:avoid !important; break-after:page !important; page-break-after:always !important; }
+        .paper:last-child, #extraPages .paper:last-child { break-after:auto !important; page-break-after:auto !important; }
+        .render-progress { display:none !important; }
       }
     `;
     doc.head.appendChild(style);
@@ -207,6 +215,28 @@
     lastScale = scale;
     lastPaperWidth = paperWidth;
     return true;
+  }
+
+  function preparePrintLayout(frame) {
+    try {
+      const doc = frame.contentDocument;
+      if (!doc) return;
+      injectEmbeddedStyle(doc);
+      ensureReportScaleWrapper(doc);
+      const papers = Array.from(doc.querySelectorAll('.editor-report-scale-shell .paper'));
+      papers.forEach((paper, index) => {
+        const isLast = index === papers.length - 1;
+        paper.style.width = '210mm';
+        paper.style.height = '297mm';
+        paper.style.minHeight = '297mm';
+        paper.style.maxHeight = '297mm';
+        paper.style.margin = '0';
+        paper.style.breakInside = 'avoid-page';
+        paper.style.pageBreakInside = 'avoid';
+        paper.style.breakAfter = isLast ? 'auto' : 'page';
+        paper.style.pageBreakAfter = isLast ? 'auto' : 'always';
+      });
+    } catch (error) {}
   }
 
   function resizeFrame(frame) {
