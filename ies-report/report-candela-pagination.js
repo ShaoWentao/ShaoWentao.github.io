@@ -3,7 +3,8 @@
     sourceName: '',
     fileText: '',
     running: false,
-    lastSignature: ''
+    lastSignature: '',
+    reading: false
   };
 
   function $(selector, root = document) {
@@ -155,9 +156,7 @@
   function targetCPlanes(data) {
     const source = sortedUnique(data.horizontalAngles || []);
     if (source.length <= 1) return [0];
-    if (source.length <= 12) return source;
-    const standard = [0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180, 195, 210, 225, 240, 255, 270, 285, 300, 315, 330, 345];
-    return standard.filter((angle) => angle <= Math.max(...source) + 0.001 || Math.max(...source) >= 359);
+    return source;
   }
 
   function cloneOuter(selector, sourcePage) {
@@ -201,6 +200,15 @@
     return { verticalAngles, horizontalAngles: headerCells, photometricType: 1, candela };
   }
 
+  function isEmbeddedMode() {
+    return /(?:\?|&)embedded=1(?:&|$)/.test(window.location.search || '');
+  }
+
+  function hasPendingIESFile() {
+    const input = document.getElementById('iesFile');
+    return !!(input && input.files && input.files[0]);
+  }
+
   function updatePageNumbers() {
     const papers = $all('.paper');
     const total = papers.length;
@@ -222,6 +230,10 @@
 
   function paginateCandelaTable() {
     if (STATE.running) return;
+    if (!STATE.fileText && (STATE.reading || isEmbeddedMode() || hasPendingIESFile())) {
+      if (hasPendingIESFile() && !STATE.reading) readCurrentFile();
+      return;
+    }
     const sourcePage = $('.candela-page:not(.candela-auto-page)');
     if (!sourcePage) return;
     const sourceTable = $('.candela-distribution-table', sourcePage);
@@ -273,10 +285,16 @@
     const input = document.getElementById('iesFile');
     const file = input && input.files && input.files[0];
     if (!file) return;
+    STATE.reading = true;
     STATE.sourceName = file.name || '';
     const reader = new FileReader();
     reader.onload = () => {
       STATE.fileText = String(reader.result || '');
+      STATE.reading = false;
+      schedulePaginate(300);
+    };
+    reader.onerror = () => {
+      STATE.reading = false;
       schedulePaginate(300);
     };
     reader.readAsText(file);

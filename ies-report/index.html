@@ -12,29 +12,28 @@
     display: grid;
     place-items: center;
     background:
-      radial-gradient(ellipse at 72% 22%, rgba(228,184,91,.18), transparent 36%),
-      radial-gradient(ellipse at 20% 80%, rgba(104,216,255,.12), transparent 38%),
-      linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px),
+      linear-gradient(rgba(0,0,0,.028) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,0,0,.022) 1px, transparent 1px),
+      linear-gradient(180deg, rgba(255,255,255,.72), rgba(250,247,243,.94)),
       url("../assets/home/moss-wood.jpg") center/cover no-repeat,
-      #050505;
-    background-size: auto, auto, 48px 48px, 48px 48px, cover, auto;
-    color: #f5f2ea;
+      #fbfaf8;
+    background-size: 48px 48px, 48px 48px, auto, cover, auto;
+    color: #272520;
     font-family: Inter, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
   }
   .loader {
     max-width: 620px;
     margin: 24px;
     padding: 30px 34px;
-    border: 1px solid rgba(255,255,255,.16);
+    border: 1px solid #e2dbcf;
     border-radius: 8px;
-    background: linear-gradient(145deg, rgba(255,255,255,.085), rgba(255,255,255,.035));
-    box-shadow: 0 26px 90px rgba(0,0,0,.46);
+    background: rgba(255,255,255,.76);
+    box-shadow: 0 24px 60px rgba(57,46,28,.12);
     backdrop-filter: blur(18px);
     line-height: 1.7;
   }
   .loader strong { display:block; font-family: Georgia, "Times New Roman", serif; font-size: 30px; font-weight: 500; line-height: 1.1; margin-bottom: 10px; }
-  .loader p { margin: 0; color: rgba(235,239,245,.7); font-size: 13px; }
+  .loader p { margin: 0; color: #6f6a62; font-size: 13px; }
 </style>
 </head>
 <body>
@@ -51,8 +50,8 @@
   ];
 
   const modules = [
-    'report-fixed-footer-layout.js?v=20260627',
-    'report-candela-pagination.js?v=20260627'
+    'report-fixed-footer-layout.js?v=20260628',
+    'report-candela-pagination.js?v=20260628'
   ];
 
   const visualRefreshStyle = `
@@ -60,22 +59,31 @@
   @media screen {
     body {
       background:
-        radial-gradient(ellipse at 72% 22%, rgba(228,184,91,.15), transparent 36%),
-        radial-gradient(ellipse at 20% 80%, rgba(104,216,255,.1), transparent 38%),
-        url("../assets/home/dark-wood.jpg") center/cover fixed no-repeat,
-        #050505 !important;
-      color: #f7f1e7 !important;
+        linear-gradient(rgba(0,0,0,.028) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,.022) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(255,255,255,.78), rgba(250,247,243,.96)),
+        url("../assets/home/moss-wood.jpg") center/cover fixed no-repeat,
+        #fbfaf8 !important;
+      background-size: 48px 48px, 48px 48px, auto, cover, auto !important;
+      color: #272520 !important;
     }
     .topbar {
-      background: linear-gradient(to bottom, rgba(0,0,0,.84), rgba(0,0,0,.48)) !important;
-      border-bottom: 1px solid rgba(255,255,255,.12) !important;
+      background: rgba(255,255,255,.86) !important;
+      border-bottom: 1px solid #eee9e0 !important;
       backdrop-filter: blur(18px);
+    }
+    .topbar,
+    .topbar a,
+    .topbar span,
+    .topbar strong,
+    nav a {
+      color: #272520 !important;
     }
     .panel,
     aside {
-      background: linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.035)) !important;
-      border-color: rgba(255,255,255,.15) !important;
-      box-shadow: 0 26px 90px rgba(0,0,0,.42) !important;
+      background: rgba(255,255,255,.86) !important;
+      border-color: #e2dbcf !important;
+      box-shadow: 0 24px 60px rgba(57,46,28,.12) !important;
       backdrop-filter: blur(18px);
     }
     button,
@@ -87,17 +95,24 @@
     }
     button.primary,
     .primary {
-      border-color: rgba(228,184,91,.72) !important;
-      background: linear-gradient(135deg,#e4b85b,#ff6b25) !important;
-      color: #120d08 !important;
+      border-color: #26231e !important;
+      background: #26231e !important;
+      color: #fff !important;
       font-weight: 800 !important;
     }
     input,
     select,
     textarea {
-      background: rgba(0,0,0,.42) !important;
-      border-color: rgba(255,255,255,.16) !important;
-      color: #f7f1e7 !important;
+      background: #fbfaf8 !important;
+      border-color: #ddd4c7 !important;
+      color: #272520 !important;
+    }
+    label,
+    .field label,
+    .form label,
+    .panel label,
+    aside label {
+      color: #3a352e !important;
     }
     .paper,
     .paper * {
