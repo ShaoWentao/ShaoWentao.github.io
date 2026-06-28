@@ -189,8 +189,8 @@
     const style = document.createElement('style');
     style.id = 'surface-shape-style';
     style.textContent = `
-      #surfaceShape, #surfaceDiameter { width:100%; min-height:40px; border:1px solid rgba(255,255,255,.15); border-radius:0; background:#0e1216; color:#f5f2ea; padding:10px 11px; font:inherit; font-size:14px; outline:none; }
-      #surfaceShape:focus, #surfaceDiameter:focus { border-color:rgba(220,166,66,.72); }
+      #surfaceShape, #surfaceDiameter { width:100%; min-height:40px; border:1px solid #ddd4c7; border-radius:8px; background:#fbfaf8; color:#272520; padding:10px 11px; font:inherit; font-size:14px; outline:none; }
+      #surfaceShape:focus, #surfaceDiameter:focus { border-color:#c68a36; box-shadow:0 0 0 3px rgba(198,138,54,.14); }
     `;
     document.head.appendChild(style);
   }

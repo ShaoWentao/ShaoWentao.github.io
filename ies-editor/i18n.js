@@ -13,11 +13,12 @@
       navPreview: 'Preview',
       navReport: 'IES Report',
       eyebrow: 'Photometric file generator',
-      heroTitle: 'Generate, inspect and export IES files.',
-      heroDesc: 'Input luminaire parameters, build a photometric file, preview the curve, and generate indoor report pages only after you ask for them.',
-      pillCurve: 'Type C curve preview',
-      pillExport: 'IES text export',
-      pillReport: 'Indoor report output',
+      heroTitle: 'IES File Generator',
+      heroDesc: 'Generate a photometric file from luminaire parameters, preview Type C distribution curves, and export clean report pages when needed.',
+      actionGenerate: 'Generate IES',
+      actionPreview: 'Preview Curve',
+      actionReport: 'Open Report Tool',
+      sectionTitle: 'Build photometric files with a cleaner workflow',
       generatorTitle: 'Generator Inputs',
       generatorBadge: 'CDN default',
       manufacturer: 'Luminaire manufacturer',
@@ -68,11 +69,12 @@
       navPreview: '预览',
       navReport: 'IES 报告',
       eyebrow: '配光文件生成器',
-      heroTitle: '生成、检查并导出 IES 文件。',
-      heroDesc: '输入灯具参数，生成配光文件，预览配光曲线，并在需要时生成室内照明报告页面。',
-      pillCurve: 'Type C 曲线预览',
-      pillExport: 'IES 文本导出',
-      pillReport: '室内报告输出',
+      heroTitle: 'IES 文件生成器',
+      heroDesc: '根据灯具参数生成配光文件，预览 Type C 配光曲线，并在需要时导出清爽专业的报告页面。',
+      actionGenerate: '生成 IES',
+      actionPreview: '预览曲线',
+      actionReport: '打开报告工具',
+      sectionTitle: '用更清晰的流程生成配光文件',
       generatorTitle: '生成参数',
       generatorBadge: 'CDN 默认',
       manufacturer: '灯具制造商',
@@ -146,10 +148,11 @@
     setText('.eyebrow', t(finalLang, 'eyebrow'));
     setText('.hero h1', t(finalLang, 'heroTitle'));
     setText('.hero p', t(finalLang, 'heroDesc'));
-    const heroPills = document.querySelectorAll('.hero-pills span');
-    if (heroPills[0]) heroPills[0].textContent = t(finalLang, 'pillCurve');
-    if (heroPills[1]) heroPills[1].textContent = t(finalLang, 'pillExport');
-    if (heroPills[2]) heroPills[2].textContent = t(finalLang, 'pillReport');
+    const heroActions = document.querySelectorAll('.hero-actions a');
+    if (heroActions[0]) heroActions[0].textContent = t(finalLang, 'actionGenerate');
+    if (heroActions[1]) heroActions[1].textContent = t(finalLang, 'actionPreview');
+    if (heroActions[2]) heroActions[2].textContent = t(finalLang, 'actionReport');
+    setText('.section-title', t(finalLang, 'sectionTitle'));
     setText('aside.panel .panel-head h2', t(finalLang, 'generatorTitle'));
     setText('aside.panel .panel-head span', t(finalLang, 'generatorBadge'));
 

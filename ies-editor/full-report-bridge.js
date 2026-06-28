@@ -27,7 +27,7 @@
     const zh = currentLanguage() === 'zh';
     const dict = {
       title: zh ? '完整光度报告' : 'Full Photometric Report',
-      hint: zh ? '点击“生成 IES 报告”后，这里会直接载入完整报告页面。原 ies-report 独立页面仍然保留。' : 'After clicking Generate IES Report, the full report page is loaded here. The standalone ies-report page remains unchanged.',
+      hint: '',
       loading: zh ? '正在生成完整报告...' : 'Generating full report...',
       ready: zh ? '完整报告已生成，可在下方预览或打印保存 PDF。' : 'Full report generated. Preview below or print/save as PDF.',
       noIES: zh ? '没有可用的 IES 文本，请先生成或上传 IES。' : 'No IES text available. Generate or upload an IES file first.',
@@ -79,7 +79,6 @@
         <div class="full-report-head">
           <div>
             <h2 id="fullReportTitle"></h2>
-            <p id="fullReportHint"></p>
           </div>
           <div class="full-report-actions">
             <button type="button" id="fullReportPrintBtn"></button>
@@ -107,11 +106,9 @@
 
   function updateLabels() {
     const title = $('fullReportTitle');
-    const hint = $('fullReportHint');
     const printBtn = $('fullReportPrintBtn');
     const reloadBtn = $('fullReportReloadBtn');
     if (title) title.textContent = label('title');
-    if (hint) hint.textContent = label('hint');
     if (printBtn) printBtn.textContent = label('print');
     if (reloadBtn) reloadBtn.textContent = label('reload');
   }

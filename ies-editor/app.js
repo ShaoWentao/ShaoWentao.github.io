@@ -365,7 +365,7 @@
     targetCanvas.height = Math.round(cssSize * ratio);
     targetCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
     targetCtx.clearRect(0, 0, cssSize, cssSize);
-    targetCtx.fillStyle = showDark ? '#0e1216' : '#ffffff';
+    targetCtx.fillStyle = showDark ? '#f8f4ee' : '#ffffff';
     targetCtx.fillRect(0, 0, cssSize, cssSize);
     const curves = curvesOf(data);
     const peak = peakOf(data);
@@ -376,7 +376,7 @@
     const cx = cssSize / 2;
     const cy = top + available / 2;
     const radius = Math.max(72, Math.min(cssSize * 0.34, available / 2 - 18));
-    targetCtx.strokeStyle = showDark ? 'rgba(255,255,255,0.13)' : '#222';
+    targetCtx.strokeStyle = showDark ? 'rgba(59,54,48,0.16)' : '#222';
     targetCtx.lineWidth = 1;
     for (let ring = 1; ring <= 4; ring += 1) {
       targetCtx.beginPath();
@@ -390,7 +390,7 @@
       targetCtx.lineTo(cx + Math.sin(rad) * radius, cy + Math.cos(rad) * radius);
       targetCtx.stroke();
     }
-    targetCtx.fillStyle = showDark ? '#aeb7c2' : '#111';
+    targetCtx.fillStyle = showDark ? '#6f6a62' : '#111';
     targetCtx.font = '12px Segoe UI, Arial';
     targetCtx.textAlign = 'center';
     targetCtx.textBaseline = 'middle';
@@ -414,10 +414,10 @@
     const beam = beamAngleFromPoints(curves[0]?.points || []);
     targetCtx.textAlign = 'left';
     targetCtx.textBaseline = 'alphabetic';
-    targetCtx.fillStyle = showDark ? '#dce4eb' : '#111';
+    targetCtx.fillStyle = showDark ? '#26231e' : '#111';
     targetCtx.font = '18px Segoe UI, Arial';
     targetCtx.fillText(title, 28, 34);
-    targetCtx.fillStyle = showDark ? '#aeb7c2' : '#222';
+    targetCtx.fillStyle = showDark ? '#6f6a62' : '#222';
     targetCtx.font = '13px Segoe UI, Arial';
     targetCtx.fillText(subtitle, 28, 56);
     targetCtx.fillText(`Beam angle: ${fmt(beam, 2)}°`, 28, 76);
@@ -436,7 +436,7 @@
     $('efficacy').textContent = data.power > 0 ? `${fmt(flux / data.power, 1)} lm/W` : '-';
     $('beamValue').textContent = `${fmt(beam, 2)}°`;
     $('beamLabel').textContent = `${typeName(data.photometricType)} / H ${fmt(data.horizontalAngles[0], 1)} to ${fmt(data.horizontalAngles[data.horizontalAngles.length - 1], 1)} / V ${fmt(data.verticalAngles[0], 1)} to ${fmt(data.verticalAngles[data.verticalAngles.length - 1], 1)} / Beam ${fmt(beam, 2)}°`;
-    drawPolar(canvas, ctx, data, data.fileName ? 'Uploaded IES curves' : 'Generated IES curve', `Red: ${curvesOf(data)[0].label} / Blue: ${curvesOf(data)[1]?.label || '-'}`, `Global peak ${fmt(peak.value, 1)} cd @ H${fmt(peak.hAngle, 1)} / V${fmt(peak.vAngle, 1)}`, true);
+    drawPolar(canvas, ctx, data, 'Photometric distribution curves', `Red: ${curvesOf(data)[0].label} / Blue: ${curvesOf(data)[1]?.label || '-'}`, `Global peak ${fmt(peak.value, 1)} cd @ H${fmt(peak.hAngle, 1)} / V${fmt(peak.vAngle, 1)}`, true);
   }
 
   function hideReport() {
