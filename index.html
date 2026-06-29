@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Shao Wentao | Digital Lighting Portfolio</title>
-<meta name="description" content="A visual index for lighting brand pages, product storytelling, newsletter archives, and browser-based lighting tools.">
+<title>Digital Lighting Workspace | Shao Wentao</title>
+<meta name="description" content="A unified workspace for lighting brand pages, newsletter archives, and browser-based IES tools.">
 <style>
   :root {
     --bg: #050505;
@@ -701,20 +701,201 @@
       flex-direction: column;
     }
   }
+
+  /* Unified light workspace theme, aligned with the IES tool pages. */
+  :root {
+    --bg: #fbfaf8;
+    --ink: #272520;
+    --muted: #6f6a62;
+    --soft: rgba(38, 35, 30, 0.08);
+    --line: #e4ded4;
+    --gold: #c68a36;
+    --ember: #d85f22;
+    --green: #2f6f57;
+    --panel: rgba(255, 255, 255, 0.78);
+    --panel-strong: rgba(255, 255, 255, 0.9);
+    --shadow: 0 24px 60px rgba(57,46,28,.12);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+  }
+
+  .site {
+    background:
+      linear-gradient(rgba(0,0,0,.028) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,0,0,.022) 1px, transparent 1px),
+      linear-gradient(180deg, #fff 0, #fbfaf8 42%, #f7f2ea 100%);
+    background-size: 48px 48px, 48px 48px, auto;
+  }
+
+  .nav {
+    background: rgba(255,255,255,.86);
+    border-bottom: 1px solid #eee9e0;
+    box-shadow: 0 18px 45px rgba(57,46,28,.08);
+  }
+
+  .brand-mark {
+    border-color: #ded5c7;
+    color: #fff;
+    background: #26231e;
+    box-shadow: none;
+  }
+
+  .brand-name span,
+  .nav-links,
+  .hero-copy p,
+  .signal-board span,
+  .quick-routes span span,
+  .reveal p,
+  .section-head p,
+  .project p,
+  .tool p,
+  .newsletter span,
+  .footer {
+    color: var(--muted);
+  }
+
+  .nav-links a:hover {
+    color: #111;
+    border-color: #ded5c7;
+    background: #f4efe7;
+  }
+
+  .hero {
+    min-height: 760px;
+    background: #fbfaf8;
+  }
+
+  .hero-video {
+    opacity: .74;
+    filter: saturate(.82) contrast(.96) brightness(1.1);
+  }
+
+  .hero::before {
+    background:
+      linear-gradient(90deg, rgba(255,255,255,.9), rgba(255,255,255,.72) 46%, rgba(250,247,243,.92)),
+      linear-gradient(to bottom, rgba(255,255,255,.72), transparent 36%, #fbfaf8 100%);
+  }
+
+  .hero::after {
+    background: linear-gradient(90deg, transparent, rgba(38,35,30,.2), transparent);
+  }
+
+  .kicker,
+  .section-label,
+  .signal-board small,
+  .quick-routes b,
+  .tag,
+  .newsletter small,
+  .tool-icon {
+    color: #8a6a3e;
+  }
+
+  .kicker::before {
+    background: #c9bca9;
+  }
+
+  h1,
+  .reveal h2,
+  .section h2 {
+    color: #272520;
+    text-shadow: none;
+  }
+
+  .btn {
+    border-color: rgba(38,35,30,.28);
+    color: #26231e;
+    background: rgba(255,255,255,.56);
+    backdrop-filter: blur(10px);
+  }
+
+  .btn.primary {
+    border-color: #26231e;
+    background: #26231e;
+    color: #fff;
+  }
+
+  .btn:hover {
+    border-color: #26231e;
+    background: #f3eee6;
+  }
+
+  .signal-board {
+    border-left-color: #c68a36;
+  }
+
+  .quick-routes a,
+  .project,
+  .tool,
+  .newsletter {
+    border-color: #e2dbcf;
+    background: var(--panel);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(18px);
+  }
+
+  .quick-routes a:hover,
+  .project:hover,
+  .tool:hover,
+  .newsletter:hover {
+    border-color: #c9bca9;
+    background: rgba(255,255,255,.92);
+  }
+
+  .project-media {
+    background: #f1eee8;
+  }
+
+  .open-link {
+    color: #26231e;
+    font-weight: 700;
+  }
+
+  .tool {
+    background:
+      linear-gradient(135deg, rgba(198,138,54,.12), transparent 38%),
+      rgba(255,255,255,.78);
+  }
+
+  .tool-icon {
+    border-color: #ded5c7;
+    background: #fbfaf8;
+  }
+
+  .reveal {
+    background: #fbfaf8;
+  }
+
+  .reveal::before {
+    background:
+      linear-gradient(90deg, rgba(255,255,255,.88), rgba(255,255,255,.52) 54%, rgba(250,247,243,.94)),
+      linear-gradient(to bottom, #fbfaf8 0%, transparent 24%, transparent 72%, #fbfaf8 100%);
+  }
+
+  .section {
+    border-top-color: #eee9e0;
+  }
+
+  .footer {
+    border-top-color: #eee9e0;
+    background: rgba(255,255,255,.68);
+  }
 </style>
 </head>
 <body>
 <div class="site" id="top">
   <header class="nav">
     <a class="brand" href="#top" aria-label="Back to top">
-      <span class="brand-mark">SW</span>
+      <span class="brand-mark">DL</span>
       <span class="brand-name">
-        <strong>Shao Wentao</strong>
-        <span>Lighting pages and web tools</span>
+        <strong>Digital Lighting Workspace</strong>
+        <span>Pages, newsletters and IES tools</span>
       </span>
     </a>
     <nav class="nav-links" aria-label="Primary navigation">
-      <a href="#projects">Projects</a>
+      <a href="#projects">Pages</a>
       <a href="#tools">Tools</a>
       <a href="#newsletter">Newsletter</a>
       <a href="cdn-newsletter/Mayalit/202607/">Latest</a>
@@ -723,36 +904,36 @@
   </header>
 
   <main>
-    <section class="hero" aria-label="Portfolio introduction">
+    <section class="hero" aria-label="Workspace introduction">
       <video class="hero-video" autoplay muted loop playsinline poster="assets/home/dark-wood.jpg">
         <source src="assets/home/ambient-hero.mp4" type="video/mp4">
       </video>
       <div class="hero-layout">
         <div class="hero-copy">
-          <div class="kicker">Digital Lighting Portfolio</div>
-          <h1>Light, tools,<br>and stories<br>in one place.</h1>
+          <div class="kicker">Digital Lighting Workspace</div>
+          <h1>Lighting pages,<br>IES tools,<br>and newsletters.</h1>
           <p>
-            A visual gateway for CDN Lighting brand pages, BACH product launches, partner newsletters,
-            and browser tools for photometric file work.
+            A unified entry for CDN Lighting and Mayalit materials, product storytelling,
+            partner newsletters, and browser tools for photometric file work.
           </p>
           <div class="cta-row">
-            <a class="btn primary" href="#projects">Explore projects</a>
-            <a class="btn" href="ies-editor/">Open IES tool</a>
-            <a class="btn" href="cdn-newsletter/Mayalit/202607/">View latest newsletter</a>
+            <a class="btn primary" href="ies-editor/">Open IES Editor</a>
+            <a class="btn" href="ies-report/">Generate IES Report</a>
+            <a class="btn" href="#newsletter">Browse newsletters</a>
           </div>
         </div>
 
         <div class="hero-panel">
           <div class="signal-board">
-            <small>Live Work Index</small>
-            <strong>Built for fast access</strong>
-            <span>Every entry below links directly to a live page in this GitHub Pages repository.</span>
+            <small>Live Workspace Index</small>
+            <strong>Built for daily operation</strong>
+            <span>Every entry links directly to a live page in this GitHub Pages repository.</span>
           </div>
           <div class="quick-routes" aria-label="Quick routes">
             <a href="aboutCDN/"><b>01</b><span><strong>CDN Lighting</strong><span>Company and brand overview</span></span><span>></span></a>
             <a href="bach-flash/"><b>02</b><span><strong>BACH Flash</strong><span>Product storytelling page</span></span><span>></span></a>
             <a href="cdn-newsletter/Mayalit/202607/"><b>03</b><span><strong>Mayalit Newsletter</strong><span>Online training notice</span></span><span>></span></a>
-            <a href="ies-editor/"><b>04</b><span><strong>IES Browser Tool</strong><span>Generate, read and report</span></span><span>></span></a>
+            <a href="ies-editor/"><b>04</b><span><strong>IES Editor</strong><span>Generate and inspect files</span></span><span>></span></a>
           </div>
         </div>
       </div>
@@ -762,15 +943,15 @@
       <div class="reveal-bg"></div>
       <div class="reveal-mask"></div>
       <div class="reveal-copy">
-        <div class="section-label">Unveil the unseen</div>
-        <h2>From raw texture to living detail.</h2>
+        <div class="section-label">Workspace Surface</div>
+        <h2>A calm portal for active lighting work.</h2>
         <p>
-          The homepage now uses the provided visual materials as a living surface:
-          dark timber, ember lines, soft moss, and a cursor reveal that changes the mood as you move.
+          The homepage keeps its interactive reveal background while adopting the same light,
+          paper-like visual system used by the IES pages.
         </p>
         <div class="reveal-actions">
-          <a class="btn primary" href="#projects">Enter the archive</a>
-          <a class="btn" href="#newsletter">Browse newsletters</a>
+          <a class="btn primary" href="#tools">Open tools</a>
+          <a class="btn" href="#projects">View pages</a>
         </div>
       </div>
     </section>
@@ -778,10 +959,10 @@
     <section class="section" id="projects">
       <div class="section-head">
         <div>
-          <div class="section-label">Project Pages</div>
-          <h2>Brand and product work</h2>
+          <div class="section-label">Workspace Pages</div>
+          <h2>Brand, product and case pages</h2>
         </div>
-        <p>Selected pages from the repository, organized for quick inspection and reuse.</p>
+        <p>Selected live pages from the repository, organized for quick access and reuse.</p>
       </div>
 
       <div class="project-grid">
