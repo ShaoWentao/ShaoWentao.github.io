@@ -42,8 +42,8 @@
   .hero-actions a:hover { transform:translateY(-1px); border-color:#26231e; background:#f3eee6; }
   .hero-actions a:first-child:hover { background:#111; color:#fff; }
   .section-title { margin:0 auto 28px; text-align:center; font-size:clamp(26px,3vw,38px); font-weight:600; letter-spacing:0; }
-  .workspace { display:grid; grid-template-columns:minmax(300px,400px) minmax(0,1fr); gap:20px; max-width:1120px; margin:0 auto clamp(38px,6vw,72px); padding:38px clamp(18px,4vw,44px); align-items:start; border-radius:14px; background:#f1eee8; }
-  .workspace > aside.panel { align-self:start; }
+  .workspace { display:grid; grid-template-columns:minmax(300px,370px) minmax(0,1fr); gap:20px; max-width:1120px; margin:0 auto clamp(38px,6vw,72px); padding:32px clamp(18px,4vw,36px); align-items:start; border-radius:14px; background:#f1eee8; }
+  .workspace > aside.panel { align-self:start; margin:0; }
   .panel { min-width:0; border:1px solid #e2dbcf; border-radius:12px; background:#fff; box-shadow:var(--shadow); overflow:hidden; }
   .panel-head { display:flex; justify-content:space-between; gap:16px; align-items:center; padding:16px 18px; border-bottom:1px solid #eee7dc; background:#fff; }
   .panel-head h2 { margin:0; font-size:18px; line-height:1.2; }
@@ -55,16 +55,21 @@
   textarea { min-height:92px; resize:vertical; line-height:1.5; }
   input:focus,textarea:focus,select:focus { border-color:#c68a36; background:#fff; box-shadow:0 0 0 3px rgba(198,138,54,.14); }
   .fields-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .advanced-editor { display:grid; gap:10px; padding:12px; border:1px solid #e2dbcf; border-radius:10px; background:#fbfaf8; }
+  .advanced-editor table { width:100%; border-collapse:collapse; font-size:12px; }
+  .advanced-editor th,.advanced-editor td { padding:5px; border-bottom:1px solid #e6ded3; text-align:left; }
+  .advanced-editor input { min-height:34px; padding:7px 8px; font-size:12px; }
+  .advanced-editor .hint { margin:0; color:var(--muted); font-size:12px; line-height:1.5; }
   [hidden] { display:none !important; }
   .actions { display:flex; flex-wrap:wrap; gap:10px; padding-top:4px; }
   button { min-height:42px; display:inline-flex; align-items:center; justify-content:center; border:1px solid #cfc6b8; border-radius:999px; background:#fff; color:#26231e; padding:10px 15px; font:inherit; font-size:14px; cursor:pointer; transition:transform .18s ease,border-color .18s ease,background .18s ease,color .18s ease; }
   button.primary { border-color:#26231e; background:#26231e; color:#fff; font-weight:800; }
   button:hover { transform:translateY(-1px); border-color:#26231e; background:#f4efe7; }
-  .main-grid { display:grid; grid-template-columns:1fr; gap:20px; min-width:0; align-self:start; }
+  .main-grid { display:grid; grid-template-columns:1fr; gap:20px; min-width:0; align-self:start; margin:0; }
   .main-grid .panel:first-child { display:grid; grid-template-rows:auto auto; }
   .chart-wrap { padding:18px; }
   #curveCanvas { width:min(100%,560px); margin:auto; }
-  canvas { width:100%; height:auto; max-width:100%; aspect-ratio:1; display:block; background:#fbfaf8; border:1px solid #e3dbcf; border-radius:10px; }
+  canvas { width:100%; height:auto; max-width:100%; aspect-ratio:508/483; display:block; background:#fbfaf8; border:1px solid #e3dbcf; border-radius:10px; }
   .stats { display:grid; grid-template-columns:repeat(4,1fr); border-top:1px solid var(--line); background:#fbfaf8; }
   .stat { min-height:86px; padding:14px; border-right:1px solid var(--line); }
   .stat:last-child { border-right:0; }
@@ -88,7 +93,7 @@
   .table-scroll { overflow:auto; max-height:520px; border:1px solid #e5e5e5; -webkit-overflow-scrolling:touch; }
   .wide-table { min-width:560px; }
   #reportPolar { background:#fff; border:1px solid #222; }
-  @media (max-width:1120px) { .workspace,.main-grid { grid-template-columns:1fr; } }
+  @media (max-width:980px) { .workspace,.main-grid { grid-template-columns:1fr; } .workspace { max-width:720px; } }
   @media (max-width:860px) { .topbar { flex-wrap:wrap; } .language-control { margin-left:0; } }
   @media (max-width:700px) {
     html, body, .app, main { width:100%; max-width:100%; overflow-x:hidden; }
@@ -109,13 +114,17 @@
     .hero-actions { width:100%; max-width:352px; display:grid; grid-template-columns:minmax(0,1fr); gap:10px; margin-top:20px; }
     .hero-actions a { width:100%; min-width:0; max-width:100%; }
     .section-title { max-width:352px; margin-left:14px; margin-right:14px; text-align:left; font-size:25px; line-height:1.28; overflow-wrap:anywhere; }
-    .workspace { width:100%; max-width:390px; display:block; margin-left:0; margin-right:0; padding:12px 12px 38px; overflow:hidden; }
+    .workspace { width:calc(100% - 24px); max-width:430px; display:block; margin-left:auto; margin-right:auto; padding:12px 12px 32px; overflow:hidden; }
     .panel { max-width:100%; }
     .workspace > .panel, .main-grid > .panel { margin-bottom:12px; }
     .panel-head { align-items:flex-start; flex-direction:column; gap:6px; padding:14px; }
     .panel-head h2 { font-size:17px; }
     .form { padding:14px; gap:12px; }
     .fields-2 { grid-template-columns:1fr; gap:12px; }
+    .advanced-editor { padding:10px 8px; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    .advanced-editor table { min-width:320px; }
+    .advanced-editor th,.advanced-editor td { padding:4px; }
+    .advanced-editor input { min-height:32px; padding:6px; }
     .actions { display:grid; grid-template-columns:1fr; }
     button { width:100%; min-height:44px; }
     .upload { padding:14px; }
@@ -174,11 +183,32 @@
         <div class="panel-head"><h2>Generator Inputs</h2><span>CDN default</span></div>
         <form class="form" id="iesForm">
           <div class="field"><label for="manufacturer">Luminaire manufacturer</label><input id="manufacturer" value="CDN" autocomplete="organization"></div>
-          <div class="field"><label for="serial">Luminaire serial number</label><input id="serial" value="spot01"></div>
-          <div class="field"><label for="iesType">IES type</label><input id="iesType" value="Generated Type C / symmetric" readonly></div>
+          <div class="field"><label for="serial">Luminaire serial number</label><input id="serial" value="Downlight"></div>
+          <div class="field"><label for="iesType">IES type</label><select id="iesType"><option value="symmetric" selected>Type C / C0-C180 symmetric</option><option value="four-plane">Type C / C0-C90-C180-C270</option></select></div>
           <div class="fields-2"><div class="field"><label for="date">Date</label><input id="date" value="20260626" inputmode="numeric"></div><div class="field"><label for="ledCount">LED number</label><input id="ledCount" type="number" min="1" step="1" value="1"></div></div>
           <div class="fields-2"><div class="field"><label for="singleFlux">Flux for single LED</label><input id="singleFlux" type="number" min="0.01" step="0.01" value="1000"></div><div class="field"><label for="efficiency">Luminaire efficiency</label><input id="efficiency" type="number" min="0.01" max="1" step="0.01" value="1"></div></div>
-          <div class="fields-2"><div class="field"><label for="beamAngle">Beam angle</label><input id="beamAngle" type="number" min="0.01" max="120" step="0.01" value="120"></div><div class="field"><label for="power">Power of luminaire (W)</label><input id="power" type="number" min="0.01" step="0.01" value="10"></div></div>
+          <div class="fields-2"><div class="field"><label for="beamAngle">C0-180 beam angle</label><input id="beamAngle" type="number" min="0.01" max="120" step="0.01" value="36"></div><div class="field c90-beam-field" hidden><label for="beamAngleC90">C90-270 beam angle</label><input id="beamAngleC90" type="number" min="0.01" max="120" step="0.01" value="36"></div></div>
+          <div class="field"><label for="power">Power of luminaire (W)</label><input id="power" type="number" min="0.01" step="0.01" value="10"></div>
+          <div class="field"><label for="generationMode">Generation mode</label><select id="generationMode"><option value="simple" selected>Simple parameters</option><option value="advanced">Advanced angle table</option></select></div>
+          <div class="field"><label for="distributionShape">Distribution shape</label><select id="distributionShape"><option value="lambertian" selected>Lambertian / cosine</option><option value="soft">Soft teardrop</option><option value="standard">Standard teardrop</option><option value="sharp">Sharp teardrop</option><option value="very-sharp">Very sharp</option></select></div>
+          <div class="advanced-editor" id="advancedEditor" hidden>
+            <p class="hint">Input key angle candela values. The editor interpolates all 1° data and mirrors C0/C180, C90/C270.</p>
+            <table aria-label="Advanced candela table">
+              <thead><tr><th>Angle</th><th>C0-180 cd</th><th class="c90-col">C90-270 cd</th></tr></thead>
+              <tbody id="advancedRows">
+                <tr><td><input class="adv-angle" type="number" value="0" step="10"></td><td><input class="adv-c0" type="number" value="12000" step="0.01"></td><td class="c90-col"><input class="adv-c90" type="number" value="12000" step="0.01"></td></tr>
+                <tr><td><input class="adv-angle" type="number" value="10" step="10"></td><td><input class="adv-c0" type="number" value="6000" step="0.01"></td><td class="c90-col"><input class="adv-c90" type="number" value="6000" step="0.01"></td></tr>
+                <tr><td><input class="adv-angle" type="number" value="20" step="10"></td><td><input class="adv-c0" type="number" value="1000" step="0.01"></td><td class="c90-col"><input class="adv-c90" type="number" value="1000" step="0.01"></td></tr>
+                <tr><td><input class="adv-angle" type="number" value="30" step="10"></td><td><input class="adv-c0" type="number" value="300" step="0.01"></td><td class="c90-col"><input class="adv-c90" type="number" value="300" step="0.01"></td></tr>
+                <tr><td><input class="adv-angle" type="number" value="40" step="10"></td><td><input class="adv-c0" type="number" value="120" step="0.01"></td><td class="c90-col"><input class="adv-c90" type="number" value="120" step="0.01"></td></tr>
+                <tr><td><input class="adv-angle" type="number" value="50" step="10"></td><td><input class="adv-c0" type="number" value="45" step="0.01"></td><td class="c90-col"><input class="adv-c90" type="number" value="45" step="0.01"></td></tr>
+                <tr><td><input class="adv-angle" type="number" value="60" step="10"></td><td><input class="adv-c0" type="number" value="15" step="0.01"></td><td class="c90-col"><input class="adv-c90" type="number" value="15" step="0.01"></td></tr>
+                <tr><td><input class="adv-angle" type="number" value="70" step="10"></td><td><input class="adv-c0" type="number" value="5" step="0.01"></td><td class="c90-col"><input class="adv-c90" type="number" value="5" step="0.01"></td></tr>
+                <tr><td><input class="adv-angle" type="number" value="80" step="10"></td><td><input class="adv-c0" type="number" value="1" step="0.01"></td><td class="c90-col"><input class="adv-c90" type="number" value="1" step="0.01"></td></tr>
+                <tr><td><input class="adv-angle" type="number" value="90" step="10"></td><td><input class="adv-c0" type="number" value="0" step="0.01"></td><td class="c90-col"><input class="adv-c90" type="number" value="0" step="0.01"></td></tr>
+              </tbody>
+            </table>
+          </div>
           <div class="field"><label for="surfaceShape">Luminous surface shape</label><select id="surfaceShape"><option value="rectangular" selected>Square / Rectangular</option><option value="circular">Circular</option></select></div>
           <div class="fields-2" id="rectangularSurfaceFields"><div class="field"><label for="length">Length of luminous surface (m)</label><input id="length" type="number" min="0" step="0.001" value="0.1"></div><div class="field"><label for="width">Width of luminous surface (m)</label><input id="width" type="number" min="0" step="0.001" value="0.1"></div></div>
           <div class="field" id="circularSurfaceFields" hidden><label for="diameter">Diameter of luminous surface (m)</label><input id="diameter" type="number" min="0" step="0.001" value="0.045"></div>

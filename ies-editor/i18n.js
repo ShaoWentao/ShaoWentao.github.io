@@ -24,12 +24,24 @@
       manufacturer: 'Luminaire manufacturer',
       serial: 'Luminaire serial number',
       iesType: 'IES type',
+      typeSymmetric: 'Type C / C0-C180 symmetric',
+      typeFourPlane: 'Type C / C0-C90-C180-C270',
       date: 'Date',
       ledNumber: 'LED number',
       singleFlux: 'Flux for single LED',
       efficiency: 'Luminaire efficiency',
-      beamAngle: 'Beam angle',
+      beamAngle: 'C0-180 beam angle',
+      beamAngleC90: 'C90-270 beam angle',
       power: 'Power of luminaire (W)',
+      generationMode: 'Generation mode',
+      modeSimple: 'Simple parameters',
+      modeAdvanced: 'Advanced angle table',
+      distributionShape: 'Distribution shape',
+      shapeLambertian: 'Lambertian / cosine',
+      shapeSoft: 'Soft teardrop',
+      shapeStandard: 'Standard teardrop',
+      shapeSharp: 'Sharp teardrop',
+      shapeVerySharp: 'Very sharp',
       surfaceShape: 'Luminous surface shape',
       length: 'Length of luminous surface (m)',
       width: 'Width of luminous surface (m)',
@@ -80,12 +92,24 @@
       manufacturer: '灯具制造商',
       serial: '灯具型号 / 编号',
       iesType: 'IES 类型',
+      typeSymmetric: 'Type C / C0-C180 对称',
+      typeFourPlane: 'Type C / C0-C90-C180-C270',
       date: '日期',
       ledNumber: 'LED 数量',
       singleFlux: '单颗 LED 光通量',
       efficiency: '灯具效率',
-      beamAngle: '光束角',
+      beamAngle: 'C0-180 光束角',
+      beamAngleC90: 'C90-270 光束角',
       power: '灯具功率 (W)',
+      generationMode: '生成模式',
+      modeSimple: '简易参数',
+      modeAdvanced: '高级角度表',
+      distributionShape: '配光形状',
+      shapeLambertian: '朗伯体 / 余弦',
+      shapeSoft: '柔和水滴型',
+      shapeStandard: '标准水滴型',
+      shapeSharp: '锐利水滴型',
+      shapeVerySharp: '极窄型',
       surfaceShape: '发光面形状',
       length: '发光面长度 (m)',
       width: '发光面宽度 (m)',
@@ -159,12 +183,42 @@
     setLabel('manufacturer', t(finalLang, 'manufacturer'));
     setLabel('serial', t(finalLang, 'serial'));
     setLabel('iesType', t(finalLang, 'iesType'));
+    const iesType = document.querySelector('#iesType');
+    if (iesType) {
+      const symmetric = iesType.querySelector('option[value="symmetric"]');
+      const fourPlane = iesType.querySelector('option[value="four-plane"]');
+      if (symmetric) symmetric.textContent = t(finalLang, 'typeSymmetric');
+      if (fourPlane) fourPlane.textContent = t(finalLang, 'typeFourPlane');
+    }
     setLabel('date', t(finalLang, 'date'));
     setLabel('ledCount', t(finalLang, 'ledNumber'));
     setLabel('singleFlux', t(finalLang, 'singleFlux'));
     setLabel('efficiency', t(finalLang, 'efficiency'));
     setLabel('beamAngle', t(finalLang, 'beamAngle'));
+    setLabel('beamAngleC90', t(finalLang, 'beamAngleC90'));
     setLabel('power', t(finalLang, 'power'));
+    setLabel('generationMode', t(finalLang, 'generationMode'));
+    const generationMode = document.querySelector('#generationMode');
+    if (generationMode) {
+      const simple = generationMode.querySelector('option[value="simple"]');
+      const advanced = generationMode.querySelector('option[value="advanced"]');
+      if (simple) simple.textContent = t(finalLang, 'modeSimple');
+      if (advanced) advanced.textContent = t(finalLang, 'modeAdvanced');
+    }
+    setLabel('distributionShape', t(finalLang, 'distributionShape'));
+    const distributionShape = document.querySelector('#distributionShape');
+    if (distributionShape) {
+      const lambertian = distributionShape.querySelector('option[value="lambertian"]');
+      const soft = distributionShape.querySelector('option[value="soft"]');
+      const standard = distributionShape.querySelector('option[value="standard"]');
+      const sharp = distributionShape.querySelector('option[value="sharp"]');
+      const verySharp = distributionShape.querySelector('option[value="very-sharp"]');
+      if (lambertian) lambertian.textContent = t(finalLang, 'shapeLambertian');
+      if (soft) soft.textContent = t(finalLang, 'shapeSoft');
+      if (standard) standard.textContent = t(finalLang, 'shapeStandard');
+      if (sharp) sharp.textContent = t(finalLang, 'shapeSharp');
+      if (verySharp) verySharp.textContent = t(finalLang, 'shapeVerySharp');
+    }
     setLabel('surfaceShape', t(finalLang, 'surfaceShape'));
     setLabel('length', t(finalLang, 'length'));
     setLabel('width', t(finalLang, 'width'));

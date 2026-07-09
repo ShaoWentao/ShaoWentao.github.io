@@ -113,6 +113,7 @@
 
   function overlayCurves(canvas, data) {
     if (!canvas || !canvas.clientWidth) return;
+    if (canvas.id === 'curveCanvas') return;
     const ctx = canvas.getContext('2d');
     const cssSize = Math.max(320, Math.round(canvas.clientWidth || 560));
     const curveList = curves(data);

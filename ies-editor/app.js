@@ -9,13 +9,16 @@
   const reportCtx = reportPolar.getContext('2d');
   const fields = {
     manufacturer: $('manufacturer'), serial: $('serial'), date: $('date'), ledCount: $('ledCount'),
-    singleFlux: $('singleFlux'), beamAngle: $('beamAngle'), efficiency: $('efficiency'), length: $('length'),
-    width: $('width'), height: $('height'), power: $('power'), notes: $('notes'), iesType: $('iesType')
+    singleFlux: $('singleFlux'), beamAngle: $('beamAngle'), beamAngleC90: $('beamAngleC90'), efficiency: $('efficiency'), length: $('length'),
+    width: $('width'), height: $('height'), power: $('power'), notes: $('notes'), iesType: $('iesType'), distributionShape: $('distributionShape'), generationMode: $('generationMode')
   };
-  const generatedVertical = Array.from({ length: 37 }, (_, i) => i * 5);
-  const generatedHorizontal = [0];
+  const generatedVertical = Array.from({ length: 181 }, (_, i) => i);
+  const simpleHorizontal = [0];
+  const advancedHorizontal = [0, 90, 180, 270];
+  const defaultAdvancedAngles = Array.from({ length: 10 }, (_, i) => i * 10);
   let current = null;
   let uploaded = null;
+  let advancedPopulated = false;
 
   function num(value, fallback) {
     const parsed = Number(value);
@@ -49,37 +52,170 @@
       date: fields.date.value.trim() || new Date().toISOString().slice(0, 10).replaceAll('-', ''),
       ledCount: Math.max(1, Math.round(num(fields.ledCount.value, 1))),
       singleFlux: Math.max(0.01, num(fields.singleFlux.value, 1000)),
-      beamAngle: Math.min(120, Math.max(0.01, num(fields.beamAngle.value, 120))),
+      beamAngle: Math.min(120, Math.max(0.01, num(fields.beamAngle.value, 36))),
+      beamAngleC90: Math.min(120, Math.max(0.01, num(fields.beamAngleC90?.value, num(fields.beamAngle.value, 36)))),
       efficiency: Math.min(1, Math.max(0.01, num(fields.efficiency.value, 1))),
       length: Math.max(0, num(fields.length.value, 0.1)),
       width: Math.max(0, num(fields.width.value, 0.1)),
       height: Math.max(0, num(fields.height.value, 0.1)),
       power: Math.max(0.01, num(fields.power.value, 10)),
+      generationMode: fields.generationMode?.value || 'simple',
+      symmetryMode: fields.iesType?.value || 'symmetric',
+      distributionShape: fields.distributionShape?.value || 'lambertian',
       notes: fields.notes.value.trim()
     };
   }
 
-  function rawIntensity(angle, beamAngle) {
-    const halfBeam = Math.max(0.005, beamAngle / 2);
-    const gaussian = Math.exp(-Math.LN2 * Math.pow(angle / halfBeam, 2));
-    const rearFade = angle > 90 ? Math.max(0, 1 - (angle - 90) / 90) : 1;
-    return gaussian * rearFade;
+  function distributionShapeFactor(shape) {
+    return {
+      soft: 1.45,
+      standard: 2.1,
+      sharp: 2.8,
+      'very-sharp': 3.6
+    }[shape] || 0;
   }
 
-  function buildGeneratedCandela(data) {
-    const raw = generatedVertical.map((angle) => rawIntensity(angle, data.beamAngle));
+  function distributionShapeName(shape) {
+    return {
+      lambertian: 'Lambertian / cosine',
+      soft: 'Soft teardrop',
+      standard: 'Standard teardrop',
+      sharp: 'Sharp teardrop',
+      'very-sharp': 'Very sharp'
+    }[shape] || 'Lambertian / cosine';
+  }
+
+  function rawIntensity(angle, beamAngle, shape = 'lambertian') {
+    const clampedBeam = Math.min(120, Math.max(0.01, beamAngle));
+    const theta = Math.abs(angle);
+    if (theta >= 90) return 0;
+    const halfBeam = Math.min(89.999, Math.max(0.005, clampedBeam / 2));
+    const shapeFactor = distributionShapeFactor(shape);
+    if (shapeFactor > 0) {
+      return Math.pow(2, -Math.pow(theta / halfBeam, shapeFactor));
+    }
+    const exponent = Math.log(0.5) / Math.log(Math.cos(halfBeam * Math.PI / 180));
+    return Math.pow(Math.cos(theta * Math.PI / 180), exponent);
+  }
+
+  function rawProfile(beamAngle, shape) {
+    return generatedVertical.map((angle) => rawIntensity(angle, beamAngle, shape));
+  }
+
+  function scaleProfilesToFlux(profiles, data) {
     let integral = 0;
     for (let i = 0; i < generatedVertical.length - 1; i += 1) {
       const a1 = generatedVertical[i] * Math.PI / 180;
       const a2 = generatedVertical[i + 1] * Math.PI / 180;
-      integral += ((raw[i] * Math.sin(a1) + raw[i + 1] * Math.sin(a2)) / 2) * (a2 - a1);
+      const v1 = profiles.reduce((sum, profile) => sum + (profile[i] || 0), 0) / profiles.length;
+      const v2 = profiles.reduce((sum, profile) => sum + (profile[i + 1] || 0), 0) / profiles.length;
+      integral += ((v1 * Math.sin(a1) + v2 * Math.sin(a2)) / 2) * (a2 - a1);
     }
     const flux = data.ledCount * data.singleFlux * data.efficiency;
     const scale = flux / Math.max(0.0001, 2 * Math.PI * integral);
-    return raw.map((value) => value * scale);
+    return profiles.map((profile) => profile.map((value) => value * scale));
   }
 
-  function buildGeneratedIES(data, candela) {
+  function buildSimpleCandela(data) {
+    const c0Raw = rawProfile(data.beamAngle, data.distributionShape);
+    if (data.symmetryMode !== 'four-plane') return scaleProfilesToFlux([c0Raw], data);
+    const c90Raw = rawProfile(data.beamAngleC90 || data.beamAngle, data.distributionShape);
+    const scaled = scaleProfilesToFlux([c0Raw, c90Raw], data);
+    return [scaled[0], scaled[1], scaled[0].slice(), scaled[1].slice()];
+  }
+
+  function isFourPlaneMode() {
+    return (fields.iesType?.value || 'symmetric') === 'four-plane';
+  }
+
+  function simpleCandelaValue(angle, data = getFormData(), plane = 'c0') {
+    const profiles = buildSimpleCandela({ ...data, generationMode: 'simple' });
+    const selected = plane === 'c90' && profiles[1] ? profiles[1] : profiles[0];
+    const index = Math.min(selected.length - 1, Math.max(0, Math.round(angle)));
+    return selected[index] || 0;
+  }
+
+  function populateAdvancedRowsFromSimple() {
+    const tbody = $('advancedRows');
+    if (!tbody) return;
+    const data = getFormData();
+    tbody.innerHTML = defaultAdvancedAngles.map((angle) => {
+      const c0 = fmt(simpleCandelaValue(angle, data, 'c0'), angle === 90 ? 3 : 2);
+      const c90 = fmt(simpleCandelaValue(angle, data, 'c90'), angle === 90 ? 3 : 2);
+      return `<tr><td><input class="adv-angle" type="number" value="${angle}" step="10"></td><td><input class="adv-c0" type="number" value="${c0}" step="0.01"></td><td class="c90-col"><input class="adv-c90" type="number" value="${c90}" step="0.01"></td></tr>`;
+    }).join('');
+    advancedPopulated = true;
+    syncIesTypeUI();
+  }
+
+  function advancedRows() {
+    const rows = Array.from(document.querySelectorAll('#advancedRows tr')).map((row) => ({
+      angle: Math.min(90, Math.max(0, num(row.querySelector('.adv-angle')?.value, NaN))),
+      c0: Math.max(0, num(row.querySelector('.adv-c0')?.value, NaN)),
+      c90: Math.max(0, num(row.querySelector('.adv-c90')?.value, NaN))
+    })).filter((row) => Number.isFinite(row.angle) && Number.isFinite(row.c0) && Number.isFinite(row.c90))
+      .sort((a, b) => a.angle - b.angle);
+    const unique = [];
+    rows.forEach((row) => {
+      if (unique.length && Math.abs(unique[unique.length - 1].angle - row.angle) < 0.0001) unique[unique.length - 1] = row;
+      else unique.push(row);
+    });
+    if (!unique.some((row) => Math.abs(row.angle) < 0.0001)) unique.unshift({ angle: 0, c0: 1000, c90: 1000 });
+    if (!unique.some((row) => Math.abs(row.angle - 90) < 0.0001)) unique.push({ angle: 90, c0: 0, c90: 0 });
+    return unique.sort((a, b) => a.angle - b.angle);
+  }
+
+  function interpolateKeyRows(rows, angle, key) {
+    if (angle <= rows[0].angle) return rows[0][key];
+    for (let i = 0; i < rows.length - 1; i += 1) {
+      const a = rows[i];
+      const b = rows[i + 1];
+      if (angle <= b.angle) {
+        const span = Math.max(0.0001, b.angle - a.angle);
+        const t = (angle - a.angle) / span;
+        const start = Math.max(0, a[key]);
+        const end = Math.max(0, b[key]);
+        if (start > 0 && end > 0) return Math.exp(Math.log(start) + (Math.log(end) - Math.log(start)) * t);
+        return start + (end - start) * t;
+      }
+    }
+    return rows[rows.length - 1][key];
+  }
+
+  function smoothAdvancedProfile(rows, key) {
+    const source = rows.map((row) => ({ angle: row.angle, value: row[key] }));
+    const smoothed = interpolateCurvePoints(source, 1);
+    const byAngle = new Map(smoothed.map((point) => [Math.round(point.angle * 1000) / 1000, point.value]));
+    return generatedVertical.map((angle) => byAngle.get(angle) ?? interpolateKeyRows(rows, angle, key));
+  }
+
+  function buildAdvancedCandela() {
+    const rows = advancedRows();
+    const c0 = smoothAdvancedProfile(rows, 'c0');
+    if (!isFourPlaneMode()) return [c0];
+    const c90 = smoothAdvancedProfile(rows, 'c90');
+    return [c0, c90, c0.slice(), c90.slice()];
+  }
+
+  function generatedPhotometry(data) {
+    if (data.generationMode === 'advanced') {
+      return {
+        verticalAngles: generatedVertical,
+        horizontalAngles: data.symmetryMode === 'four-plane' ? advancedHorizontal : simpleHorizontal,
+        candela: buildAdvancedCandela(),
+        modeLabel: data.symmetryMode === 'four-plane' ? 'Advanced angle table / C0-C90-C180-C270' : 'Advanced angle table / C0-C180 symmetric'
+      };
+    }
+    const simpleCandela = buildSimpleCandela(data);
+    return {
+      verticalAngles: generatedVertical,
+      horizontalAngles: data.symmetryMode === 'four-plane' ? advancedHorizontal : simpleHorizontal,
+      candela: simpleCandela,
+      modeLabel: `${data.symmetryMode === 'four-plane' ? 'C0-C90-C180-C270' : 'C0-C180 symmetric'} / ${distributionShapeName(data.distributionShape)}`
+    };
+  }
+
+  function buildGeneratedIES(data, photometry) {
     const lines = [
       'IESNA:LM-63-2002',
       `[TEST] ${data.serial}`,
@@ -91,12 +227,13 @@
       '[LAMPCAT] LED',
       `[LAMP] ${data.ledCount} LED, ${fmt(data.singleFlux, 2)} lm each`,
       `[MORE] ${data.notes || 'Generated by CDN IES Editor.'}`,
+      `[MORE] Generation mode: ${photometry.modeLabel}`,
       'TILT=NONE',
-      [data.ledCount, fmt(data.singleFlux * data.efficiency, 4), 1, generatedVertical.length, generatedHorizontal.length, 1, 2, fmt(data.width, 4), fmt(data.length, 4), fmt(data.height, 4)].join(' '),
+      [data.ledCount, fmt(data.singleFlux * data.efficiency, 4), 1, photometry.verticalAngles.length, photometry.horizontalAngles.length, 1, 2, fmt(data.width, 4), fmt(data.length, 4), fmt(data.height, 4)].join(' '),
       `1 1 ${fmt(data.power, 4)}`,
-      wrapNumbers(generatedVertical.map((angle) => fmt(angle, 2))),
-      wrapNumbers(generatedHorizontal.map((angle) => fmt(angle, 2))),
-      wrapNumbers(candela.map((value) => fmt(value, 4)), 8),
+      wrapNumbers(photometry.verticalAngles.map((angle) => fmt(angle, 2))),
+      wrapNumbers(photometry.horizontalAngles.map((angle) => fmt(angle, 2))),
+      wrapNumbers(photometry.candela.flat().map((value) => fmt(value, 4)), 8),
       ''
     ];
     return lines.join('\n');
@@ -188,8 +325,8 @@
 
   function makeGeneratedParsed() {
     const data = getFormData();
-    const candela = buildGeneratedCandela(data);
-    const text = buildGeneratedIES(data, candela);
+    const photometry = generatedPhotometry(data);
+    const text = buildGeneratedIES(data, photometry);
     return parseIES(text, `${safeName(data.manufacturer)}-${safeName(data.serial)}.ies`);
   }
 
@@ -358,7 +495,163 @@
     return Math.abs(right - left);
   }
 
+  function niceCandelaScale(value) {
+    const max = Math.max(1, Number(value) || 1);
+    const exponent = Math.floor(Math.log10(max));
+    const base = Math.pow(10, exponent);
+    const normalized = max / base;
+    const step = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 2.5 ? 2.5 : normalized <= 3 ? 3 : normalized <= 5 ? 5 : 10;
+    return step * base;
+  }
+
+  function previewCandelaScale(peakValue) {
+    const targetPeakFill = 1;
+    return Math.max(1, Number(peakValue) || 1) / targetPeakFill;
+  }
+
+  function interpolateCurvePoints(points, step = 0.5) {
+    const sorted = points
+      .filter((point) => Number.isFinite(point.angle) && Number.isFinite(point.value))
+      .sort((a, b) => a.angle - b.angle);
+    const unique = [];
+    sorted.forEach((point) => {
+      if (unique.length && Math.abs(unique[unique.length - 1].angle - point.angle) < 0.0001) {
+        unique[unique.length - 1] = point.value > unique[unique.length - 1].value ? point : unique[unique.length - 1];
+      } else {
+        unique.push(point);
+      }
+    });
+    if (unique.length < 4) return unique;
+
+    const xs = unique.map((point) => point.angle);
+    const ys = unique.map((point) => Math.max(0, point.value || 0));
+    const slopes = [];
+    const deltas = [];
+    for (let i = 0; i < xs.length - 1; i += 1) {
+      const dx = xs[i + 1] - xs[i];
+      deltas[i] = dx ? (ys[i + 1] - ys[i]) / dx : 0;
+    }
+    slopes[0] = deltas[0] || 0;
+    slopes[xs.length - 1] = deltas[deltas.length - 1] || 0;
+    for (let i = 1; i < xs.length - 1; i += 1) {
+      slopes[i] = deltas[i - 1] * deltas[i] <= 0 ? 0 : (deltas[i - 1] + deltas[i]) / 2;
+    }
+    for (let i = 0; i < deltas.length; i += 1) {
+      if (Math.abs(deltas[i]) < 0.000001) {
+        slopes[i] = 0;
+        slopes[i + 1] = 0;
+      }
+    }
+
+    const sampled = [];
+    for (let i = 0; i < xs.length - 1; i += 1) {
+      const x0 = xs[i];
+      const x1 = xs[i + 1];
+      const span = x1 - x0;
+      if (span <= 0) continue;
+      const count = Math.max(1, Math.ceil(span / step));
+      for (let j = 0; j < count; j += 1) {
+        const t = j / count;
+        const h00 = 2 * t * t * t - 3 * t * t + 1;
+        const h10 = t * t * t - 2 * t * t + t;
+        const h01 = -2 * t * t * t + 3 * t * t;
+        const h11 = t * t * t - t * t;
+        const value = h00 * ys[i] + h10 * span * slopes[i] + h01 * ys[i + 1] + h11 * span * slopes[i + 1];
+        sampled.push({ angle: x0 + t * span, value: Math.max(0, value) });
+      }
+    }
+    sampled.push({ angle: xs[xs.length - 1], value: ys[ys.length - 1] });
+    return sampled;
+  }
+
+  function drawReportStylePreview(targetCanvas, targetCtx, data) {
+    const cssWidth = Math.max(320, Math.round(targetCanvas.clientWidth || 560));
+    const cssHeight = Math.round(cssWidth * 483 / 508);
+    const ratio = Math.min(window.devicePixelRatio || 1, 2);
+    targetCanvas.width = Math.round(cssWidth * ratio);
+    targetCanvas.height = Math.round(cssHeight * ratio);
+    targetCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    targetCtx.clearRect(0, 0, cssWidth, cssHeight);
+    targetCtx.fillStyle = '#ffffff';
+    targetCtx.fillRect(0, 0, cssWidth, cssHeight);
+
+    const curves = curvesOf(data);
+    const peak = peakOf(data);
+    const scaleMax = previewCandelaScale(peak.value);
+    const cx = cssWidth / 2;
+    const cy = 0;
+    const radius = cssHeight * 0.79;
+    const bottomY = cy + radius;
+
+    targetCtx.save();
+    targetCtx.strokeStyle = '#111111';
+    targetCtx.lineWidth = 1.15;
+
+    for (let ring = 1; ring <= 5; ring += 1) {
+      targetCtx.beginPath();
+      targetCtx.arc(cx, cy, radius * ring / 5, Math.PI * 0.04, Math.PI * 0.96);
+      targetCtx.stroke();
+    }
+
+    for (let angle = -90; angle <= 90; angle += 15) {
+      const rad = angle * Math.PI / 180;
+      targetCtx.beginPath();
+      targetCtx.moveTo(cx, cy);
+      targetCtx.lineTo(cx + Math.sin(rad) * radius, cy + Math.cos(rad) * radius);
+      targetCtx.stroke();
+    }
+    targetCtx.restore();
+
+    const previewCurves = data.horizontalAngles.length > 1 ? curves.slice(0, 2) : curves.slice(0, 1);
+    previewCurves.forEach((curve, curveIndex) => {
+      const points = interpolateCurvePoints(curve.points
+        .filter((point) => Number.isFinite(point.angle) && Number.isFinite(point.value) && point.angle >= -90 && point.angle <= 90)
+        .sort((a, b) => a.angle - b.angle), 0.25);
+
+      targetCtx.save();
+      targetCtx.strokeStyle = '#050505';
+      targetCtx.lineWidth = Math.max(curveIndex === 0 ? 2.8 : 2.1, cssWidth * (curveIndex === 0 ? 0.006 : 0.0045));
+      if (curveIndex > 0) targetCtx.setLineDash([8, 6]);
+      targetCtx.lineJoin = 'round';
+      targetCtx.lineCap = 'round';
+      targetCtx.beginPath();
+      points.forEach((point, index) => {
+        const rad = point.angle * Math.PI / 180;
+        const r = radius * Math.max(0, point.value || 0) / scaleMax;
+        const x = cx + Math.sin(rad) * r;
+        const y = cy + Math.cos(rad) * r;
+        if (index === 0) targetCtx.moveTo(x, y);
+        else targetCtx.lineTo(x, y);
+      });
+      targetCtx.stroke();
+      targetCtx.setLineDash([]);
+      targetCtx.restore();
+    });
+
+    targetCtx.save();
+    targetCtx.fillStyle = '#050505';
+    const labelSize = cssWidth < 420 ? Math.max(13, cssWidth * 0.039) : Math.max(18, cssWidth * 0.052);
+    const imaxSize = cssWidth < 420 ? Math.max(12, cssWidth * 0.034) : Math.max(17, cssWidth * 0.047);
+    targetCtx.font = `${labelSize}px Arial, Helvetica, sans-serif`;
+    targetCtx.textBaseline = 'alphabetic';
+    targetCtx.textAlign = 'left';
+    targetCtx.fillText('30°', 10, bottomY + 28);
+    targetCtx.textAlign = 'right';
+    targetCtx.fillText('30°', cssWidth - 10, bottomY + 28);
+    targetCtx.textAlign = 'center';
+    targetCtx.fillText(`${fmt(scaleMax, scaleMax >= 100 ? 0 : 1)}cd`, cx, bottomY + (cssWidth < 420 ? 32 : 38));
+    targetCtx.fillText('0°', cx, bottomY + (cssWidth < 420 ? 56 : 72));
+    targetCtx.textAlign = 'right';
+    targetCtx.font = `${imaxSize}px Arial, Helvetica, sans-serif`;
+    targetCtx.fillText(`Imax=${fmt(peak.value, peak.value >= 100 ? 0 : 1)}cd`, cssWidth - 10, cssHeight - (cssWidth < 420 ? 9 : 22));
+    targetCtx.restore();
+  }
+
   function drawPolar(targetCanvas, targetCtx, data, title, subtitle, footer, showDark = true) {
+    if (showDark) {
+      drawReportStylePreview(targetCanvas, targetCtx, data);
+      return;
+    }
     const cssSize = Math.max(320, Math.round(targetCanvas.clientWidth || 560));
     const ratio = Math.min(window.devicePixelRatio || 1, 2);
     targetCanvas.width = Math.round(cssSize * ratio);
@@ -402,7 +695,7 @@
       targetCtx.strokeStyle = curve.color;
       targetCtx.lineWidth = 2.5;
       targetCtx.beginPath();
-      curve.points.forEach((point, index) => {
+      interpolateCurvePoints(curve.points, 0.5).forEach((point, index) => {
         const rad = point.angle * Math.PI / 180;
         const r = radius * (point.value / max);
         const x = cx + Math.sin(rad) * r;
@@ -515,11 +808,15 @@
     fields.height.value = fmt(data.height || 0, 4);
     fields.power.value = fmt(data.power || 0, 4);
     fields.beamAngle.value = fmt(beamAngleFromPoints(curvesOf(data)[0]?.points || []), 2);
-    fields.iesType.value = `${typeName(data.photometricType)} / parsed / H ${fmt(data.horizontalAngles[0], 1)} to ${fmt(data.horizontalAngles[data.horizontalAngles.length - 1], 1)} / V ${fmt(data.verticalAngles[0], 1)} to ${fmt(data.verticalAngles[data.verticalAngles.length - 1], 1)} / ${data.horizontalAngles.length} x ${data.verticalAngles.length}`;
+    if (fields.beamAngleC90) fields.beamAngleC90.value = fmt(beamAngleFromPoints(curvesOf(data)[1]?.points || curvesOf(data)[0]?.points || []), 2);
+    if (fields.iesType) fields.iesType.value = data.horizontalAngles.length > 1 ? 'four-plane' : 'symmetric';
+    if (fields.distributionShape) fields.distributionShape.value = 'lambertian';
     fields.notes.value = 'Uploaded IES file. Original photometric data is preserved.';
+    syncIesTypeUI();
   }
 
   function updateGeneratedPreview() {
+    syncGenerationModeUI();
     current = makeGeneratedParsed();
     current.fileName = `${safeName(fields.manufacturer.value || 'CDN')}-${safeName(fields.serial.value || 'spot01')}.ies`;
     preview.textContent = current.text;
@@ -541,15 +838,46 @@
 
   function resetFields() {
     uploaded = null;
-    fields.manufacturer.value = 'CDN'; fields.serial.value = 'spot01'; fields.date.value = '20260626'; fields.ledCount.value = '1';
-    fields.singleFlux.value = '1000'; fields.beamAngle.value = '120'; fields.efficiency.value = '1'; fields.length.value = '0.1';
+    fields.manufacturer.value = 'CDN'; fields.serial.value = 'Downlight'; fields.date.value = '20260626'; fields.ledCount.value = '1';
+    fields.singleFlux.value = '1000'; fields.beamAngle.value = '36'; if (fields.beamAngleC90) fields.beamAngleC90.value = '36'; fields.efficiency.value = '1'; fields.length.value = '0.1';
     fields.width.value = '0.1'; fields.height.value = '0.1'; fields.power.value = '10'; fields.notes.value = 'Generated by CDN IES Editor.';
-    fields.iesType.value = 'Generated Type C / symmetric';
+    if (fields.iesType) fields.iesType.value = 'symmetric';
+    if (fields.generationMode) fields.generationMode.value = 'simple';
+    if (fields.distributionShape) fields.distributionShape.value = 'lambertian';
+    advancedPopulated = false;
+    syncIesTypeUI();
     hideReport();
     updateGeneratedPreview();
   }
 
-  form.addEventListener('input', () => { uploaded = null; hideReport(); updateGeneratedPreview(); });
+  function syncIesTypeUI() {
+    const showC90 = isFourPlaneMode();
+    document.querySelectorAll('.c90-beam-field').forEach((node) => { node.hidden = !showC90; });
+    document.querySelectorAll('.c90-col').forEach((node) => { node.hidden = !showC90; });
+    document.querySelectorAll('.adv-c90').forEach((input) => {
+      if (showC90 && !input.value) input.value = input.closest('tr')?.querySelector('.adv-c0')?.value || '0';
+    });
+  }
+
+  function syncGenerationModeUI() {
+    const editor = $('advancedEditor');
+    const advanced = (fields.generationMode?.value || 'simple') === 'advanced';
+    if (editor) editor.hidden = !advanced;
+    if (advanced && !advancedPopulated) {
+      populateAdvancedRowsFromSimple();
+    }
+    syncIesTypeUI();
+  }
+
+  form.addEventListener('input', (event) => {
+    if (!event.target.closest('#advancedRows') && event.target !== fields.generationMode && (fields.generationMode?.value || 'simple') !== 'advanced') advancedPopulated = false;
+    uploaded = null; hideReport(); updateGeneratedPreview();
+  });
+  form.addEventListener('change', (event) => {
+    if (event.target === fields.generationMode && fields.generationMode.value === 'advanced') populateAdvancedRowsFromSimple();
+    if (event.target === fields.iesType) syncIesTypeUI();
+    uploaded = null; hideReport(); updateGeneratedPreview();
+  });
   $('downloadBtn').addEventListener('click', downloadCurrentIES);
   $('reportBtn').addEventListener('click', () => { if (!uploaded) updateGeneratedPreview(); buildReport(uploaded || current); });
   $('copyBtn').addEventListener('click', () => navigator.clipboard.writeText(preview.textContent));
@@ -562,18 +890,22 @@
       try {
         uploaded = parseIES(decodeIESBuffer(reader.result), file.name);
         current = uploaded;
+        if (fields.generationMode) fields.generationMode.value = 'simple';
+        syncGenerationModeUI();
         setUploadedFields(uploaded);
         preview.textContent = uploaded.text;
         $('fileName').textContent = file.name;
         updateStats(uploaded);
         buildReport(uploaded);
       } catch (error) {
-        fields.iesType.value = `Read failed: ${error.message || error}`;
+        fields.notes.value = `Read failed: ${error.message || error}`;
       }
     };
     reader.readAsArrayBuffer(file);
   });
   window.addEventListener('resize', () => { if (current) updateStats(current); if (!report.classList.contains('hidden') && (uploaded || current)) drawPolar(reportPolar, reportCtx, uploaded || current, 'POLAR GRAPH', 'Photometric report graph', 'Resized', false); });
+  syncGenerationModeUI();
   updateGeneratedPreview();
   hideReport();
 })();
+
