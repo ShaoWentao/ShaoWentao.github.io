@@ -836,6 +836,23 @@
     URL.revokeObjectURL(link.href);
   }
 
+  function sendToInteriorCalculator() {
+    if (!uploaded) updateGeneratedPreview();
+    const data = uploaded || current || makeGeneratedParsed();
+    const fileName = data.fileName || `${safeName(fields.manufacturer.value || 'CDN')}-${safeName(fields.serial.value || 'spot01')}.ies`;
+    const payload = {
+      fileName,
+      text: data.text || preview.textContent || '',
+      sentAt: Date.now()
+    };
+    try {
+      sessionStorage.setItem('interior-lighting-pending-ies', JSON.stringify(payload));
+    } catch (error) {
+      localStorage.setItem('interior-lighting-pending-ies', JSON.stringify(payload));
+    }
+    window.location.href = '../interior-lighting/?from=ies-editor';
+  }
+
   function resetFields() {
     uploaded = null;
     fields.manufacturer.value = 'CDN'; fields.serial.value = 'Downlight'; fields.date.value = '20260626'; fields.ledCount.value = '1';
@@ -879,6 +896,7 @@
     uploaded = null; hideReport(); updateGeneratedPreview();
   });
   $('downloadBtn').addEventListener('click', downloadCurrentIES);
+  $('calcBtn').addEventListener('click', sendToInteriorCalculator);
   $('reportBtn').addEventListener('click', () => { if (!uploaded) updateGeneratedPreview(); buildReport(uploaded || current); });
   $('copyBtn').addEventListener('click', () => navigator.clipboard.writeText(preview.textContent));
   $('resetBtn').addEventListener('click', resetFields);

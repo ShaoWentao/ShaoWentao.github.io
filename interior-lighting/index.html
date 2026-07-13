@@ -14,14 +14,17 @@
   input,select,button { font:inherit; }
   a { color:inherit; text-decoration:none; }
   .shell { width:min(1280px,calc(100% - 24px)); margin:6px auto 24px; }
-  .toolbar { height:84px; display:grid; grid-template-columns:260px 1fr 180px; align-items:center; gap:16px; padding:10px 16px; border-radius:5px; background:linear-gradient(#fff,#f1f1f1); box-shadow:var(--shadow); }
+  .toolbar { min-height:84px; display:grid; grid-template-columns:260px 1fr 220px; align-items:center; gap:16px; padding:10px 16px; border-radius:5px; background:linear-gradient(#fff,#f1f1f1); box-shadow:var(--shadow); }
   .tool-actions { display:flex; gap:18px; align-items:end; }
   .tool-action { width:42px; display:grid; justify-items:center; gap:3px; border:0; background:transparent; color:#111; font-size:12px; line-height:1; cursor:pointer; padding:0; }
   .tool-action b { width:38px; height:38px; display:grid; place-items:center; border:1px solid #9fb6ca; border-radius:4px; color:#2d5f9f; background:#f8fbff; font-size:13px; line-height:1; font-weight:700; white-space:nowrap; overflow:hidden; }
   .tool-action span { display:block; width:54px; text-align:center; }
   .hidden-file { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; }
   .title { text-align:center; font-size:32px; font-weight:400; letter-spacing:.01em; color:#2b2b2b; }
+  .toolbar-side { display:grid; gap:6px; justify-items:end; }
   .brand { text-align:right; color:#56616a; font-size:18px; font-weight:700; opacity:.72; }
+  .language-control { display:flex; align-items:center; justify-content:flex-end; gap:7px; color:#444; font-size:12px; }
+  .language-control select { width:auto; height:24px; border:1px solid #cfcfcf; background:#fff; padding:1px 20px 1px 5px; font:inherit; }
   .stage { display:grid; grid-template-columns:280px minmax(0,1fr) 280px; min-height:680px; margin-top:6px; border-radius:5px; background:#fff; box-shadow:var(--shadow); overflow:hidden; }
   .left,.right { padding:14px; background:linear-gradient(90deg,#fbfbfb,#fff); }
   .left { border-right:1px solid #eee; }
@@ -91,6 +94,8 @@
   @media (max-width:1000px) {
     .toolbar { grid-template-columns:1fr; height:auto; text-align:left; }
     .title,.brand { text-align:left; font-size:24px; }
+    .toolbar-side { justify-items:start; }
+    .language-control { justify-content:flex-start; }
     .stage { grid-template-columns:1fr; }
     .viewport { min-height:430px; order:3; }
     #roomSvg { min-height:430px; }
@@ -147,7 +152,10 @@
       <input class="hidden-file" id="iesFile" type="file" accept=".ies,.IES,text/plain">
     </div>
     <div class="title">Simple Interior Illuminance Calculator</div>
-    <div class="brand">Room Lighting Layout</div>
+    <div class="toolbar-side">
+      <div class="brand">Room Lighting Layout</div>
+      <div class="language-control"><label id="languageLabel" for="languageSelect">Language</label><select id="languageSelect" aria-label="Language"><option value="en">English</option><option value="zh">中文</option></select></div>
+    </div>
   </header>
 
   <section class="stage">
@@ -303,6 +311,286 @@
   let pendingNewScheme = false;
   let lastRoomSize = { length: 10, width: 5 };
   const defaultValues = Object.fromEntries(inputs.map((input) => [input.id, input.type === "checkbox" ? input.checked : input.value]));
+  const LANG_KEY = "interior-lighting-language";
+  let currentLang = "en";
+  const i18nText = {
+    en: {
+      docTitle: "Simple Interior Illuminance Calculator | Shao Wentao",
+      importAction: "Import",
+      resetAction: "Reset",
+      printAction: "Print",
+      title: "Simple Interior Illuminance Calculator",
+      brand: "Room Lighting Layout",
+      language: "Language",
+      settings: "Settings",
+      units: "Units",
+      sampleGrid: "Sample Grid",
+      photometricFile: "Photometric File",
+      noFile: "No photometric file loaded. Upload a file to calculate with luminaire data.",
+      roomDimensions: "Room Dimensions",
+      length: "Length [X]",
+      width: "Width [Y]",
+      height: "Height [Z]",
+      workplane: "Workplane",
+      mountingMethod: "Mounting Method",
+      mountingHeight: "Mounting Height",
+      recessed: "Recessed",
+      surface: "Surface",
+      suspended: "Suspended",
+      reflectances: "Room Reflectances",
+      ceiling: "Ceiling",
+      walls: "Walls",
+      floor: "Floor",
+      criteria: "Criteria",
+      illuminance: "Illuminance",
+      quantity: "Quantity",
+      constraints: "Constraints",
+      spacingX: "Spacing X",
+      spacingY: "Spacing Y",
+      rows: "Rows",
+      columns: "Columns",
+      calculationResults: "Calculation Results",
+      directAvg: "Direct Avg Check",
+      minimum: "Minimum",
+      maximum: "Maximum",
+      powerDensity: "Power Density",
+      spacingResults: "Spacing Results",
+      spacing: "Spacing",
+      arrangement: "Arrangement",
+      outsideX: "Outside Spacing X",
+      outsideY: "Outside Spacing Y",
+      comparison: "Comparison",
+      luminaire: "Luminaire",
+      count: "Count",
+      display: "Display",
+      dimensions: "Dimensions",
+      room: "Room",
+      layout: "Layout",
+      showCavity: "Show Zonal Cavity Info [+]",
+      hideCavity: "Hide Zonal Cavity Info [-]",
+      projectInfo: "Project Information",
+      addProduct: "Add product",
+      emptyProduct: "Click the '+' tab to select a product",
+      luminaireInfo: "Luminaire Information",
+      lightLoss: "Light Loss Factor",
+      symbolShape: "Symbol Shape",
+      lampQuantity: "Lamp Quantity",
+      suspensionLength: "Suspension Length",
+      symbolLength: "Symbol Length",
+      lumensPerLamp: "Lumens Per Lamp",
+      orientation: "Orientation",
+      symbolWidth: "Symbol Width",
+      wattage: "Wattage",
+      rectangular: "Rectangular",
+      circular: "Circular",
+      footer: "Results are for early design comparison. Final layouts should be checked with full lighting simulation and confirmed product photometry.",
+      localTool: "LOCAL BROWSER TOOL",
+      readFailed: "Unable to read IES"
+    },
+    zh: {
+      docTitle: "简易室内照度计算器 | Shao Wentao",
+      importAction: "导入",
+      resetAction: "重置",
+      printAction: "打印",
+      title: "简易室内照度计算器",
+      brand: "室内灯具布置",
+      language: "语言",
+      settings: "设置",
+      units: "单位",
+      sampleGrid: "采样网格",
+      photometricFile: "配光文件",
+      noFile: "尚未载入配光文件。请上传 IES 文件后进行照度计算。",
+      roomDimensions: "空间尺寸",
+      length: "长度 [X]",
+      width: "宽度 [Y]",
+      height: "高度 [Z]",
+      workplane: "工作面",
+      mountingMethod: "安装方式",
+      mountingHeight: "安装高度",
+      recessed: "嵌入",
+      surface: "吸顶",
+      suspended: "悬吊",
+      reflectances: "空间反射比",
+      ceiling: "天花",
+      walls: "墙面",
+      floor: "地面",
+      criteria: "目标条件",
+      illuminance: "目标照度",
+      quantity: "数量",
+      constraints: "布置约束",
+      spacingX: "X 向间距",
+      spacingY: "Y 向间距",
+      rows: "行数",
+      columns: "列数",
+      calculationResults: "计算结果",
+      directAvg: "直接照度校验",
+      minimum: "最小值",
+      maximum: "最大值",
+      powerDensity: "功率密度",
+      spacingResults: "间距结果",
+      spacing: "间距",
+      arrangement: "布置",
+      outsideX: "X 向边距",
+      outsideY: "Y 向边距",
+      comparison: "方案对比",
+      luminaire: "灯具",
+      count: "数量",
+      display: "显示",
+      dimensions: "尺寸",
+      room: "空间",
+      layout: "布置",
+      showCavity: "显示腔室系数信息 [+]",
+      hideCavity: "隐藏腔室系数信息 [-]",
+      projectInfo: "项目信息",
+      addProduct: "添加产品",
+      emptyProduct: "点击 “+” 选择产品",
+      luminaireInfo: "灯具信息",
+      lightLoss: "光损耗系数",
+      symbolShape: "符号形状",
+      lampQuantity: "光源数量",
+      suspensionLength: "悬吊长度",
+      symbolLength: "符号长度",
+      lumensPerLamp: "单灯光通量",
+      orientation: "方向",
+      symbolWidth: "符号宽度",
+      wattage: "功率",
+      rectangular: "矩形",
+      circular: "圆形",
+      footer: "结果用于前期方案对比。最终布置应通过完整照明模拟和确认后的产品配光文件复核。",
+      localTool: "本地浏览器工具",
+      readFailed: "无法读取 IES"
+    }
+  };
+
+  function tt(key) {
+    return (i18nText[currentLang] && i18nText[currentLang][key]) || i18nText.en[key] || "";
+  }
+
+  function setText(selector, text) {
+    const node = document.querySelector(selector);
+    if (node) node.textContent = text;
+  }
+
+  function setLabel(forId, text) {
+    const node = document.querySelector(`label[for="${forId}"]`);
+    if (node) node.textContent = text;
+  }
+
+  function setOption(selectId, value, text) {
+    const node = document.querySelector(`#${selectId} option[value="${value}"]`);
+    if (node) node.textContent = text;
+  }
+
+  function applyLanguage(lang) {
+    currentLang = lang === "zh" ? "zh" : "en";
+    document.documentElement.lang = currentLang === "zh" ? "zh-CN" : "en";
+    document.title = tt("docTitle");
+    setText("#importAction span", tt("importAction"));
+    setText("#resetTool span", tt("resetAction"));
+    setText("#printTool span", tt("printAction"));
+    setText(".title", tt("title"));
+    setText(".brand", tt("brand"));
+    setText("#languageLabel", tt("language"));
+    const headings = document.querySelectorAll(".left .section h2, .left .section h3");
+    if (headings[0]) headings[0].textContent = tt("settings");
+    if (headings[1]) headings[1].textContent = tt("photometricFile");
+    if (headings[2]) headings[2].textContent = tt("roomDimensions");
+    if (headings[3]) headings[3].textContent = tt("reflectances");
+    if (headings[4]) headings[4].textContent = tt("criteria");
+    if (headings[5]) headings[5].textContent = tt("constraints");
+    setLabel("units", tt("units"));
+    setLabel("sampleMode", tt("sampleGrid"));
+    setLabel("length", tt("length"));
+    setLabel("width", tt("width"));
+    setLabel("height", tt("height"));
+    setLabel("workplane", tt("workplane"));
+    setLabel("ceilingType", tt("mountingMethod"));
+    setLabel("mountingHeight", tt("mountingHeight"));
+    setLabel("ceilingRef", tt("ceiling"));
+    setLabel("wallRef", tt("walls"));
+    setLabel("floorRef", tt("floor"));
+    setLabel("targetLux", tt("illuminance"));
+    setLabel("targetQty", tt("quantity"));
+    setLabel("spacingX", tt("spacingX"));
+    setLabel("spacingY", tt("spacingY"));
+    setLabel("rows", tt("rows"));
+    setLabel("cols", tt("columns"));
+    setOption("ceilingType", "recessed", tt("recessed"));
+    setOption("ceilingType", "surface", tt("surface"));
+    setOption("ceilingType", "suspended", tt("suspended"));
+    setOption("symbolShape", "rectangular", tt("rectangular"));
+    setOption("symbolShape", "circular", tt("circular"));
+    if (!iesData) $("fileName").textContent = tt("noFile");
+    const panelTitles = document.querySelectorAll(".right .panel-title");
+    if (panelTitles[0]) panelTitles[0].firstChild.textContent = `${tt("calculationResults")} `;
+    if (panelTitles[1]) panelTitles[1].firstChild.textContent = `${tt("spacingResults")} `;
+    setText(".comparison h2", tt("comparison"));
+    const rowsText = [
+      tt("illuminance"), "Lumen Method", tt("directAvg"), tt("minimum"), tt("maximum"),
+      "Emin/Eavg", "Emin/Emax", tt("powerDensity"), tt("quantity"),
+      tt("spacing"), tt("arrangement"), tt("outsideX"), tt("outsideY")
+    ];
+    document.querySelectorAll(".right .results .result-row span:first-child").forEach((node, index) => {
+      if (rowsText[index]) node.textContent = rowsText[index];
+    });
+    const comparisonHeads = document.querySelectorAll(".comparison th");
+    if (comparisonHeads[0]) comparisonHeads[0].textContent = tt("luminaire");
+    if (comparisonHeads[3]) comparisonHeads[3].textContent = tt("count");
+    const displayHeading = Array.from(document.querySelectorAll(".right h2")).find((node) => node.textContent === "Display" || node.textContent === "显示");
+    if (displayHeading) displayHeading.textContent = tt("display");
+    const checks = document.querySelector(".checks");
+    if (checks) {
+      const dimensionsLabel = checks.querySelector("span");
+      if (dimensionsLabel) dimensionsLabel.textContent = tt("dimensions");
+      const labels = checks.querySelectorAll("label");
+      if (labels[0]) labels[0].childNodes[0].textContent = `${tt("room")} `;
+      if (labels[1]) labels[1].childNodes[0].textContent = `${tt("layout")} `;
+    }
+    $("toggleCavity").textContent = $("cavity").classList.contains("open") ? tt("hideCavity") : tt("showCavity");
+    setText(".project-info span", tt("projectInfo"));
+    $("addProjectProduct").title = tt("addProduct");
+    setText("#emptyProduct", tt("emptyProduct"));
+    if (!iesData) setText("#manufacturer", tt("luminaireInfo"));
+    const productLabels = document.querySelectorAll(".product-grid label");
+    [tt("lightLoss"), tt("symbolShape"), tt("lampQuantity"), tt("suspensionLength"), tt("symbolLength"), tt("lumensPerLamp"), tt("orientation"), tt("symbolWidth"), tt("wattage")].forEach((text, index) => {
+      if (productLabels[index]) productLabels[index].textContent = text;
+    });
+    setText(".footer span", tt("footer"));
+    setText(".footer b", tt("localTool"));
+    const selector = $("languageSelect");
+    if (selector) selector.value = currentLang;
+  }
+
+  async function fetchCountry(url, pick) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 1800);
+    try {
+      const response = await fetch(url, { signal: controller.signal, cache: "no-store" });
+      if (!response.ok) throw new Error(String(response.status));
+      return pick(await response.json());
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  async function detectLanguageByIp() {
+    const saved = localStorage.getItem(LANG_KEY);
+    if (saved === "zh" || saved === "en") return saved;
+    const services = [
+      () => fetchCountry("https://api.country.is/", (data) => data.country),
+      () => fetchCountry("https://ipapi.co/json/", (data) => data.country_code),
+      () => fetchCountry("https://ipwho.is/?fields=country_code", (data) => data.country_code)
+    ];
+    for (const service of services) {
+      try {
+        const country = String(await service()).toUpperCase();
+        if (country === "CN") return "zh";
+        if (/^[A-Z]{2}$/.test(country)) return "en";
+      } catch (error) {}
+    }
+    const browserLang = (navigator.language || "").toLowerCase();
+    return browserLang === "zh-cn" || browserLang.startsWith("zh-hans") ? "zh" : "en";
+  }
 
   function n(id, fallback = 0) {
     const value = parseFloat($(id).value);
@@ -1261,23 +1549,49 @@
     iesData = schemes[activeScheme] ? schemes[activeScheme].data : null;
     update();
   });
+
+  function addPhotometricSchemeFromText(text, fileName) {
+    const parsed = parseIES(text, fileName);
+    schemes.push({ data: parsed });
+    activeScheme = schemes.length - 1;
+    iesData = schemes[activeScheme].data;
+    pendingNewScheme = false;
+    $("fileName").textContent = fileName;
+    if (iesData.width) $("symbolWidth").value = fmt(Math.abs(iesData.width), 2);
+    if (iesData.length) $("symbolLength").value = fmt(Math.abs(iesData.length), 2);
+    return parsed;
+  }
+
+  function loadPendingEditorIES() {
+    const keys = ["interior-lighting-pending-ies"];
+    for (const key of keys) {
+      const raw = sessionStorage.getItem(key) || localStorage.getItem(key);
+      if (!raw) continue;
+      sessionStorage.removeItem(key);
+      localStorage.removeItem(key);
+      try {
+        const payload = JSON.parse(raw);
+        if (payload && payload.text) {
+          addPhotometricSchemeFromText(payload.text, payload.fileName || "editor-generated.ies");
+          return true;
+        }
+      } catch (error) {
+        $("fileName").textContent = `${tt("readFailed")}: ${error.message || error}`;
+      }
+    }
+    return false;
+  }
+
   $("iesFile").addEventListener("change", async (event) => {
     const file = event.target.files && event.target.files[0];
     if (!file) return;
     try {
-      const parsed = parseIES(await file.text(), file.name);
-      schemes.push({ data: parsed });
-      activeScheme = schemes.length - 1;
-      iesData = schemes[activeScheme].data;
-      pendingNewScheme = false;
-      $("fileName").textContent = file.name;
-      if (iesData.width) $("symbolWidth").value = fmt(Math.abs(iesData.width), 2);
-      if (iesData.length) $("symbolLength").value = fmt(Math.abs(iesData.length), 2);
+      addPhotometricSchemeFromText(await file.text(), file.name);
       update();
       event.target.value = "";
     } catch (error) {
       pendingNewScheme = false;
-      $("fileName").textContent = `Unable to read IES: ${error.message}`;
+      $("fileName").textContent = `${tt("readFailed")}: ${error.message}`;
     }
   });
   $("resetTool").addEventListener("click", () => {
@@ -1286,7 +1600,7 @@
     activeScheme = -1;
     pendingNewScheme = false;
     $("iesFile").value = "";
-    $("fileName").textContent = "No photometric file loaded. Upload a file to calculate with luminaire data.";
+    $("fileName").textContent = tt("noFile");
     inputs.forEach((input) => {
       if (input.type === "checkbox") input.checked = defaultValues[input.id];
       else input.value = defaultValues[input.id];
@@ -1294,14 +1608,14 @@
     });
     lastRoomSize = { length: n("length", 10), width: n("width", 5) };
     $("cavity").classList.remove("open");
-    $("toggleCavity").textContent = "Show Zonal Cavity Info [+]";
+    $("toggleCavity").textContent = tt("showCavity");
     viewMode = "iso";
     update();
   });
   $("printTool").addEventListener("click", printReport);
   $("toggleCavity").addEventListener("click", () => {
     $("cavity").classList.toggle("open");
-    $("toggleCavity").textContent = $("cavity").classList.contains("open") ? "Hide Zonal Cavity Info [-]" : "Show Zonal Cavity Info [+]";
+    $("toggleCavity").textContent = $("cavity").classList.contains("open") ? tt("hideCavity") : tt("showCavity");
   });
   $("viewPlan").addEventListener("click", () => { viewMode = "plan"; update(); });
   $("viewIso").addEventListener("click", () => { viewMode = "iso"; update(); });
@@ -1311,8 +1625,15 @@
   $("width").addEventListener("input", () => { scaleLayoutToRoom(); update(); });
   $("targetQty").addEventListener("input", () => { delete $("targetQty").dataset.auto; });
   inputs.filter((input) => input.id !== "length" && input.id !== "width").forEach((input) => input.addEventListener(input.type === "checkbox" || input.tagName === "SELECT" ? "change" : "input", update));
+  $("languageSelect").addEventListener("change", () => {
+    const lang = $("languageSelect").value === "zh" ? "zh" : "en";
+    localStorage.setItem(LANG_KEY, lang);
+    applyLanguage(lang);
+  });
+  detectLanguageByIp().then((lang) => { applyLanguage(lang); update(); });
+  loadPendingEditorIES();
   update();
 </script>
+<script defer src="../assets/visitor-counter.js"></script>
 </body>
 </html>
-

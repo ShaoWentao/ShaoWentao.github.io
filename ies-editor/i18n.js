@@ -49,6 +49,7 @@
       height: 'Height of luminous surface (m)',
       notes: 'Description / keywords',
       generateReport: 'Generate IES Report',
+      sendCalculator: 'Send to Illuminance Calculator',
       download: 'Download IES',
       copy: 'Copy text',
       reset: 'Reset',
@@ -117,6 +118,7 @@
       height: '发光面高度 (m)',
       notes: '描述 / 关键词',
       generateReport: '生成 IES 报告',
+      sendCalculator: '发送到照度计算器',
       download: '下载 IES',
       copy: '复制文本',
       reset: '重置',
@@ -228,10 +230,12 @@
     setLabel('upload', t(finalLang, 'upload'));
 
     const reportBtn = document.getElementById('reportBtn');
+    const calcBtn = document.getElementById('calcBtn');
     const downloadBtn = document.getElementById('downloadBtn');
     const copyBtn = document.getElementById('copyBtn');
     const resetBtn = document.getElementById('resetBtn');
     if (reportBtn) reportBtn.textContent = t(finalLang, 'generateReport');
+    if (calcBtn) calcBtn.textContent = t(finalLang, 'sendCalculator');
     if (downloadBtn) downloadBtn.textContent = t(finalLang, 'download');
     if (copyBtn) copyBtn.textContent = t(finalLang, 'copy');
     if (resetBtn) resetBtn.textContent = t(finalLang, 'reset');
