@@ -511,7 +511,7 @@
 
   .tool-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 16px;
   }
 
@@ -546,8 +546,78 @@
 
   .newsletter-grid {
     display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 12px;
+  }
+
+  .wechat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .wechat-card,
+  .wechat-empty {
+    min-height: 230px;
+    display: grid;
+    align-content: space-between;
+    gap: 14px;
+    padding: 18px;
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: var(--radius);
+    background: rgba(255,255,255,0.045);
+    transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+  }
+
+  .wechat-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(228,184,91,0.48);
+    background: rgba(228,184,91,0.06);
+  }
+
+  .wechat-card img {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.08);
+  }
+
+  .wechat-card small,
+  .wechat-empty small {
+    color: var(--gold);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+
+  .wechat-card h3,
+  .wechat-empty h3 {
+    margin: 0;
+    font-size: 20px;
+    line-height: 1.22;
+  }
+
+  .wechat-card p,
+  .wechat-empty p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.65;
+  }
+
+  .wechat-empty {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0, 1fr) 112px;
+    align-items: center;
+  }
+
+  .wechat-empty img {
+    width: 112px;
+    height: 112px;
+    border-radius: 12px;
+    background: #fff;
+    object-fit: cover;
   }
 
   .newsletter {
@@ -620,7 +690,7 @@
     }
 
     .newsletter-grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
     }
   }
 
@@ -685,8 +755,18 @@
 
     .project-grid,
     .tool-grid,
+    .wechat-grid,
     .newsletter-grid {
       grid-template-columns: 1fr;
+    }
+
+    .wechat-empty {
+      grid-template-columns: 1fr;
+    }
+
+    .wechat-empty img {
+      width: 96px;
+      height: 96px;
     }
 
     .project {
@@ -752,6 +832,8 @@
   .section-head p,
   .project p,
   .tool p,
+  .wechat-card p,
+  .wechat-empty p,
   .newsletter span,
   .footer {
     color: var(--muted);
@@ -788,6 +870,8 @@
   .signal-board small,
   .quick-routes b,
   .tag,
+  .wechat-card small,
+  .wechat-empty small,
   .newsletter small,
   .tool-icon {
     color: #8a6a3e;
@@ -834,6 +918,8 @@
   .quick-routes a,
   .project,
   .tool,
+  .wechat-card,
+  .wechat-empty,
   .newsletter {
     border-color: #e2dbcf;
     background: var(--panel);
@@ -844,12 +930,15 @@
   .quick-routes a:hover,
   .project:hover,
   .tool:hover,
+  .wechat-card:hover,
   .newsletter:hover {
     border-color: #c9bca9;
     background: rgba(255,255,255,.92);
   }
 
-  .project-media {
+  .project-media,
+  .wechat-card img,
+  .wechat-empty img {
     background: #f1eee8;
   }
 
@@ -902,6 +991,7 @@
     <nav class="nav-links" aria-label="Primary navigation">
       <a href="#projects">Pages</a>
       <a href="#tools">Tools</a>
+      <a href="#wechat">WeChat</a>
       <a href="#newsletter">Newsletter</a>
       <a href="cdn-newsletter/Mayalit/202607/">Latest</a>
       <a href="https://shaowt.com/">shaowt.com</a>
@@ -1023,6 +1113,26 @@
       </div>
     </section>
 
+    <section class="section" id="wechat">
+      <div class="section-head">
+        <div>
+          <div class="section-label">WeChat Articles</div>
+          <h2>瓶子先森Light</h2>
+        </div>
+      </div>
+
+      <div class="wechat-grid" id="wechatPosts" aria-live="polite">
+        <article class="wechat-empty">
+          <div>
+            <small>WeChat account</small>
+            <h3>文章栏目已就位</h3>
+            <p>后续会在这里展示公众号文章，方便从主页直接进入阅读。</p>
+          </div>
+          <img src="assets/wechat-light-qrcode.jpg" alt="瓶子先森Light 微信二维码">
+        </article>
+      </div>
+    </section>
+
     <section class="section" id="newsletter">
       <div class="section-head">
         <div>
@@ -1075,6 +1185,42 @@
       });
     }, { threshold: 0.25 });
     videos.forEach((video) => observer.observe(video));
+  }
+
+  const wechatContainer = document.querySelector("#wechatPosts");
+  const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+    "'": "&#39;"
+  }[char]));
+  const renderWechatPosts = (posts = []) => {
+    if (!wechatContainer || !Array.isArray(posts) || posts.length === 0) return;
+    wechatContainer.innerHTML = posts.slice(0, 6).map((post) => {
+      const title = escapeHtml(post.title || "Untitled WeChat Article");
+      const date = escapeHtml(post.date || "WeChat");
+      const summary = escapeHtml(post.summary || "");
+      const url = escapeHtml(post.url || "#wechat");
+      const cover = escapeHtml(post.cover || "assets/wechat-light-qrcode.jpg");
+      return `
+        <a class="wechat-card" href="${url}" target="_blank" rel="noopener">
+          <img src="${cover}" alt="${title}">
+          <div>
+            <small>${date}</small>
+            <h3>${title}</h3>
+            <p>${summary}</p>
+          </div>
+          <span class="open-link">Read on WeChat</span>
+        </a>
+      `;
+    }).join("");
+  };
+  if (wechatContainer) {
+    fetch("assets/data/wechat-posts.json", { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : Promise.reject(new Error(String(response.status))))
+      .then((data) => renderWechatPosts(data.posts))
+      .catch(() => {});
   }
 </script>
 <script defer src="./assets/visitor-counter.js"></script>
