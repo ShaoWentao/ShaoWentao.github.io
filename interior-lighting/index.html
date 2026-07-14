@@ -20,6 +20,9 @@
   .tool-action b { width:38px; height:38px; display:grid; place-items:center; border:1px solid #9fb6ca; border-radius:4px; color:#2d5f9f; background:#f8fbff; font-size:13px; line-height:1; font-weight:700; white-space:nowrap; overflow:hidden; }
   .tool-action span { display:block; width:54px; text-align:center; }
   .hidden-file { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; }
+  .drop-overlay { position:fixed; inset:0; z-index:10000; display:none; place-items:center; padding:24px; background:rgba(32,32,32,.58); backdrop-filter:blur(2px); pointer-events:none; }
+  .drop-overlay div { min-width:min(520px,calc(100vw - 48px)); padding:34px 28px; border:2px dashed rgba(255,255,255,.8); border-radius:8px; background:rgba(255,255,255,.94); color:#202020; text-align:center; font-size:22px; font-weight:800; box-shadow:0 18px 44px rgba(0,0,0,.28); }
+  body.dragging-file .drop-overlay { display:grid; }
   .title { text-align:center; font-size:32px; font-weight:400; letter-spacing:.01em; color:#2b2b2b; }
   .toolbar-side { display:grid; gap:6px; justify-items:end; }
   .brand { text-align:right; color:#56616a; font-size:18px; font-weight:700; opacity:.72; }
@@ -149,7 +152,7 @@
       <label class="tool-action" for="iesFile" id="importAction"><b>Open</b><span>Import</span></label>
       <button class="tool-action" type="button" id="resetTool"><b>New</b><span>Reset</span></button>
       <button class="tool-action" type="button" id="printTool"><b>PDF</b><span>Print</span></button>
-      <input class="hidden-file" id="iesFile" type="file" accept=".ies,.IES,text/plain">
+      <input class="hidden-file" id="iesFile" type="file" accept=".ies,.IES,.ldt,.LDT,text/plain">
     </div>
     <div class="title">Simple Interior Illuminance Calculator</div>
     <div class="toolbar-side">
@@ -168,7 +171,7 @@
 
       <div class="section file-row">
         <h3>Photometric File</h3>
-        <div class="file-name" id="fileName">No photometric file loaded. Upload a file to calculate with luminaire data.</div>
+        <div class="file-name" id="fileName">No photometric file loaded. Upload or drop an IES/LDT file to calculate with luminaire data.</div>
       </div>
 
       <div class="section">
@@ -299,6 +302,9 @@
     <b>LOCAL BROWSER TOOL</b>
   </footer>
 </div>
+<div class="drop-overlay" id="dropOverlay" aria-hidden="true">
+  <div>Drop IES or LDT file to load</div>
+</div>
 
 <script>
   const $ = (id) => document.getElementById(id);
@@ -326,7 +332,9 @@
       units: "Units",
       sampleGrid: "Sample Grid",
       photometricFile: "Photometric File",
-      noFile: "No photometric file loaded. Upload a file to calculate with luminaire data.",
+      noFile: "No photometric file loaded. Upload or drop an IES/LDT file to calculate with luminaire data.",
+      dropFile: "Drop IES or LDT file to load",
+      unsupportedFile: "Please use an IES or LDT photometric file.",
       roomDimensions: "Room Dimensions",
       length: "Length [X]",
       width: "Width [Y]",
@@ -385,7 +393,7 @@
       circular: "Circular",
       footer: "Results are for early design comparison. Final layouts should be checked with full lighting simulation and confirmed product photometry.",
       localTool: "LOCAL BROWSER TOOL",
-      readFailed: "Unable to read IES"
+      readFailed: "Unable to read photometric file"
     },
     zh: {
       docTitle: "简易室内照度计算器 | Shao Wentao",
@@ -399,7 +407,9 @@
       units: "单位",
       sampleGrid: "采样网格",
       photometricFile: "配光文件",
-      noFile: "尚未载入配光文件。请上传 IES 文件后进行照度计算。",
+      noFile: "尚未载入配光文件。请上传或拖入 IES/LDT 文件后进行照度计算。",
+      dropFile: "拖入 IES 或 LDT 文件即可载入",
+      unsupportedFile: "请使用 IES 或 LDT 配光文件。",
       roomDimensions: "空间尺寸",
       length: "长度 [X]",
       width: "宽度 [Y]",
@@ -458,7 +468,7 @@
       circular: "圆形",
       footer: "结果用于前期方案对比。最终布置应通过完整照明模拟和确认后的产品配光文件复核。",
       localTool: "本地浏览器工具",
-      readFailed: "无法读取 IES"
+      readFailed: "无法读取配光文件"
     }
   };
 
@@ -557,6 +567,7 @@
     });
     setText(".footer span", tt("footer"));
     setText(".footer b", tt("localTool"));
+    setText("#dropOverlay div", tt("dropFile"));
     const selector = $("languageSelect");
     if (selector) selector.value = currentLang;
   }
@@ -670,6 +681,63 @@
     }
     const keys = parseKeywords(lines);
     return { fileName, manufacturer: keys.manufacturer || "Photometric Luminaire", catalog: keys.catalog || fileName, lampCount, lumensPerLamp, power, width, length, height, photometricType, verticalAngles, horizontalAngles, candela };
+  }
+
+  function parseLDT(text, fileName) {
+    const lines = text.replace(/\r/g, "").split("\n").map((line) => line.trim());
+    const value = (index) => lines[index] || "";
+    const numberAt = (index, fallback = 0) => {
+      const num = Number(String(value(index)).replace(",", ".").split(/\s+/)[0]);
+      return Number.isFinite(num) ? num : fallback;
+    };
+    const numberListAfter = (start) => lines.slice(start).join(" ").replace(/,/g, ".").split(/\s+/).map(Number).filter(Number.isFinite);
+    const nC = Math.max(1, Math.round(numberAt(3, 1)));
+    const dC = numberAt(4, 0);
+    const nG = Math.max(1, Math.round(numberAt(5, 1)));
+    const dG = numberAt(6, 0);
+    let lampCount = Math.max(1, Math.round(numberAt(23, 1)));
+    let lumensPerLamp = numberAt(28, 1000);
+    const power = numberAt(31, 0);
+    const length = numberAt(12, 0) / 1000;
+    const width = numberAt(13, 0) / 1000;
+    const height = numberAt(14, 0) / 1000;
+    let values = numberListAfter(33);
+    let horizontalAngles = values.slice(0, nC);
+    let verticalAngles = values.slice(nC, nC + nG);
+    let rawCandela = values.slice(nC + nG, nC + nG + nC * nG);
+    if (horizontalAngles.length < nC || verticalAngles.length < nG || rawCandela.length < nC * nG) {
+      const fallbackAngles = [];
+      for (let c = 0; c < nC; c += 1) fallbackAngles.push(dC ? c * dC : c * (360 / Math.max(1, nC)));
+      horizontalAngles = horizontalAngles.length >= nC ? horizontalAngles : fallbackAngles;
+      verticalAngles = verticalAngles.length >= nG ? verticalAngles : Array.from({ length: nG }, (_, index) => dG ? index * dG : index);
+      rawCandela = rawCandela.length >= nC * nG ? rawCandela : values.slice(-nC * nG);
+    }
+    if (rawCandela.length < nC * nG) throw new Error("Incomplete LDT candela data.");
+    if (lumensPerLamp < 0) lumensPerLamp = Math.abs(lumensPerLamp);
+    const cdMultiplier = lumensPerLamp > 0 ? lampCount * lumensPerLamp / 1000 : 1;
+    const candela = [];
+    for (let c = 0; c < nC; c += 1) {
+      candela.push(rawCandela.slice(c * nG, (c + 1) * nG).map((item) => Math.max(0, item * cdMultiplier)));
+    }
+    return {
+      fileName,
+      manufacturer: value(0) || "EULUMDAT Luminaire",
+      catalog: value(8) || value(9) || fileName,
+      lampCount,
+      lumensPerLamp,
+      power,
+      width,
+      length,
+      height,
+      photometricType: 1,
+      verticalAngles,
+      horizontalAngles,
+      candela
+    };
+  }
+
+  function parsePhotometricFile(text, fileName) {
+    return /\.ldt$/i.test(fileName || "") ? parseLDT(text, fileName) : parseIES(text, fileName);
   }
 
   function integrateSeries(points, closed = false) {
@@ -1551,7 +1619,7 @@
   });
 
   function addPhotometricSchemeFromText(text, fileName) {
-    const parsed = parseIES(text, fileName);
+    const parsed = parsePhotometricFile(text, fileName);
     schemes.push({ data: parsed });
     activeScheme = schemes.length - 1;
     iesData = schemes[activeScheme].data;
@@ -1560,6 +1628,27 @@
     if (iesData.width) $("symbolWidth").value = fmt(Math.abs(iesData.width), 2);
     if (iesData.length) $("symbolLength").value = fmt(Math.abs(iesData.length), 2);
     return parsed;
+  }
+
+  async function loadPhotometricFile(file) {
+    if (!file) return false;
+    if (!/\.(ies|ldt)$/i.test(file.name || "")) {
+      $("fileName").textContent = tt("unsupportedFile");
+      return false;
+    }
+    try {
+      addPhotometricSchemeFromText(await file.text(), file.name);
+      update();
+      return true;
+    } catch (error) {
+      pendingNewScheme = false;
+      $("fileName").textContent = `${tt("readFailed")}: ${error.message || error}`;
+      return false;
+    }
+  }
+
+  function firstPhotometricFile(fileList) {
+    return Array.from(fileList || []).find((file) => /\.(ies|ldt)$/i.test(file.name || "")) || null;
   }
 
   function loadPendingEditorIES() {
@@ -1583,16 +1672,42 @@
   }
 
   $("iesFile").addEventListener("change", async (event) => {
-    const file = event.target.files && event.target.files[0];
-    if (!file) return;
-    try {
-      addPhotometricSchemeFromText(await file.text(), file.name);
-      update();
-      event.target.value = "";
-    } catch (error) {
-      pendingNewScheme = false;
-      $("fileName").textContent = `${tt("readFailed")}: ${error.message}`;
-    }
+    await loadPhotometricFile(firstPhotometricFile(event.target.files));
+    event.target.value = "";
+  });
+
+  let dragDepth = 0;
+  function hasFileDrag(event) {
+    return Array.from((event.dataTransfer && event.dataTransfer.types) || []).includes("Files");
+  }
+  function showDropOverlay(show) {
+    document.body.classList.toggle("dragging-file", show);
+    const overlay = $("dropOverlay");
+    if (overlay) overlay.setAttribute("aria-hidden", show ? "false" : "true");
+  }
+  window.addEventListener("dragenter", (event) => {
+    if (!hasFileDrag(event)) return;
+    event.preventDefault();
+    dragDepth += 1;
+    showDropOverlay(true);
+  });
+  window.addEventListener("dragover", (event) => {
+    if (!hasFileDrag(event)) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+  });
+  window.addEventListener("dragleave", (event) => {
+    if (!hasFileDrag(event)) return;
+    event.preventDefault();
+    dragDepth = Math.max(0, dragDepth - 1);
+    if (dragDepth === 0) showDropOverlay(false);
+  });
+  window.addEventListener("drop", async (event) => {
+    if (!hasFileDrag(event)) return;
+    event.preventDefault();
+    dragDepth = 0;
+    showDropOverlay(false);
+    await loadPhotometricFile(firstPhotometricFile(event.dataTransfer.files));
   });
   $("resetTool").addEventListener("click", () => {
     iesData = null;
