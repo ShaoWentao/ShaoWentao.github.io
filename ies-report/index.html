@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IES Report | Shao Wentao</title>
+<meta name="description" content="Read IES files and generate editable photometric reports in the browser.">
+<style>
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    background:
+      linear-gradient(rgba(0,0,0,.028) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,0,0,.022) 1px, transparent 1px),
+      linear-gradient(180deg, rgba(255,255,255,.72), rgba(250,247,243,.94)),
+      url("../assets/home/moss-wood.jpg") center/cover no-repeat,
+      #fbfaf8;
+    background-size: 48px 48px, 48px 48px, auto, cover, auto;
+    color: #272520;
+    font-family: Inter, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+  }
+  .loader {
+    max-width: 620px;
+    margin: 24px;
+    padding: 30px 34px;
+    border: 1px solid #e2dbcf;
+    border-radius: 8px;
+    background: rgba(255,255,255,.76);
+    box-shadow: 0 24px 60px rgba(57,46,28,.12);
+    backdrop-filter: blur(18px);
+    line-height: 1.7;
+  }
+  .loader strong { display:block; font-family: Georgia, "Times New Roman", serif; font-size: 30px; font-weight: 500; line-height: 1.1; margin-bottom: 10px; }
+  .loader p { margin: 0; color: #6f6a62; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="loader">
+  <strong>Loading IES Report...</strong>
+  <p>正在载入报告页面和固定页尾 / 光强数据分页模块。</p>
+</div>
+<script>
+(() => {
+  const pinnedReportVersion = '0c6331ab2146455d3bef6099ba5cea557871e797';
+  const reportSources = [
+    `https://raw.githubusercontent.com/ShaoWentao/ShaoWentao.github.io/${pinnedReportVersion}/ies-report/index.html`,
+    `https://cdn.jsdelivr.net/gh/ShaoWentao/ShaoWentao.github.io@${pinnedReportVersion}/ies-report/index.html`
+  ];
+
+  const modules = [
+    'report-fixed-footer-layout.js?v=20260628',
+    'report-candela-pagination.js?v=20260628'
+  ];
+
+  const visualRefreshStyle = `
+<style id="codex-report-shell-refresh">
+  @media screen {
+    body {
+      background:
+        linear-gradient(rgba(0,0,0,.028) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,.022) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(255,255,255,.78), rgba(250,247,243,.96)),
+        url("../assets/home/moss-wood.jpg") center/cover fixed no-repeat,
+        #fbfaf8 !important;
+      background-size: 48px 48px, 48px 48px, auto, cover, auto !important;
+      color: #272520 !important;
+    }
+    .topbar {
+      background: rgba(255,255,255,.86) !important;
+      border-bottom: 1px solid #eee9e0 !important;
+      backdrop-filter: blur(18px);
+    }
+    .topbar,
+    .topbar a,
+    .topbar span,
+    .topbar strong,
+    nav a {
+      color: #272520 !important;
+    }
+    .panel,
+    aside {
+      background: rgba(255,255,255,.86) !important;
+      border-color: #e2dbcf !important;
+      box-shadow: 0 24px 60px rgba(57,46,28,.12) !important;
+      backdrop-filter: blur(18px);
+    }
+    button,
+    .primary,
+    input,
+    select,
+    textarea {
+      border-radius: 8px !important;
+    }
+    button.primary,
+    .primary {
+      border-color: #26231e !important;
+      background: #26231e !important;
+      color: #fff !important;
+      font-weight: 800 !important;
+    }
+    input,
+    select,
+    textarea {
+      background: #fbfaf8 !important;
+      border-color: #ddd4c7 !important;
+      color: #272520 !important;
+    }
+    label,
+    .field label,
+    .form label,
+    .panel label,
+    aside label {
+      color: #3a352e !important;
+    }
+    .paper,
+    .paper * {
+      filter: none !important;
+      text-shadow: none !important;
+    }
+    .paper {
+      background: #fff !important;
+      color: #111 !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+    }
+    .paper .report-head,
+    .paper .report-head *,
+    .paper header,
+    .paper header *,
+    .paper .lab,
+    .paper .logo,
+    .paper .cdn-logo,
+    .paper .report-logo,
+    .paper .page-no {
+      background: transparent !important;
+      box-shadow: none !important;
+      filter: none !important;
+      text-shadow: none !important;
+      backdrop-filter: none !important;
+    }
+  }
+  </style>`;
+
+  function moduleTags() {
+    return modules.map((src) => `<script src="${src}"></` + `script>`).join('\n');
+  }
+
+  function patchReportHtml(html) {
+    const withStyle = html.includes('codex-report-shell-refresh')
+      ? html
+      : html.replace(/<\/head>/i, `${visualRefreshStyle}\n</head>`);
+    const patched = withStyle.replace(/<\/body>\s*<\/html>\s*$/i, `${moduleTags()}\n</body>\n</html>`);
+    return patched.includes('report-fixed-footer-layout.js') ? patched : html + moduleTags();
+  }
+
+  async function loadReport() {
+    let lastError = null;
+    for (const source of reportSources) {
+      try {
+        const response = await fetch(source, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const html = await response.text();
+        document.open();
+        document.write(patchReportHtml(html));
+        document.close();
+        return;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+    document.body.innerHTML = `<div class="loader"><strong>IES Report failed to load.</strong><p>${String(lastError && lastError.message || lastError || 'Unknown error')}</p></div>`;
+  }
+
+  loadReport();
+})();
+</script>
+<script defer src="../assets/visitor-counter.js"></script>
+</body>
+</html>

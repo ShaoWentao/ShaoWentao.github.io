@@ -1,71 +1,1228 @@
-<!DOCTYPE html>
-<html lang="zh-cn">
-
+<!doctype html>
+<html lang="zh-CN">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>IES Editor</title>
-    
-    <base href="/" />
-    
-    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
-    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Digital Lighting Workspace | Shao Wentao</title>
+<meta name="description" content="A unified workspace for lighting brand pages, newsletter archives, and browser-based IES tools.">
+<style>
+  :root {
+    --bg: #050505;
+    --ink: #f6f1e8;
+    --muted: rgba(235, 239, 245, 0.68);
+    --soft: rgba(255, 255, 255, 0.1);
+    --line: rgba(255, 255, 255, 0.16);
+    --gold: #e4b85b;
+    --ember: #ff6b25;
+    --green: #a6e96b;
+    --panel: rgba(8, 9, 11, 0.68);
+    --panel-strong: rgba(255, 255, 255, 0.08);
+    --radius: 8px;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: Inter, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+    letter-spacing: 0;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  img,
+  video {
+    display: block;
+    max-width: 100%;
+  }
+
+  a:focus-visible,
+  button:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 4px;
+  }
+
+  .site {
+    min-height: 100vh;
+    overflow: hidden;
+    background:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px),
+      #050505;
+    background-size: 48px 48px, 48px 48px, auto;
+  }
+
+  .nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 18px clamp(20px, 4vw, 58px);
+    background: linear-gradient(to bottom, rgba(0,0,0,0.82), rgba(0,0,0,0.32));
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    backdrop-filter: blur(18px);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .brand-mark {
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255,255,255,0.28);
+    border-radius: var(--radius);
+    color: #0b0905;
+    background: linear-gradient(135deg, #fff0b8, #e6b34e 48%, #ff6b25);
+    font-weight: 900;
+    box-shadow: 0 0 34px rgba(228, 184, 91, 0.3);
+  }
+
+  .brand-name strong {
+    display: block;
+    font-size: 14px;
+    line-height: 18px;
+  }
+
+  .brand-name span {
+    display: block;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 16px;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: rgba(245,248,255,0.76);
+    font-size: 13px;
+  }
+
+  .nav-links a {
+    padding: 8px 10px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    transition: border-color 180ms ease, background 180ms ease, color 180ms ease;
+  }
+
+  .nav-links a:hover {
+    color: #fff;
+    border-color: rgba(228,184,91,0.45);
+    background: rgba(228,184,91,0.08);
+  }
+
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    isolation: isolate;
+    display: grid;
+    align-items: center;
+    padding: 112px clamp(20px, 5vw, 76px) 58px;
+  }
+
+  .hero-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -3;
+    filter: saturate(1.05) contrast(1.08);
+  }
+
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    background:
+      radial-gradient(ellipse at 50% 46%, rgba(40, 120, 180, 0.18), transparent 36%),
+      linear-gradient(90deg, rgba(0,0,0,0.72), rgba(0,0,0,0.2) 46%, rgba(0,0,0,0.76)),
+      linear-gradient(to bottom, rgba(0,0,0,0.42), transparent 35%, #050505 100%);
+  }
+
+  .hero::after {
+    content: "";
+    position: absolute;
+    left: clamp(20px, 5vw, 76px);
+    right: clamp(20px, 5vw, 76px);
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.32), transparent);
+  }
+
+  .hero-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(300px, 0.95fr);
+    gap: clamp(28px, 6vw, 82px);
+    align-items: end;
+  }
+
+  .kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: #f3d28a;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+  }
+
+  .kicker::before {
+    content: "";
+    width: 34px;
+    height: 1px;
+    background: var(--gold);
+  }
+
+  h1 {
+    margin: 18px 0 0;
+    max-width: 930px;
+    font-family: Georgia, "Times New Roman", "Songti SC", serif;
+    font-size: clamp(58px, 9vw, 124px);
+    line-height: 0.88;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-shadow: 0 0 28px rgba(130, 190, 255, 0.34), 0 0 88px rgba(228, 184, 91, 0.18);
+  }
+
+  .hero-copy p {
+    margin: 24px 0 0;
+    max-width: 620px;
+    color: rgba(244,248,255,0.82);
+    font-size: clamp(16px, 1.8vw, 21px);
+    line-height: 1.68;
+  }
+
+  .cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 30px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    min-height: 42px;
+    padding: 11px 16px;
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 999px;
+    color: #fff;
+    background: rgba(255,255,255,0.06);
+    font-size: 13px;
+    transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+  }
+
+  .btn.primary {
+    border-color: rgba(228,184,91,0.72);
+    background: linear-gradient(135deg, rgba(228,184,91,0.92), rgba(255,107,37,0.88));
+    color: #120d08;
+    font-weight: 800;
+  }
+
+  .btn:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255,255,255,0.38);
+    background: rgba(255,255,255,0.11);
+  }
+
+  .hero-panel {
+    align-self: stretch;
+    display: grid;
+    align-content: end;
+    gap: 14px;
+  }
+
+  .signal-board {
+    border-left: 3px solid rgba(228,184,91,0.86);
+    padding-left: 18px;
+    max-width: 420px;
+    justify-self: end;
+    text-align: right;
+  }
+
+  .signal-board small {
+    display: block;
+    color: var(--gold);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+  }
+
+  .signal-board strong {
+    display: block;
+    margin-top: 8px;
+    font-size: clamp(26px, 3.8vw, 48px);
+    line-height: 1;
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 500;
+  }
+
+  .signal-board span {
+    display: block;
+    margin-top: 12px;
+    color: rgba(235,239,245,0.72);
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .quick-routes {
+    display: grid;
+    gap: 8px;
+    max-width: 460px;
+    justify-self: end;
+    width: 100%;
+    margin-top: 32px;
+  }
+
+  .quick-routes a {
+    display: grid;
+    grid-template-columns: 38px 1fr auto;
+    align-items: center;
+    gap: 14px;
+    min-height: 58px;
+    padding: 10px 12px;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(0,0,0,0.34);
+    border-radius: var(--radius);
+    backdrop-filter: blur(16px);
+    transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+  }
+
+  .quick-routes a:hover {
+    transform: translateX(-4px);
+    border-color: rgba(228,184,91,0.46);
+    background: rgba(228,184,91,0.08);
+  }
+
+  .quick-routes b {
+    color: var(--gold);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 18px;
+    font-weight: 500;
+  }
+
+  .quick-routes strong {
+    display: block;
+    font-size: 14px;
+  }
+
+  .quick-routes span span {
+    display: block;
+    margin-top: 3px;
+    color: rgba(235,239,245,0.62);
+    font-size: 12px;
+  }
+
+  .reveal {
+    --mx: 50%;
+    --my: 52%;
+    position: relative;
+    min-height: 100vh;
+    display: grid;
+    align-items: center;
+    padding: 92px clamp(20px, 5vw, 76px);
+    isolation: isolate;
+    overflow: hidden;
+    background: #050505;
+  }
+
+  .reveal-bg,
+  .reveal-mask {
+    position: absolute;
+    inset: 0;
+    background-position: center;
+    background-size: cover;
+    z-index: -3;
+  }
+
+  .reveal-bg {
+    background-image: url("assets/home/dark-wood.jpg");
+  }
+
+  .reveal-mask {
+    z-index: -2;
+    background-image: url("assets/home/moss-wood.jpg");
+    -webkit-mask-image: radial-gradient(circle 250px at var(--mx) var(--my), #000 0%, #000 48%, transparent 74%);
+    mask-image: radial-gradient(circle 250px at var(--mx) var(--my), #000 0%, #000 48%, transparent 74%);
+  }
+
+  .reveal::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      linear-gradient(90deg, rgba(0,0,0,0.72), rgba(0,0,0,0.18) 54%, rgba(0,0,0,0.84)),
+      linear-gradient(to bottom, #050505 0%, transparent 22%, transparent 72%, #050505 100%);
+  }
+
+  .reveal-copy {
+    max-width: 670px;
+  }
+
+  .section-label {
+    color: var(--gold);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+  }
+
+  .reveal h2,
+  .section h2 {
+    margin: 14px 0 0;
+    font-family: Georgia, "Times New Roman", "Songti SC", serif;
+    font-size: clamp(40px, 6vw, 88px);
+    line-height: 0.98;
+    font-weight: 500;
+  }
+
+  .reveal p,
+  .section-head p {
+    margin: 18px 0 0;
+    max-width: 710px;
+    color: var(--muted);
+    font-size: 16px;
+    line-height: 1.75;
+  }
+
+  .reveal-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 26px;
+  }
+
+  .section {
+    padding: clamp(70px, 8vw, 112px) clamp(20px, 5vw, 76px);
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .section-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 28px;
+    align-items: end;
+    margin-bottom: 28px;
+  }
+
+  .section-head p {
+    max-width: 520px;
+    margin-top: 0;
+  }
+
+  .project-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .project {
+    min-height: 360px;
+    display: grid;
+    grid-template-rows: 190px 1fr;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: var(--radius);
+    background: rgba(255,255,255,0.045);
+    transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+  }
+
+  .project:hover {
+    transform: translateY(-4px);
+    border-color: rgba(228,184,91,0.46);
+    background: rgba(228,184,91,0.055);
+  }
+
+  .project-media {
+    background: #111;
+    overflow: hidden;
+  }
+
+  .project-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 500ms ease;
+  }
+
+  .project:hover img {
+    transform: scale(1.04);
+  }
+
+  .project-body {
+    display: grid;
+    align-content: space-between;
+    gap: 18px;
+    padding: 18px;
+  }
+
+  .tag {
+    display: inline-flex;
+    color: var(--gold);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  .project h3,
+  .tool h3 {
+    margin: 10px 0 0;
+    font-size: 24px;
+    line-height: 1.14;
+    font-weight: 600;
+  }
+
+  .project p,
+  .tool p {
+    margin: 10px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.65;
+  }
+
+  .open-link {
+    color: #fff;
+    font-size: 12px;
+  }
+
+  .tool-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .tool {
+    min-height: 260px;
+    display: grid;
+    align-content: space-between;
+    padding: 22px;
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: var(--radius);
+    background:
+      linear-gradient(135deg, rgba(228,184,91,0.08), transparent 38%),
+      rgba(255,255,255,0.045);
+    transition: transform 180ms ease, border-color 180ms ease;
+  }
+
+  .tool:hover {
+    transform: translateY(-4px);
+    border-color: rgba(228,184,91,0.5);
+  }
+
+  .tool-icon {
+    width: 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius);
+    border: 1px solid rgba(255,255,255,0.18);
+    color: var(--gold);
+    font-weight: 900;
+  }
+
+  .newsletter-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .wechat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .wechat-card,
+  .wechat-empty {
+    min-height: 230px;
+    display: grid;
+    align-content: space-between;
+    gap: 14px;
+    padding: 18px;
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: var(--radius);
+    background: rgba(255,255,255,0.045);
+    transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+  }
+
+  .wechat-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(228,184,91,0.48);
+    background: rgba(228,184,91,0.06);
+  }
+
+  .wechat-card img {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.08);
+  }
+
+  .wechat-card small,
+  .wechat-empty small {
+    color: var(--gold);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+
+  .wechat-card h3,
+  .wechat-empty h3 {
+    margin: 0;
+    font-size: 20px;
+    line-height: 1.22;
+  }
+
+  .wechat-card p,
+  .wechat-empty p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.65;
+  }
+
+  .wechat-empty {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0, 1fr) 112px;
+    align-items: center;
+  }
+
+  .wechat-empty img {
+    width: 112px;
+    height: 112px;
+    border-radius: 12px;
+    background: #fff;
+    object-fit: cover;
+  }
+
+  .newsletter {
+    min-height: 190px;
+    display: grid;
+    align-content: space-between;
+    padding: 16px;
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: var(--radius);
+    background: rgba(255,255,255,0.045);
+    transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+  }
+
+  .newsletter:hover {
+    transform: translateY(-4px);
+    border-color: rgba(228,184,91,0.48);
+    background: rgba(228,184,91,0.06);
+  }
+
+  .newsletter small {
+    color: var(--gold);
+    font-size: 11px;
+    text-transform: uppercase;
+  }
+
+  .newsletter strong {
+    display: block;
+    margin-top: 10px;
+    font-size: 18px;
+    line-height: 1.18;
+  }
+
+  .newsletter span {
+    display: block;
+    margin-top: 9px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.55;
+  }
+
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 34px clamp(20px, 5vw, 76px);
+    border-top: 1px solid rgba(255,255,255,0.12);
+    color: rgba(235,239,245,0.58);
+    font-size: 12px;
+  }
+
+  @media (max-width: 1080px) {
+    .hero-layout,
+    .section-head {
+      grid-template-columns: 1fr;
+      display: block;
+    }
+
+    .hero-panel {
+      margin-top: 42px;
+    }
+
+    .signal-board,
+    .quick-routes {
+      justify-self: start;
+      text-align: left;
+    }
+
+    .project-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .newsletter-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 720px) {
+    .nav {
+      position: absolute;
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .nav-links {
+      width: 100%;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .nav-links a:last-child {
+      display: none;
+    }
+
+    .hero {
+      min-height: 920px;
+      padding-top: 168px;
+    }
+
+    .hero-layout,
+    .hero-copy,
+    .hero-panel {
+      width: 100%;
+      min-width: 0;
+    }
+
+    h1 {
+      max-width: 100%;
+      font-size: clamp(42px, 14vw, 58px);
+      line-height: 0.96;
+    }
+
+    .hero-copy p {
+      max-width: 330px;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .signal-board span {
+      max-width: 330px;
+    }
+
+    .cta-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      width: min(100%, 260px);
+      gap: 10px;
+    }
+
+    .btn {
+      justify-content: center;
+      min-height: 40px;
+      padding: 10px 14px;
+    }
+
+    .project-grid,
+    .tool-grid,
+    .wechat-grid,
+    .newsletter-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .wechat-empty {
+      grid-template-columns: 1fr;
+    }
+
+    .wechat-empty img {
+      width: 96px;
+      height: 96px;
+    }
+
+    .project {
+      min-height: 330px;
+    }
+
+    .reveal {
+      min-height: 820px;
+    }
+
+    .footer {
+      flex-direction: column;
+    }
+  }
+
+  /* Unified light workspace theme, aligned with the IES tool pages. */
+  :root {
+    --bg: #fbfaf8;
+    --ink: #272520;
+    --muted: #6f6a62;
+    --soft: rgba(38, 35, 30, 0.08);
+    --line: #e4ded4;
+    --gold: #c68a36;
+    --ember: #d85f22;
+    --green: #2f6f57;
+    --panel: rgba(255, 255, 255, 0.78);
+    --panel-strong: rgba(255, 255, 255, 0.9);
+    --shadow: 0 24px 60px rgba(57,46,28,.12);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+  }
+
+  .site {
+    background:
+      linear-gradient(rgba(0,0,0,.028) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,0,0,.022) 1px, transparent 1px),
+      linear-gradient(180deg, #fff 0, #fbfaf8 42%, #f7f2ea 100%);
+    background-size: 48px 48px, 48px 48px, auto;
+  }
+
+  .nav {
+    background: rgba(255,255,255,.86);
+    border-bottom: 1px solid #eee9e0;
+    box-shadow: 0 18px 45px rgba(57,46,28,.08);
+  }
+
+  .brand-mark {
+    border-color: #ded5c7;
+    color: #fff;
+    background: #26231e;
+    box-shadow: none;
+  }
+
+  .brand-name span,
+  .nav-links,
+  .hero-copy p,
+  .signal-board span,
+  .quick-routes span span,
+  .reveal p,
+  .section-head p,
+  .project p,
+  .tool p,
+  .wechat-card p,
+  .wechat-empty p,
+  .newsletter span,
+  .footer {
+    color: var(--muted);
+  }
+
+  .nav-links a:hover {
+    color: #111;
+    border-color: #ded5c7;
+    background: #f4efe7;
+  }
+
+  .hero {
+    min-height: 760px;
+    background: #fbfaf8;
+  }
+
+  .hero-video {
+    opacity: .74;
+    filter: saturate(.82) contrast(.96) brightness(1.1);
+  }
+
+  .hero::before {
+    background:
+      linear-gradient(90deg, rgba(255,255,255,.76), rgba(255,255,255,.46) 46%, rgba(250,247,243,.78)),
+      linear-gradient(to bottom, rgba(255,255,255,.52), transparent 38%, #fbfaf8 100%);
+  }
+
+  .hero::after {
+    background: linear-gradient(90deg, transparent, rgba(38,35,30,.2), transparent);
+  }
+
+  .kicker,
+  .section-label,
+  .signal-board small,
+  .quick-routes b,
+  .tag,
+  .wechat-card small,
+  .wechat-empty small,
+  .newsletter small,
+  .tool-icon {
+    color: #8a6a3e;
+  }
+
+  .kicker::before {
+    background: #c9bca9;
+  }
+
+  h1,
+  .reveal h2,
+  .section h2 {
+    color: #272520;
+    line-height: 1.04;
+    text-shadow: none;
+  }
+
+  h1 {
+    font-size: clamp(50px, 7.2vw, 96px);
+  }
+
+  .btn {
+    border-color: rgba(38,35,30,.28);
+    color: #26231e;
+    background: rgba(255,255,255,.56);
+    backdrop-filter: blur(10px);
+  }
+
+  .btn.primary {
+    border-color: #26231e;
+    background: #26231e;
+    color: #fff;
+  }
+
+  .btn:hover {
+    border-color: #26231e;
+    background: #f3eee6;
+  }
+
+  .signal-board {
+    border-left-color: #c68a36;
+  }
+
+  .quick-routes a,
+  .project,
+  .tool,
+  .wechat-card,
+  .wechat-empty,
+  .newsletter {
+    border-color: #e2dbcf;
+    background: var(--panel);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(18px);
+  }
+
+  .quick-routes a:hover,
+  .project:hover,
+  .tool:hover,
+  .wechat-card:hover,
+  .newsletter:hover {
+    border-color: #c9bca9;
+    background: rgba(255,255,255,.92);
+  }
+
+  .project-media,
+  .wechat-card img,
+  .wechat-empty img {
+    background: #f1eee8;
+  }
+
+  .open-link {
+    color: #26231e;
+    font-weight: 700;
+  }
+
+  .tool {
+    background:
+      linear-gradient(135deg, rgba(198,138,54,.12), transparent 38%),
+      rgba(255,255,255,.78);
+  }
+
+  .tool-icon {
+    border-color: #ded5c7;
+    background: #fbfaf8;
+  }
+
+  .reveal {
+    background: #fbfaf8;
+  }
+
+  .reveal::before {
+    background:
+      linear-gradient(90deg, rgba(255,255,255,.88), rgba(255,255,255,.52) 54%, rgba(250,247,243,.94)),
+      linear-gradient(to bottom, #fbfaf8 0%, transparent 24%, transparent 72%, #fbfaf8 100%);
+  }
+
+  .section {
+    border-top-color: #eee9e0;
+  }
+
+  .footer {
+    border-top-color: #eee9e0;
+    background: rgba(255,255,255,.68);
+  }
+</style>
 </head>
-
 <body>
-    <div id="app">
-        <svg class="loading-progress">
-            <circle r="40%" cx="50%" cy="50%" />
-            <circle r="40%" cx="50%" cy="50%" />
-        </svg>
-        <div class="loading-progress-text">Loading...</div>
-    </div>
+<div class="site" id="top">
+  <header class="nav">
+    <a class="brand" href="#top" aria-label="Back to top">
+      <span class="brand-mark">DL</span>
+      <span class="brand-name">
+        <strong>Digital Lighting Workspace</strong>
+        <span>Pages, newsletters and IES tools</span>
+      </span>
+    </a>
+    <nav class="nav-links" aria-label="Primary navigation">
+      <a href="#projects">Pages</a>
+      <a href="#tools">Tools</a>
+      <a href="#wechat">WeChat</a>
+      <a href="#newsletter">Newsletter</a>
+      <a href="cdn-newsletter/Mayalit/202607/">Latest</a>
+      <a href="https://shaowt.com/">shaowt.com</a>
+    </nav>
+  </header>
 
-    <div id="blazor-error-ui">
-        An error has occurred.
-        <a href="" class="reload">Reload</a>
-        <a class="dismiss">🗙</a>
-    </div>
+  <main>
+    <section class="hero" aria-label="Workspace introduction">
+      <video class="hero-video" autoplay muted loop playsinline poster="assets/home/dark-wood.jpg">
+        <source src="assets/home/ambient-hero.mp4" type="video/mp4">
+      </video>
+      <div class="hero-layout">
+        <div class="hero-copy">
+          <div class="kicker">Digital Lighting Workspace</div>
+          <h1>Lighting pages,<br>IES tools,<br>and newsletters.</h1>
+          <p>
+            A unified entry for CDN Lighting and Mayalit materials, product storytelling,
+            partner newsletters, and browser tools for photometric file work.
+          </p>
+          <div class="cta-row">
+            <a class="btn primary" href="ies-editor/">Open IES Editor</a>
+            <a class="btn" href="ies-report/">Generate IES Report</a>
+            <a class="btn" href="#newsletter">Browse newsletters</a>
+          </div>
+        </div>
 
-    <script src="_framework/blazor.webassembly.js"></script>
-    
-    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+        <div class="hero-panel">
+          <div class="signal-board">
+            <small>Live Workspace Index</small>
+            <strong>Built for daily operation</strong>
+            <span>Every entry links directly to a live page in this GitHub Pages repository.</span>
+          </div>
+          <div class="quick-routes" aria-label="Quick routes">
+            <a href="aboutCDN/"><b>01</b><span><strong>CDN Lighting</strong><span>Company and brand overview</span></span><span>></span></a>
+            <a href="bach-flash/"><b>02</b><span><strong>BACH Flash</strong><span>Product storytelling page</span></span><span>></span></a>
+            <a href="cdn-newsletter/Mayalit/202607/"><b>03</b><span><strong>Mayalit Newsletter</strong><span>Online training notice</span></span><span>></span></a>
+            <a href="ies-editor/"><b>04</b><span><strong>IES Editor</strong><span>Generate and inspect files</span></span><span>></span></a>
+          </div>
+        </div>
+      </div>
+    </section>
 
-    <script>
-        window.drawPolarCurve = (c0, c90) => {
-            const canvas = document.getElementById('iesCanvas');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            // 简单的防止报错处理
-            if (!c0 || c0.length === 0) return;
-            
-            const w = canvas.width;
-            const h = canvas.height;
-            const radius = Math.min(w, h) / 2 - 20;
-            const cx = w / 2;
-            const cy = h / 2;
-            
-            ctx.clearRect(0, 0, w, h);
-            
-            // 画圆圈
-            ctx.strokeStyle = '#ddd';
-            ctx.beginPath();
-            ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
-            ctx.stroke();
+    <section class="reveal" id="surface" aria-label="Interactive visual reveal">
+      <div class="reveal-bg"></div>
+      <div class="reveal-mask"></div>
+      <div class="reveal-copy">
+        <div class="section-label">Workspace Surface</div>
+        <h2>A calm portal for active lighting work.</h2>
+        <p>
+          The homepage keeps its interactive reveal background while adopting the same light,
+          paper-like visual system used by the IES pages.
+        </p>
+        <div class="reveal-actions">
+          <a class="btn primary" href="#tools">Open tools</a>
+          <a class="btn" href="#projects">View pages</a>
+        </div>
+      </div>
+    </section>
 
-            // 画 C0 (红线)
-            const maxVal = Math.max(...c0);
-            ctx.strokeStyle = 'red';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            for (let i = 0; i < c0.length; i++) {
-                const angle = (i / (c0.length - 1)) * Math.PI + (Math.PI/2); // 简单的下半圆映射
-                const r = (c0[i] / maxVal) * radius;
-                ctx.lineTo(cx + r * Math.cos(angle), cy + r * Math.sin(angle));
-            }
-            ctx.stroke();
-        };
-    </script>
+    <section class="section" id="projects">
+      <div class="section-head">
+        <div>
+          <div class="section-label">Workspace Pages</div>
+          <h2>Brand, product and case pages</h2>
+        </div>
+        <p>Selected live pages from the repository, organized for quick access and reuse.</p>
+      </div>
+
+      <div class="project-grid">
+        <a class="project" href="aboutCDN/">
+          <div class="project-media"><img src="aboutCDN/images/hero.jpg" alt="CDN Lighting overview"></div>
+          <div class="project-body"><div><span class="tag">Brand</span><h3>About CDN Lighting</h3><p>Company overview with brand structure, capabilities and project references.</p></div><span class="open-link">Open page</span></div>
+        </a>
+        <a class="project" href="aboutbach/">
+          <div class="project-media"><img src="aboutbach/images/hero-bg.jpg" alt="BACH brand"></div>
+          <div class="project-body"><div><span class="tag">Brand</span><h3>About BACH</h3><p>Premium lighting brand page for architectural, museum and smart home categories.</p></div><span class="open-link">Open page</span></div>
+        </a>
+        <a class="project" href="bach-flash/">
+          <div class="project-media"><img src="bach-flash/images/01-hero-flash.jpg" alt="BACH Flash product"></div>
+          <div class="project-body"><div><span class="tag">Product</span><h3>BACH Flash</h3><p>Compact product storytelling with optics, system features and application scenes.</p></div><span class="open-link">Open page</span></div>
+        </a>
+        <a class="project" href="bach-5s/">
+          <div class="project-media"><img src="bach-5s/hero_desktop.jpg" alt="BACH 5S product"></div>
+          <div class="project-body"><div><span class="tag">Product</span><h3>BACH 5S</h3><p>Product family page covering applications, wallwasher versions and specifications.</p></div><span class="open-link">Open page</span></div>
+        </a>
+        <a class="project" href="cdn-newsletter/202606/">
+          <div class="project-media"><img src="cdn-newsletter/202606/images/mandiri-panorama-web.jpg" alt="Menara Mandiri newsletter"></div>
+          <div class="project-body"><div><span class="tag">Case</span><h3>Menara Mandiri</h3><p>ARC case newsletter featuring facade lighting and product application references.</p></div><span class="open-link">Open page</span></div>
+        </a>
+        <a class="project" href="cdn-newsletter/Mayalit/202607/">
+          <div class="project-media"><img src="cdn-newsletter/Mayalit/202607/images/hero-sichuan-museum.jpg" alt="Mayalit online training newsletter"></div>
+          <div class="project-body"><div><span class="tag">Training</span><h3>Mayalit Online Training</h3><p>Partner training notice for museum lighting, product systems and references.</p></div><span class="open-link">Open page</span></div>
+        </a>
+      </div>
+    </section>
+
+    <section class="section" id="tools">
+      <div class="section-head">
+        <div>
+          <div class="section-label">Browser Tools</div>
+          <h2>Lighting tool workspace</h2>
+        </div>
+        <p>Local-browser utilities for early lighting calculations, photometric files and report output.</p>
+      </div>
+
+      <div class="tool-grid">
+        <a class="tool" href="interior-lighting/">
+          <div><div class="tool-icon">LUX</div><h3>Simple Interior Illuminance Calculator</h3><p>Calculate room illuminance, fixture quantity, spacing, power density and a simple ceiling layout.</p></div>
+          <span class="open-link">Open tool</span>
+        </a>
+        <a class="tool" href="ies-editor/">
+          <div><div class="tool-icon">IES</div><h3>IES Editor</h3><p>Generate IES files, upload and preview photometric curves, edit parameters and export LDT data.</p></div>
+          <span class="open-link">Open tool</span>
+        </a>
+        <a class="tool" href="ies-report/">
+          <div><div class="tool-icon">PDF</div><h3>IES Report</h3><p>Read IES files and create editable bilingual photometric report pages for printing or PDF output.</p></div>
+          <span class="open-link">Open report</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="section" id="wechat">
+      <div class="section-head">
+        <div>
+          <div class="section-label">WeChat Articles</div>
+          <h2>瓶子先森Light</h2>
+        </div>
+      </div>
+
+      <div class="wechat-grid" id="wechatPosts" aria-live="polite">
+        <article class="wechat-empty">
+          <div>
+            <small>WeChat account</small>
+            <h3>文章栏目已就位</h3>
+            <p>后续会在这里展示公众号文章，方便从主页直接进入阅读。</p>
+          </div>
+          <img src="assets/wechat-light-qrcode.jpg" alt="瓶子先森Light 微信二维码">
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="newsletter">
+      <div class="section-head">
+        <div>
+          <div class="section-label">Newsletter Archive</div>
+          <h2>Email-style pages</h2>
+        </div>
+        <p>Partner updates, market recaps, event pages, case features and training announcements.</p>
+      </div>
+
+      <div class="newsletter-grid">
+        <a class="newsletter" href="cdn-newsletter/202601/"><div><small>January 2026</small><strong>Business Update & Notices</strong><span>Performance, organization, pricing and holiday notices.</span></div><span class="open-link">Open</span></a>
+        <a class="newsletter" href="cdn-newsletter/202602/"><div><small>February 2026</small><strong>Operations & Market Updates</strong><span>Back-to-work, HIC Jakarta and regional event plans.</span></div><span class="open-link">Open</span></a>
+        <a class="newsletter" href="cdn-newsletter/202605/"><div><small>May 2026</small><strong>Business & Brand Evolution</strong><span>Performance update, price adjustment and brand logo upgrade.</span></div><span class="open-link">Open</span></a>
+        <a class="newsletter" href="cdn-newsletter/202606/"><div><small>June 2026</small><strong>Menara Mandiri Case</strong><span>Facade lighting as an urban beacon in Jakarta.</span></div><span class="open-link">Open</span></a>
+        <a class="newsletter" href="cdn-newsletter/202606-hskc/"><div><small>June 2026</small><strong>HSKC2026 Seoul</strong><span>Hospitality South Korea Conference event recap.</span></div><span class="open-link">Open</span></a>
+        <a class="newsletter" href="cdn-newsletter/Mayalit/202607/"><div><small>July 2026</small><strong>Mayalit Online Training</strong><span>Museum lighting training invitation for CDN Lighting partners.</span></div><span class="open-link">Open</span></a>
+        <a class="newsletter" href="cdn-newsletter/202607-hmc-lims/"><div><small>July 2026</small><strong>HMC2026 & Muscat Summit</strong><span>Regional event recap from Muscat and Kuala Lumpur.</span></div><span class="open-link">Open</span></a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>&copy; 2026 Shao Wentao. Built with GitHub Pages.</span>
+    <span>Lighting stories, product pages, browser tools, and newsletter archives.</span>
+  </footer>
+</div>
+
+<script>
+  const reveal = document.querySelector(".reveal");
+  if (reveal) {
+    const setPoint = (clientX, clientY) => {
+      const rect = reveal.getBoundingClientRect();
+      reveal.style.setProperty("--mx", `${clientX - rect.left}px`);
+      reveal.style.setProperty("--my", `${clientY - rect.top}px`);
+    };
+    reveal.addEventListener("pointermove", (event) => setPoint(event.clientX, event.clientY), { passive: true });
+    reveal.addEventListener("pointerenter", (event) => setPoint(event.clientX, event.clientY), { passive: true });
+  }
+
+  const videos = document.querySelectorAll("video");
+  if ("IntersectionObserver" in window) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        const video = entry.target;
+        if (entry.isIntersecting) {
+          video.play().catch(() => {});
+        } else {
+          video.pause();
+        }
+      });
+    }, { threshold: 0.25 });
+    videos.forEach((video) => observer.observe(video));
+  }
+
+  const wechatContainer = document.querySelector("#wechatPosts");
+  const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+    "'": "&#39;"
+  }[char]));
+  const renderWechatPosts = (posts = []) => {
+    if (!wechatContainer || !Array.isArray(posts) || posts.length === 0) return;
+    wechatContainer.innerHTML = posts.slice(0, 6).map((post) => {
+      const title = escapeHtml(post.title || "Untitled WeChat Article");
+      const date = escapeHtml(post.date || "WeChat");
+      const summary = escapeHtml(post.summary || "");
+      const url = escapeHtml(post.url || "#wechat");
+      const cover = escapeHtml(post.cover || "assets/wechat-light-qrcode.jpg");
+      return `
+        <a class="wechat-card" href="${url}" target="_blank" rel="noopener">
+          <img src="${cover}" alt="${title}">
+          <div>
+            <small>${date}</small>
+            <h3>${title}</h3>
+            <p>${summary}</p>
+          </div>
+          <span class="open-link">Read on WeChat</span>
+        </a>
+      `;
+    }).join("");
+  };
+  if (wechatContainer) {
+    fetch("assets/data/wechat-posts.json", { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : Promise.reject(new Error(String(response.status))))
+      .then((data) => renderWechatPosts(data.posts))
+      .catch(() => {});
+  }
+</script>
+<script defer src="./assets/visitor-counter.js"></script>
 </body>
-
 </html>

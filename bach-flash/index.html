@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FLASH | Architectural Linear Lighting System</title>
+  <style>
+    :root {
+      --bg: #050505;
+      --bg-soft: #0d0d0d;
+      --panel: #151515;
+      --panel-soft: #1d1d1d;
+      --line: rgba(255,255,255,0.12);
+      --line-soft: rgba(255,255,255,0.08);
+      --text: #f4f1ea;
+      --muted: #a6a6a6;
+      --muted-2: #757575;
+      --gold: #c8a45d;
+      --gold-2: #e6cf91;
+      --gold-soft: rgba(200,164,93,0.16);
+      --white-soft: rgba(255,255,255,0.76);
+      --radius: 24px;
+      --max: 1200px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 20;
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.88), rgba(0,0,0,0.34), transparent);
+      backdrop-filter: blur(8px);
+    }
+
+    .nav-inner {
+      width: min(var(--max), calc(100% - 40px));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding: 18px 0;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      line-height: 1;
+    }
+
+    .nav-logo {
+      width: 128px;
+      height: auto;
+      display: block;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .nav-links a:hover { color: var(--text); }
+
+    .hero {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      position: relative;
+      overflow: hidden;
+      padding: 120px 20px 80px;
+      background:
+        radial-gradient(circle at 74% 28%, rgba(200,164,93,0.20), transparent 34%),
+        linear-gradient(115deg, rgba(0,0,0,0.94) 0%, rgba(0,0,0,0.82) 42%, rgba(0,0,0,0.34) 100%),
+        url('images/01-hero-flash.jpg') center/cover no-repeat;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0 0;
+      height: 190px;
+      background: linear-gradient(to bottom, transparent, var(--bg));
+    }
+
+    .hero-inner {
+      width: min(var(--max), 100%);
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1.02fr 0.98fr;
+      gap: 54px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      color: var(--gold);
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      font-size: 12px;
+      margin-bottom: 18px;
+    }
+
+    h1, h2, h3 { margin: 0; line-height: 1.08; font-weight: 500; }
+
+    h1 {
+      font-size: clamp(58px, 8.5vw, 128px);
+      letter-spacing: -0.075em;
+    }
+
+    .hero-subtitle {
+      font-size: clamp(24px, 3vw, 44px);
+      margin-top: 14px;
+      max-width: 780px;
+      letter-spacing: -0.035em;
+      color: #f7f3ea;
+    }
+
+    .hero-copy {
+      max-width: 650px;
+      margin: 28px 0 34px;
+      color: var(--white-soft);
+      font-size: 18px;
+    }
+
+    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 0 22px;
+      border-radius: 999px;
+      font-size: 14px;
+      border: 1px solid rgba(255,255,255,0.18);
+      transition: 0.25s ease;
+    }
+
+    .btn.primary {
+      background: var(--gold);
+      border-color: var(--gold);
+      color: #090909;
+    }
+
+    .btn:hover { transform: translateY(-2px); }
+
+    .hero-card {
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: var(--radius);
+      background: rgba(10,10,10,0.52);
+      backdrop-filter: blur(16px);
+      padding: 24px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.45);
+    }
+
+    .product-visual {
+      height: 420px;
+      border-radius: calc(var(--radius) - 6px);
+      border: 1px solid rgba(255,255,255,0.12);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01)),
+        url('images/02-product-system.png') center/contain no-repeat;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .product-visual::before {
+      content: "";
+      position: absolute;
+      left: 12%;
+      right: 12%;
+      bottom: 24%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent);
+      filter: blur(1px);
+    }
+
+    .spec-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .spec-item {
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 16px;
+      padding: 16px;
+      background: rgba(255,255,255,0.04);
+    }
+
+    .spec-item strong {
+      display: block;
+      font-size: 22px;
+      color: var(--text);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .spec-item span {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    section { padding: 110px 20px; }
+    .container { width: min(var(--max), 100%); margin: 0 auto; }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 40px;
+      align-items: end;
+      margin-bottom: 48px;
+    }
+
+    .section-head h2 {
+      font-size: clamp(36px, 5vw, 72px);
+      letter-spacing: -0.058em;
+    }
+
+    .section-head p {
+      margin: 0;
+      color: var(--white-soft);
+      font-size: 18px;
+      max-width: 650px;
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .overview-card {
+      min-height: 330px;
+      border-radius: var(--radius);
+      padding: 24px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.025));
+      border: 1px solid var(--line);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .overview-card .mini-image {
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 48%;
+      background-size: cover;
+      background-position: center;
+      opacity: 0.82;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .overview-card:nth-child(1) .mini-image { background-image: url('images/03-compact-profile.jpg'); }
+    .overview-card:nth-child(2) .mini-image { background-image: url('images/04-ice-cube-optics.jpg'); }
+    .overview-card:nth-child(3) .mini-image { background-image: url('images/09-nano-louvre.jpg'); }
+    .overview-card:nth-child(4) .mini-image { background-image: url('images/11-durability-ip66.jpg'); }
+
+    .overview-card .num {
+      color: var(--gold);
+      font-size: 13px;
+      letter-spacing: 0.16em;
+      margin-bottom: 12px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .overview-card h3 {
+      font-size: 22px;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .overview-card p {
+      color: var(--muted);
+      font-size: 15px;
+      margin: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .feature-story {
+      border-top: 1px solid rgba(255,255,255,0.08);
+      background: var(--bg-soft);
+    }
+
+    .feature-row {
+      width: min(var(--max), 100%);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      gap: 28px;
+      align-items: center;
+      padding: 78px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .feature-row.reverse { grid-template-columns: 0.92fr 1.08fr; }
+    .feature-row.reverse .feature-media { order: 2; }
+    .feature-row.reverse .feature-content { order: 1; }
+
+    .feature-media {
+      min-height: 460px;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      overflow: hidden;
+      position: relative;
+      background-color: #111;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .feature-media.contain {
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-color: #0a0a0a;
+    }
+
+    .feature-media::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.42), transparent 54%);
+      pointer-events: none;
+    }
+    .feature-content {
+      padding: 24px 10px;
+    }
+
+    .feature-kicker {
+      color: var(--gold);
+      font-size: 13px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .feature-content h2 {
+      font-size: clamp(34px, 4vw, 58px);
+      letter-spacing: -0.052em;
+      margin-bottom: 22px;
+    }
+
+    .feature-content p {
+      color: var(--white-soft);
+      font-size: 17px;
+      margin: 0 0 22px;
+      max-width: 560px;
+    }
+
+    .bullet-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .bullet {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .bullet::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--gold);
+      margin-top: 9px;
+      flex: 0 0 auto;
+    }
+
+    .compact-img { background-image: url('images/03-compact-profile.jpg'); }
+    .optics-img { background-image: url('images/04-ice-cube-optics.jpg'); }
+    .asym-img { background-image: url('images/05-asymmetric-distribution.jpg'); }
+    .washing-img { background-image: url('images/06-wall-washing-performance.jpg'); }
+    .grazing-img { background-image: url('images/07-wall-grazing-performance.jpg'); }
+    .sloped-img { background-image: url('images/08-sloped-grazing-comparison.jpg'); }
+    .louvre-img { background-image: url('images/09-nano-louvre-glare-control.jpg'); }
+    .accessory-img { background-image: url('images/10-accessories-system.jpg'); }
+    .durability-img { background-image: url('images/11-durability-ip66.jpg'); }
+    .custom-img { background-image: url('images/12-customization.jpg'); }
+
+    .performance-band {
+      background:
+        linear-gradient(90deg, rgba(0,0,0,0.96), rgba(0,0,0,0.72)),
+        url('images/05-asymmetric-distribution.jpg') center/cover no-repeat;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin-top: 42px;
+    }
+
+    .metric {
+      padding: 30px;
+      border-radius: var(--radius);
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.38);
+      backdrop-filter: blur(10px);
+    }
+
+    .metric strong {
+      display: block;
+      font-size: clamp(44px, 5vw, 72px);
+      line-height: 1;
+      letter-spacing: -0.08em;
+      color: var(--gold);
+    }
+
+    .metric span {
+      display: block;
+      color: var(--white-soft);
+      margin-top: 12px;
+      font-size: 16px;
+    }
+
+    .system {
+      background: var(--bg);
+    }
+
+    .system-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .system-card {
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.025));
+      padding: 28px;
+    }
+
+    .system-card h3 { font-size: 28px; margin-bottom: 18px; }
+
+    .tag-list {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      border: 1px solid rgba(255,255,255,0.14);
+      color: var(--white-soft);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 13px;
+      background: rgba(255,255,255,0.04);
+    }
+
+    .gallery {
+      background: var(--bg-soft);
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .gallery-main,
+    .gallery-side-item {
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background-size: cover;
+      background-position: center;
+      position: relative;
+      overflow: hidden;
+      min-height: 560px;
+    }
+
+    .gallery-main { background-image: url('images/13-project-hotel-lobby.jpg'); }
+
+    .gallery-side {
+      display: grid;
+      gap: 18px;
+    }
+
+    .gallery-side-item { min-height: 271px; }
+    .gallery-side-item:nth-child(1) { background-image: url('images/14-project-pillar-facade.jpg'); }
+    .gallery-side-item:nth-child(2) { background-image: url('images/15-project-art-corridor.jpg'); }
+
+    .gallery-main::after,
+    .gallery-side-item::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.78), rgba(0,0,0,0.08));
+    }
+
+    .gallery-caption {
+      position: absolute;
+      left: 24px;
+      right: 24px;
+      bottom: 24px;
+      z-index: 1;
+    }
+
+    .gallery-caption h3 {
+      font-size: 26px;
+      margin-bottom: 8px;
+    }
+
+    .gallery-caption p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .contact-footer {
+      background: #1b1b1b;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      padding: 48px 20px 42px;
+      color: #d6d6d6;
+    }
+
+    .contact-footer-inner {
+      width: min(var(--max), 100%);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.2fr 0.58fr 0.82fr;
+      gap: 70px;
+      align-items: start;
+    }
+
+    .footer-logo {
+      width: 164px;
+      height: auto;
+      margin-bottom: 22px;
+    }
+
+    .footer-tagline {
+      color: #aebdcb;
+      font-size: 16px;
+      letter-spacing: 0.02em;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+    }
+
+    .footer-copyright {
+      color: #56616a;
+      font-size: 12px;
+    }
+
+    .footer-title {
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      margin: 0 0 18px;
+      text-transform: uppercase;
+    }
+
+    .footer-text {
+      color: #aebdcb;
+      font-size: 14px;
+      line-height: 1.7;
+      margin: 0;
+    }
+
+    .footer-text a {
+      color: #aebdcb;
+      transition: 0.25s ease;
+    }
+
+    .footer-text a:hover { color: #ffffff; }
+
+    @media (max-width: 980px) {
+      .hero-inner,
+      .section-head,
+      .feature-row,
+      .feature-row.reverse,
+      .system-grid,
+      .gallery-grid,
+      .contact-footer-inner {
+        grid-template-columns: 1fr;
+      }
+
+      .feature-row.reverse .feature-media,
+      .feature-row.reverse .feature-content { order: initial; }
+
+      .overview-grid,
+      .metrics { grid-template-columns: repeat(2, 1fr); }
+      .contact-footer-inner { gap: 34px; }
+      .nav-links { display: none; }
+      .hero { padding-top: 110px; }
+      .product-visual { height: 320px; }
+      .feature-media { min-height: 390px; }
+    }
+
+    @media (max-width: 640px) {
+      section { padding: 78px 18px; }
+      .overview-grid,
+      .metrics,
+      .spec-strip { grid-template-columns: 1fr; }
+      .hero-copy, .section-head p, .feature-content p { font-size: 16px; }
+      .feature-row { padding: 56px 0; }
+      .feature-media, .gallery-main, .gallery-side-item { min-height: 380px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="nav-inner">
+      <a class="brand" href="#top" aria-label="BACH Flash home">
+        <img class="nav-logo" src="images/bach-logo.png" alt="BACH" />
+      </a>
+      <nav class="nav-links" aria-label="Main navigation">
+        <a href="#advantages">Advantages</a>
+        <a href="#optical-story">Optics</a>
+        <a href="#system">System</a>
+        <a href="#projects">Projects</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-inner">
+        <div>
+          <div class="eyebrow">Architectural Linear Lighting System</div>
+          <h1>FLASH</h1>
+          <div class="hero-subtitle">Designed to reveal architecture through precision linear light.</div>
+          <p class="hero-copy">Flash by BACH gives designers a refined tool for shaping façades, landscapes and interior architectural details — combining compact form, optical precision, visual comfort and long-term durability.</p>
+          <div class="hero-actions">
+            <a class="btn primary" href="#advantages">Explore features</a>
+            <a class="btn" href="#projects">View projects</a>
+          </div>
+        </div>
+        <aside class="hero-card" aria-label="Flash product highlights">
+          <div class="product-visual" role="img" aria-label="Flash architectural linear lighting product visual"></div>
+          <div class="spec-strip">
+            <div class="spec-item"><strong>IP66</strong><span>Protection</span></div>
+            <div class="spec-item"><strong>85%</strong><span>Use ratio</span></div>
+            <div class="spec-item"><strong>1000h</strong><span>Salt spray</span></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="advantages">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">Core advantages</div>
+            <h2>Compact, precise and beautifully controlled.</h2>
+          </div>
+          <p>Flash integrates optics, structure, glare control and accessories into one complete architectural lighting system, giving designers freedom without compromising performance.</p>
+        </div>
+        <div class="overview-grid">
+          <article class="overview-card">
+            <div class="mini-image"></div>
+            <div class="num">01</div>
+            <h3>Compact profile</h3>
+            <p>25mm and 35mm linear profiles for subtle integration into architectural details.</p>
+          </article>
+          <article class="overview-card">
+            <div class="mini-image"></div>
+            <div class="num">02</div>
+            <h3>Ice Cube Optics</h3>
+            <p>Refined optical engineering for clean beams, high uniformity and efficient transmission.</p>
+          </article>
+          <article class="overview-card">
+            <div class="mini-image"></div>
+            <div class="num">03</div>
+            <h3>Low-glare comfort</h3>
+            <p>Nano Louvre and shielding options provide precise cut-off control.</p>
+          </article>
+          <article class="overview-card">
+            <div class="mini-image"></div>
+            <div class="num">04</div>
+            <h3>Outdoor durability</h3>
+            <p>IP66 protection and 1000-hour salt spray resistance for demanding environments.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="feature-story" id="optical-story">
+      <div class="feature-row">
+        <div class="feature-media compact-img contain">
+        </div>
+        <div class="feature-content">
+          <div class="feature-kicker">01 / Compact body</div>
+          <h2>Small profile, strong architectural presence.</h2>
+          <p>Flash is available in 25×32mm and 35×32mm profiles, balancing discreet integration with professional output.</p>
+          <div class="bullet-list">
+            <div class="bullet">25×32mm profile: 18W/M and 24W/M.</div>
+            <div class="bullet">35×32mm profile: 36W/M for higher output requirements.</div>
+            <div class="bullet">Designed for façades, details, corridors and landscape structures.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="feature-row reverse">
+        <div class="feature-media optics-img contain">
+        </div>
+        <div class="feature-content">
+          <div class="feature-kicker">02 / Ice Cube Optics</div>
+          <h2>Refined optics for clean, elegant light.</h2>
+          <p>The Ice Cube Optics system is engineered to create precise beam quality, high light transmission and smooth uniformity in a compact linear form.</p>
+          <div class="bullet-list">
+            <div class="bullet">Clean beam edges and controlled distribution.</div>
+            <div class="bullet">High optical efficiency for architectural surfaces.</div>
+            <div class="bullet">A distinctive optical identity for the Flash series.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="feature-row">
+        <div class="feature-media asym-img contain">
+        </div>
+        <div class="feature-content">
+          <div class="feature-kicker">03 / Asymmetric distribution</div>
+          <h2>More light where the architecture needs it.</h2>
+          <p>Advanced asymmetric distributions improve effective light utilization on the target wall, reducing unnecessary spill and visible glare.</p>
+          <div class="bullet-list">
+            <div class="bullet">Up to 85% use ratio for wall washing applications.</div>
+            <div class="bullet">Up to 70% use ratio for mini-tilt wall grazing.</div>
+            <div class="bullet">Stronger surface brightness with better visual comfort.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="feature-row reverse">
+        <div class="feature-media washing-img">
+        </div>
+        <div class="feature-content">
+          <div class="feature-kicker">04 / Wall washing</div>
+          <h2>Smooth vertical illumination for large surfaces.</h2>
+          <p>Flash wall washing creates a clean and balanced wash across façades and interior feature walls, helping surfaces appear calm, bright and refined.</p>
+          <div class="bullet-list">
+            <div class="bullet">Suitable for 1000mm, 1500mm and 2000mm setback conditions.</div>
+            <div class="bullet">Designed for high wall coverage and smooth brightness transition.</div>
+            <div class="bullet">Ideal for hotels, public spaces and exterior façades.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="feature-row">
+        <div class="feature-media grazing-img">
+        </div>
+        <div class="feature-content">
+          <div class="feature-kicker">05 / Wall grazing</div>
+          <h2>Texture becomes visible through controlled contrast.</h2>
+          <p>Flash wall grazing emphasizes material depth and vertical rhythm, revealing stone, concrete, timber and decorative surfaces with clarity.</p>
+          <div class="bullet-list">
+            <div class="bullet">150mm, 200mm and 250mm installation distances for different texture effects.</div>
+            <div class="bullet">Strong visual depth for rough surfaces and crafted materials.</div>
+            <div class="bullet">Stable beam performance with low-glare control.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="feature-row reverse">
+        <div class="feature-media sloped-img contain">
+        </div>
+        <div class="feature-content">
+          <div class="feature-kicker">06 / Sloped grazing</div>
+          <h2>Precise light control for angled surfaces.</h2>
+          <p>Flash sloped grazing maintains a clean perpendicular lighting effect even on inclined mounting surfaces, helping avoid dark areas and discomfort glare.</p>
+          <div class="bullet-list">
+            <div class="bullet">Designed for angled façades, canopies and sloped architectural forms.</div>
+            <div class="bullet">Reduces visible glare compared with conventional tilted light.</div>
+            <div class="bullet">Keeps architectural rhythm clean and visually comfortable.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="feature-row">
+        <div class="feature-media louvre-img contain">
+        </div>
+        <div class="feature-content">
+          <div class="feature-kicker">07 / Nano Louvre</div>
+          <h2>Glare control without losing the elegance of light.</h2>
+          <p>The integrated Nano Louvre system shields the light source from direct view while preserving smooth beam quality and high wall brightness.</p>
+          <div class="bullet-list">
+            <div class="bullet">Integrated 60° cut-off angle design.</div>
+            <div class="bullet">35° shielded viewing condition for improved visual comfort.</div>
+            <div class="bullet">Suitable for pedestrian zones, corridors and close-view applications.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="feature-row reverse">
+        <div class="feature-media accessory-img contain">
+        </div>
+        <div class="feature-content">
+          <div class="feature-kicker">08 / Accessories</div>
+          <h2>A complete system for real project conditions.</h2>
+          <p>Flash supports multiple anti-glare and installation accessories, allowing the same product family to adapt to façades, landscapes, ground installations and structural details.</p>
+          <div class="bullet-list">
+            <div class="bullet">External visor, external louvre and internal Nano Louvre.</div>
+            <div class="bullet">Surface mounting, extension arm, in-ground profile and ground spike.</div>
+            <div class="bullet">Designed to simplify installation and maintain optical alignment.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="feature-row">
+        <div class="feature-media durability-img contain">
+        </div>
+        <div class="feature-content">
+          <div class="feature-kicker">09 / Reliability</div>
+          <h2>Built for demanding outdoor environments.</h2>
+          <p>With IP66 protection, architectural-grade powder coating and 1000-hour salt spray resistance, Flash is engineered for long-term stability in challenging environments.</p>
+          <div class="bullet-list">
+            <div class="bullet">Multi-step pre-treatment for superior corrosion resistance.</div>
+            <div class="bullet">UV-stabilised surface finish for long-term outdoor appearance.</div>
+            <div class="bullet">Breathing valve supports durability under changing outdoor conditions.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="feature-row reverse">
+        <div class="feature-media custom-img contain">
+        </div>
+        <div class="feature-content">
+          <div class="feature-kicker">10 / Customization</div>
+          <h2>Configured around the design intent.</h2>
+          <p>Flash can be customized across power, optics, finish, installation accessories and wire outlet position, helping designers respond to specific architectural requirements.</p>
+          <div class="bullet-list">
+            <div class="bullet">Higher-power options for demanding projects.</div>
+            <div class="bullet">In-house optics for particular applications.</div>
+            <div class="bullet">RAL colors, white, bronze, green and tailor-made accessories.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="performance-band">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">Performance</div>
+            <h2>High surface utilization. Low visual disturbance.</h2>
+          </div>
+          <p>Flash improves how light reaches the target surface, supporting efficient, comfortable and expressive architectural lighting.</p>
+        </div>
+        <div class="metrics">
+          <div class="metric"><strong>85%</strong><span>Use ratio for wall washing asymmetric distribution</span></div>
+          <div class="metric"><strong>70%</strong><span>Use ratio for wall grazing mini-tilt asymmetric distribution</span></div>
+          <div class="metric"><strong>60°</strong><span>Integrated cut-off angle with Nano Louvre system</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="system" id="system">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">System flexibility</div>
+            <h2>A complete platform for architectural linear lighting.</h2>
+          </div>
+          <p>Multiple optics, controls, finishes, anti-glare accessories and installation options support both standard applications and tailor-made project requirements.</p>
+        </div>
+        <div class="system-grid">
+          <article class="system-card">
+            <h3>Light & control</h3>
+            <div class="tag-list">
+              <span class="tag">2700K</span>
+              <span class="tag">3000K</span>
+              <span class="tag">4000K</span>
+              <span class="tag">2700–6500K</span>
+              <span class="tag">RGB + 2700K</span>
+              <span class="tag">RGB + 3000K</span>
+              <span class="tag">RGB + 4000K</span>
+              <span class="tag">Ra&gt;90</span>
+              <span class="tag">ON/OFF</span>
+              <span class="tag">0–10V</span>
+              <span class="tag">DALI</span>
+              <span class="tag">DALI-2 Type 8</span>
+              <span class="tag">DMX</span>
+            </div>
+          </article>
+          <article class="system-card">
+            <h3>Optics & accessories</h3>
+            <div class="tag-list">
+              <span class="tag">12° / 22° / 30° / 40°</span>
+              <span class="tag">10° / 30° / 50°</span>
+              <span class="tag">18×55°</span>
+              <span class="tag">15×20°</span>
+              <span class="tag">Wall Washing</span>
+              <span class="tag">Wall Grazing</span>
+              <span class="tag">Sloped Grazing</span>
+              <span class="tag">Internal Nano Louvre</span>
+              <span class="tag">External Visor</span>
+              <span class="tag">External Louvre</span>
+              <span class="tag">Extension Arm</span>
+              <span class="tag">In-ground Profile</span>
+              <span class="tag">Ground Spike</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="gallery" id="projects">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">Project gallery</div>
+            <h2>Light that becomes part of the architecture.</h2>
+          </div>
+          <p>Flash reveals texture, rhythm and atmosphere in hospitality, public spaces and façade applications, highlighting the architecture without overpowering the space.</p>
+        </div>
+        <div class="gallery-grid">
+          <div class="gallery-main">
+            <div class="gallery-caption">
+              <h3>Luxury Hotel Lobby</h3>
+              <p>Refined linear grazing light for reception and arrival spaces.</p>
+            </div>
+          </div>
+          <div class="gallery-side">
+            <div class="gallery-side-item">
+              <div class="gallery-caption">
+                <h3>Pillar Façade</h3>
+                <p>Vertical rhythm and material texture enhanced by controlled up-grazing.</p>
+              </div>
+            </div>
+            <div class="gallery-side-item">
+              <div class="gallery-caption">
+                <h3>Art Corridor</h3>
+                <p>Soft wall illumination for curated interior details.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="contact-footer">
+      <div class="contact-footer-inner">
+        <div class="footer-brand-block">
+          <img class="footer-logo" src="images/bach-logo.png" alt="BACH" />
+          <div class="footer-tagline">Light Tunes Architecture</div>
+          <div class="footer-copyright">© 2025 BACH Lighting. All rights reserved.</div>
+        </div>
+
+        <div class="footer-contact-block">
+          <h3 class="footer-title">Contact</h3>
+          <p class="footer-text">
+            T: <a href="tel:+867525333256">+86-752-533 3256</a><br />
+            E: <a href="mailto:sales@cdnlighting.com.cn">sales@cdnlighting.com.cn</a><br />
+            W: <a href="https://www.cdnlighting.cc" target="_blank" rel="noopener">www.cdnlighting.cc</a>
+          </p>
+        </div>
+
+        <div class="footer-address-block">
+          <h3 class="footer-title">Address</h3>
+          <p class="footer-text">
+            No. A17, Xianghe West Rd.,<br />
+            Dongjiang Ind. Zone, Shuikou,<br />
+            Huizhou, Guangdong, China
+          </p>
+        </div>
+      </div>
+    </footer>
+<script defer src="../assets/visitor-counter.js"></script>
+</body>
+</html>

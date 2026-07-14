@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IES Editor | Shao Wentao</title>
+<meta name="description" content="View, edit and generate IES photometric files in the browser.">
+<style>
+  :root { --bg:#fbfaf8; --paper:#fff; --panel:#f1eee8; --ink:#272520; --muted:#6f6a62; --line:#e4ded4; --red:#d71920; --gold:#c68a36; --cyan:#2f6f87; --ember:#d85f22; --radius:12px; --shadow:0 24px 60px rgba(57,46,28,.12); }
+  * { box-sizing:border-box; }
+  html { -webkit-text-size-adjust:100%; }
+  body { margin:0; overflow-x:hidden; background:var(--bg); color:var(--ink); font-family:Inter,"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif; }
+  .app, main { min-width:0; overflow-x:hidden; }
+  body::before { content:""; position:fixed; inset:auto -12vw -18vw auto; z-index:-2; width:52vw; aspect-ratio:1; border-radius:50%; background:radial-gradient(circle,rgba(198,138,54,.13),transparent 64%); pointer-events:none; }
+  body::after { content:""; position:fixed; inset:0; z-index:-1; background:linear-gradient(180deg,#fff 0,#fbfaf8 38%,#f7f2ea 100%); pointer-events:none; }
+  a { color:inherit; text-decoration:none; }
+  a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible { outline:2px solid var(--gold); outline-offset:3px; }
+  .topbar { position:sticky; top:0; z-index:5; display:flex; align-items:center; justify-content:space-between; gap:18px; padding:16px clamp(18px,4vw,48px); border-bottom:1px solid #eee9e0; background:rgba(255,255,255,.86); backdrop-filter:blur(18px); }
+  .brand { display:flex; align-items:center; gap:12px; min-width:0; }
+  .mark { width:38px; height:38px; flex:0 0 38px; display:grid; place-items:center; border:1px solid #ded5c7; border-radius:10px; background:#26231e; color:#fff; font-weight:900; font-size:14px; letter-spacing:.02em; }
+  .brand strong,.brand span { display:block; }
+  .brand strong { font-size:14px; line-height:18px; white-space:nowrap; }
+  .brand span { color:var(--muted); font-size:12px; line-height:16px; }
+  .nav { display:flex; gap:14px; color:#35322d; font-size:13px; white-space:nowrap; }
+  .nav a { padding:7px 9px; border:1px solid transparent; border-radius:999px; transition:background .18s ease,border-color .18s ease,color .18s ease; }
+  .nav a:hover { color:#111; border-color:#ded5c7; background:#f4efe7; }
+  .language-control { display:flex; align-items:center; gap:8px; margin-left:auto; color:#35322d; font-size:12px; white-space:nowrap; }
+  .language-control label { color:#35322d; font-size:12px; }
+  .language-control select { min-height:34px; width:auto; border:1px solid #d8d0c4; border-radius:999px; background:#fff; color:#272520; padding:6px 28px 6px 10px; font:inherit; font-size:12px; outline:none; }
+  .hero { min-height:620px; width:100%; margin:0 0 72px; display:grid; place-items:center; position:relative; overflow:hidden; background:url("../assets/home/moss-wood.jpg") center/cover no-repeat,#faf7f3; padding:clamp(78px,9vw,128px) clamp(22px,5vw,72px) clamp(64px,7vw,98px); text-align:center; isolation:isolate; }
+  .hero-media { position:absolute; inset:0; z-index:0; width:100%; height:100%; object-fit:cover; opacity:.7; filter:saturate(.85) contrast(.96) brightness(1.08); }
+  .hero::before { content:""; position:absolute; inset:0; z-index:1; background:linear-gradient(180deg,rgba(255,255,255,.74),rgba(250,247,243,.86) 58%,rgba(251,250,248,.98)); pointer-events:none; }
+  .hero::after { content:""; position:absolute; inset:0; z-index:2; background:linear-gradient(rgba(0,0,0,.028) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.022) 1px,transparent 1px),radial-gradient(ellipse at 50% 42%,rgba(255,255,255,.48),transparent 58%); background-size:48px 48px,48px 48px,auto; pointer-events:none; }
+  .hero-inner { position:relative; z-index:4; width:min(100%,820px); margin:auto; }
+  .eyebrow { display:inline-flex; align-items:center; justify-content:center; gap:9px; color:#8a6a3e; font-size:12px; text-transform:uppercase; letter-spacing:.16em; }
+  .eyebrow::before,.eyebrow::after { content:""; width:34px; height:1px; background:#c9bca9; }
+  h1 { margin:20px auto 0; max-width:760px; font-size:clamp(48px,5.6vw,82px); font-weight:500; line-height:1.02; letter-spacing:0; }
+  .hero p { margin:22px auto 0; max-width:720px; color:#3f3a33; font-size:clamp(16px,1.45vw,20px); line-height:1.78; }
+  .hero-actions { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:14px; margin-top:34px; }
+  .hero-actions a { min-width:136px; min-height:42px; display:inline-flex; align-items:center; justify-content:center; border:1px solid rgba(38,35,30,.42); border-radius:999px; padding:10px 22px; background:rgba(255,255,255,.42); color:#26231e; font-size:14px; font-weight:600; backdrop-filter:blur(10px); transition:transform .18s ease,border-color .18s ease,background .18s ease,color .18s ease; }
+  .hero-actions a:first-child { border-color:#26231e; background:#26231e; color:#fff; }
+  .hero-actions a:hover { transform:translateY(-1px); border-color:#26231e; background:#f3eee6; }
+  .hero-actions a:first-child:hover { background:#111; color:#fff; }
+  .section-title { margin:0 auto 28px; text-align:center; font-size:clamp(26px,3vw,38px); font-weight:600; letter-spacing:0; }
+  .workspace { display:grid; grid-template-columns:minmax(300px,370px) minmax(0,1fr); gap:20px; max-width:1120px; margin:0 auto clamp(38px,6vw,72px); padding:32px clamp(18px,4vw,36px); align-items:start; border-radius:14px; background:#f1eee8; }
+  .workspace > aside.panel { align-self:start; margin:0; }
+  .panel { min-width:0; border:1px solid #e2dbcf; border-radius:12px; background:#fff; box-shadow:var(--shadow); overflow:hidden; }
+  .panel-head { display:flex; justify-content:space-between; gap:16px; align-items:center; padding:16px 18px; border-bottom:1px solid #eee7dc; background:#fff; }
+  .panel-head h2 { margin:0; font-size:18px; line-height:1.2; }
+  .panel-head span { display:inline-flex; align-items:center; min-height:26px; padding:5px 9px; border:1px solid #ded5c7; border-radius:999px; color:#6d604f; background:#f7f3ec; font-size:12px; line-height:1.45; }
+  .form { display:grid; gap:14px; padding:18px; }
+  .field { display:grid; gap:7px; min-width:0; }
+  label { color:#3a352e; font-size:13px; font-weight:600; }
+  input,textarea,select { width:100%; min-height:40px; border:1px solid #ddd4c7; border-radius:8px; background:#fbfaf8; color:var(--ink); padding:10px 11px; font:inherit; font-size:14px; outline:none; transition:border-color .18s ease,box-shadow .18s ease,background .18s ease; }
+  textarea { min-height:92px; resize:vertical; line-height:1.5; }
+  input:focus,textarea:focus,select:focus { border-color:#c68a36; background:#fff; box-shadow:0 0 0 3px rgba(198,138,54,.14); }
+  .fields-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .advanced-editor { display:grid; gap:10px; padding:12px; border:1px solid #e2dbcf; border-radius:10px; background:#fbfaf8; }
+  .advanced-editor table { width:100%; border-collapse:collapse; font-size:12px; }
+  .advanced-editor th,.advanced-editor td { padding:5px; border-bottom:1px solid #e6ded3; text-align:left; }
+  .advanced-editor input { min-height:34px; padding:7px 8px; font-size:12px; }
+  .advanced-editor .hint { margin:0; color:var(--muted); font-size:12px; line-height:1.5; }
+  [hidden] { display:none !important; }
+  .actions { display:flex; flex-wrap:wrap; gap:10px; padding-top:4px; }
+  button { min-height:42px; display:inline-flex; align-items:center; justify-content:center; border:1px solid #cfc6b8; border-radius:999px; background:#fff; color:#26231e; padding:10px 15px; font:inherit; font-size:14px; cursor:pointer; transition:transform .18s ease,border-color .18s ease,background .18s ease,color .18s ease; }
+  button.primary { border-color:#26231e; background:#26231e; color:#fff; font-weight:800; }
+  button:hover { transform:translateY(-1px); border-color:#26231e; background:#f4efe7; }
+  .main-grid { display:grid; grid-template-columns:1fr; gap:20px; min-width:0; align-self:start; margin:0; }
+  .main-grid .panel:first-child { display:grid; grid-template-rows:auto auto; }
+  .chart-wrap { padding:18px; }
+  #curveCanvas { width:min(100%,560px); margin:auto; }
+  canvas { width:100%; height:auto; max-width:100%; aspect-ratio:508/483; display:block; background:#fbfaf8; border:1px solid #e3dbcf; border-radius:10px; }
+  .stats { display:grid; grid-template-columns:repeat(4,1fr); border-top:1px solid var(--line); background:#fbfaf8; }
+  .stat { min-height:86px; padding:14px; border-right:1px solid var(--line); }
+  .stat:last-child { border-right:0; }
+  .stat strong { display:block; font-size:22px; line-height:1.15; }
+  .stat span { display:block; margin-top:5px; color:var(--muted); font-size:12px; line-height:1.35; }
+  .preview { height:420px; margin:0; padding:16px; overflow:auto; color:#272520; background:#f7f4ef; border:0; font-family:"Cascadia Mono",Consolas,monospace; font-size:12px; line-height:1.55; white-space:pre; tab-size:2; }
+  .upload { padding:18px; border-top:1px solid var(--line); }
+  .upload input { min-height:auto; padding:11px; }
+  .notes { margin:0; color:var(--muted); font-size:12px; line-height:1.55; padding:0 18px 18px; }
+  .report { max-width:1120px; margin:0 auto; padding:0 clamp(18px,5vw,64px) 72px; }
+  .report.hidden { display:none; }
+  .report-shell { background:#f7f7f5; color:#111; border:1px solid rgba(0,0,0,.12); border-radius:var(--radius); padding:26px; display:grid; gap:22px; box-shadow:0 24px 60px rgba(0,0,0,.28); }
+  .report-title { display:flex; justify-content:space-between; gap:18px; align-items:flex-start; border-bottom:2px solid #111; padding-bottom:14px; }
+  .report-title h2 { margin:0; font-size:22px; }
+  .report-title span { font-size:13px; color:#333; text-align:right; overflow-wrap:anywhere; }
+  .report-page { background:#fff; border:1px solid #d8d8d8; border-radius:6px; padding:20px; min-height:260px; overflow:hidden; }
+  .report-page h3 { margin:0 0 14px; font-size:16px; letter-spacing:.02em; }
+  .report-page pre { margin:0; white-space:pre-wrap; overflow-wrap:anywhere; font-family:Consolas,"Courier New",monospace; font-size:12px; line-height:1.45; }
+  .report-page table { width:100%; border-collapse:collapse; font-size:13px; }
+  .report-page th,.report-page td { padding:6px 8px; border-bottom:1px solid #e5e5e5; text-align:left; }
+  .table-scroll { overflow:auto; max-height:520px; border:1px solid #e5e5e5; -webkit-overflow-scrolling:touch; }
+  .wide-table { min-width:560px; }
+  #reportPolar { background:#fff; border:1px solid #222; }
+  @media (max-width:980px) { .workspace,.main-grid { grid-template-columns:1fr; } .workspace { max-width:720px; } }
+  @media (max-width:860px) { .topbar { flex-wrap:wrap; } .language-control { margin-left:0; } }
+  @media (max-width:700px) {
+    html, body, .app, main { width:100%; max-width:100%; overflow-x:hidden; }
+    .topbar { align-items:flex-start; flex-direction:column; padding:14px 16px; gap:12px; }
+    .topbar > * { max-width:100%; }
+    .brand strong { white-space:normal; }
+    .nav { width:100%; overflow-x:auto; padding-bottom:4px; gap:16px; font-size:12px; -webkit-overflow-scrolling:touch; }
+    .language-control { width:100%; max-width:100%; justify-content:flex-start; gap:14px; }
+    .language-control select { width:120px; min-width:0; flex:0 0 auto; }
+    .hero { width:100%; max-width:100%; min-height:520px; margin:0 0 42px; padding:64px 18px 46px; overflow:hidden; text-align:left; place-items:center start; }
+    .hero-media { width:100%; max-width:none; }
+    .hero-inner { width:100%; max-width:352px; margin:0; }
+    .eyebrow { justify-content:flex-start; font-size:11px; letter-spacing:.1em; }
+    .eyebrow::after { display:none; }
+    .eyebrow::before { width:24px; }
+    h1 { font-size:34px; line-height:1.04; }
+    .hero p { max-width:340px; margin-left:0; margin-right:0; font-size:14px; line-height:1.65; overflow-wrap:anywhere; }
+    .hero-actions { width:100%; max-width:352px; display:grid; grid-template-columns:minmax(0,1fr); gap:10px; margin-top:20px; }
+    .hero-actions a { width:100%; min-width:0; max-width:100%; }
+    .section-title { max-width:352px; margin-left:14px; margin-right:14px; text-align:left; font-size:25px; line-height:1.28; overflow-wrap:anywhere; }
+    .workspace { width:calc(100% - 24px); max-width:430px; display:block; margin-left:auto; margin-right:auto; padding:12px 12px 32px; overflow:hidden; }
+    .panel { max-width:100%; }
+    .workspace > .panel, .main-grid > .panel { margin-bottom:12px; }
+    .panel-head { align-items:flex-start; flex-direction:column; gap:6px; padding:14px; }
+    .panel-head h2 { font-size:17px; }
+    .form { padding:14px; gap:12px; }
+    .fields-2 { grid-template-columns:1fr; gap:12px; }
+    .advanced-editor { padding:10px 8px; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    .advanced-editor table { min-width:320px; }
+    .advanced-editor th,.advanced-editor td { padding:4px; }
+    .advanced-editor input { min-height:32px; padding:6px; }
+    .actions { display:grid; grid-template-columns:1fr; }
+    button { width:100%; min-height:44px; }
+    .upload { padding:14px; }
+    .notes { padding:0 14px 14px; }
+    .chart-wrap { padding:10px; }
+    .stats { grid-template-columns:1fr 1fr; }
+    .stat { min-height:72px; padding:12px; border-right:1px solid var(--line); border-bottom:1px solid var(--line); }
+    .stat:nth-child(2n) { border-right:0; }
+    .stat:nth-last-child(-n+2) { border-bottom:0; }
+    .stat strong { font-size:20px; }
+    .preview { height:360px; padding:12px; font-size:11px; }
+    .report { padding:0 12px 42px; }
+    .report-shell { padding:12px; gap:12px; }
+    .report-title { display:block; padding-bottom:10px; }
+    .report-title h2 { font-size:18px; }
+    .report-title span { display:block; text-align:left; margin-top:8px; font-size:12px; }
+    .report-page { padding:12px; min-height:0; }
+    .report-page h3 { font-size:14px; }
+    .report-page table { font-size:12px; }
+    .report-page th,.report-page td { padding:5px 6px; }
+  }
+  @media (max-width:380px) {
+    h1 { font-size:30px; }
+    .stats { grid-template-columns:1fr; }
+    .stat, .stat:nth-child(2n), .stat:nth-last-child(-n+2) { border-right:0; border-bottom:1px solid var(--line); }
+    .stat:last-child { border-bottom:0; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <a class="brand" href="../"><span class="mark">IES</span><span><strong>IES Editor</strong><span>Browser photometric file tool</span></span></a>
+    <nav class="nav"><a href="../">Home</a><a href="#generator">Generate</a><a href="#preview">Preview</a><a href="../ies-report/">IES Report</a></nav>
+    <div class="language-control"><label id="languageLabel" for="languageSelect">Language</label><select id="languageSelect" aria-label="Language"><option value="en">English</option><option value="zh">中文</option></select></div>
+  </header>
+  <main>
+    <section class="hero">
+      <video class="hero-media" autoplay muted loop playsinline poster="../assets/home/moss-wood.jpg" aria-hidden="true">
+        <source src="../assets/home/ambient-hero.mp4" type="video/mp4">
+      </video>
+      <div class="hero-inner">
+        <div class="eyebrow">IES tools</div>
+        <h1>IES File Generator</h1>
+        <p>Generate a photometric file from luminaire parameters, preview Type C distribution curves, and export clean report pages when needed.</p>
+        <div class="hero-actions" aria-label="IES editor shortcuts">
+          <a href="#generator">Generate IES</a>
+          <a href="#preview">Preview Curve</a>
+          <a href="../ies-report/">Open Report Tool</a>
+        </div>
+      </div>
+    </section>
+    <h2 class="section-title">Build photometric files with a cleaner workflow</h2>
+    <section class="workspace" id="generator">
+      <aside class="panel">
+        <div class="panel-head"><h2>Generator Inputs</h2><span>CDN default</span></div>
+        <form class="form" id="iesForm">
+          <div class="field"><label for="manufacturer">Luminaire manufacturer</label><input id="manufacturer" value="CDN" autocomplete="organization"></div>
+          <div class="field"><label for="serial">Luminaire serial number</label><input id="serial" value="Downlight"></div>
+          <div class="field"><label for="iesType">IES type</label><select id="iesType"><option value="symmetric" selected>Type C / C0-C180 symmetric</option><option value="four-plane">Type C / C0-C90-C180-C270</option></select></div>
+          <div class="fields-2"><div class="field"><label for="date">Date</label><input id="date" value="20260626" inputmode="numeric"></div><div class="field"><label for="ledCount">LED number</label><input id="ledCount" type="number" min="1" step="1" value="1"></div></div>
+          <div class="fields-2"><div class="field"><label for="singleFlux">Flux for single LED</label><input id="singleFlux" type="number" min="0.01" step="0.01" value="1000"></div><div class="field"><label for="efficiency">Luminaire efficiency</label><input id="efficiency" type="number" min="0.01" max="1" step="0.01" value="1"></div></div>
+          <div class="fields-2"><div class="field"><label for="beamAngle">C0-180 beam angle</label><input id="beamAngle" type="number" min="0.01" max="120" step="0.01" value="36"></div><div class="field c90-beam-field" hidden><label for="beamAngleC90">C90-270 beam angle</label><input id="beamAngleC90" type="number" min="0.01" max="120" step="0.01" value="36"></div></div>
+          <div class="field"><label for="power">Power of luminaire (W)</label><input id="power" type="number" min="0.01" step="0.01" value="10"></div>
+          <div class="field"><label for="generationMode">Generation mode</label><select id="generationMode"><option value="simple" selected>Simple parameters</option><option value="advanced">Advanced angle table</option></select></div>
+          <div class="field"><label for="distributionShape">Distribution shape</label><select id="distributionShape"><option value="lambertian" selected>Lambertian / cosine</option><option value="soft">Soft teardrop</option><option value="standard">Standard teardrop</option><option value="sharp">Sharp teardrop</option><option value="very-sharp">Very sharp</option></select></div>
+          <div class="advanced-editor" id="advancedEditor" hidden>
+            <p class="hint">Input key angle candela values. The editor interpolates all 1° data and mirrors C0/C180, C90/C270.</p>
+            <table aria-label="Advanced candela table">
+              <thead><tr><th>Angle</th><th>C0-180 cd</th><th class="c90-col">C90-270 cd</th></tr></thead>
+              <tbody id="advancedRows">
+                <tr><td><input class="adv-angle" type="number" value="0" step="10"></td><td><input class="adv-c0" type="number" value="12000" step="0.01"></td><td class="c90-col"><input class="adv-c90" type="number" value="12000" step="0.01"></td></tr>
+                <tr><td><input class="adv-angle" type="number" value="10" step="10"></td><td><input class="adv-c0" type="number" value="6000" step="0.01"></td><td class="c90-col"><input class="adv-c90" type="number" value="6000" step="0.01"></td></tr>
+                <tr><td><input class="adv-angle" type="number" value="20" step="10"></td><td><input class="adv-c0" type="number" value="1000" step="0.01"></td><td class="c90-col"><input class="adv-c90" type="number" value="1000" step="0.01"></td></tr>
+                <tr><td><input class="adv-angle" type="number" value="30" step="10"></td><td><input class="adv-c0" type="number" value="300" step="0.01"></td><td class="c90-col"><input class="adv-c90" type="number" value="300" step="0.01"></td></tr>
+                <tr><td><input class="adv-angle" type="number" value="40" step="10"></td><td><input class="adv-c0" type="number" value="120" step="0.01"></td><td class="c90-col"><input class="adv-c90" type="number" value="120" step="0.01"></td></tr>
+                <tr><td><input class="adv-angle" type="number" value="50" step="10"></td><td><input class="adv-c0" type="number" value="45" step="0.01"></td><td class="c90-col"><input class="adv-c90" type="number" value="45" step="0.01"></td></tr>
+                <tr><td><input class="adv-angle" type="number" value="60" step="10"></td><td><input class="adv-c0" type="number" value="15" step="0.01"></td><td class="c90-col"><input class="adv-c90" type="number" value="15" step="0.01"></td></tr>
+                <tr><td><input class="adv-angle" type="number" value="70" step="10"></td><td><input class="adv-c0" type="number" value="5" step="0.01"></td><td class="c90-col"><input class="adv-c90" type="number" value="5" step="0.01"></td></tr>
+                <tr><td><input class="adv-angle" type="number" value="80" step="10"></td><td><input class="adv-c0" type="number" value="1" step="0.01"></td><td class="c90-col"><input class="adv-c90" type="number" value="1" step="0.01"></td></tr>
+                <tr><td><input class="adv-angle" type="number" value="90" step="10"></td><td><input class="adv-c0" type="number" value="0" step="0.01"></td><td class="c90-col"><input class="adv-c90" type="number" value="0" step="0.01"></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="field"><label for="surfaceShape">Luminous surface shape</label><select id="surfaceShape"><option value="rectangular" selected>Square / Rectangular</option><option value="circular">Circular</option></select></div>
+          <div class="fields-2" id="rectangularSurfaceFields"><div class="field"><label for="length">Length of luminous surface (m)</label><input id="length" type="number" min="0" step="0.001" value="0.1"></div><div class="field"><label for="width">Width of luminous surface (m)</label><input id="width" type="number" min="0" step="0.001" value="0.1"></div></div>
+          <div class="field" id="circularSurfaceFields" hidden><label for="diameter">Diameter of luminous surface (m)</label><input id="diameter" type="number" min="0" step="0.001" value="0.045"></div>
+          <div class="field"><label for="height">Height of luminous surface (m)</label><input id="height" type="number" min="0" step="0.001" value="0.1"></div>
+          <div class="field"><label for="notes">Description / keywords</label><textarea id="notes">Generated by CDN IES Editor.</textarea></div>
+          <div class="actions"><button class="primary" type="button" id="reportBtn">Generate IES Report</button><button type="button" id="calcBtn">Send to Illuminance Calculator</button><button type="button" id="downloadBtn">Download IES</button><button type="button" id="copyBtn">Copy text</button><button type="button" id="resetBtn">Reset</button></div>
+        </form>
+        <div class="upload"><div class="field"><label for="upload">Open existing IES file</label><input id="upload" type="file" accept=".ies,.ldt,.txt"></div></div>
+        <p class="notes">The indoor report pages are hidden on first load. They appear after Generate IES Report or after a file is uploaded and parsed successfully.</p>
+      </aside>
+      <div class="main-grid">
+        <section class="panel"><div class="panel-head"><h2>Distribution Preview</h2><span id="beamLabel">Generated Type C</span></div><div class="chart-wrap"><canvas id="curveCanvas" width="720" height="720" aria-label="Photometric distribution curve"></canvas></div><div class="stats"><div class="stat"><strong id="totalFlux">1000 lm</strong><span>Total luminaire flux</span></div><div class="stat"><strong id="maxCd">0 cd</strong><span>Peak candela</span></div><div class="stat"><strong id="efficacy">100 lm/W</strong><span>Estimated efficacy</span></div><div class="stat"><strong id="beamValue">120°</strong><span>Beam angle FWHM</span></div></div></section>
+        <section class="panel" id="preview"><div class="panel-head"><h2>IES Preview</h2><span id="fileName">CDN-spot01.ies</span></div><pre class="preview" id="iesPreview"></pre></section>
+      </div>
+    </section>
+    <section class="report hidden" id="report">
+      <div class="report-shell">
+        <div class="report-title"><h2>IES INDOOR REPORT</h2><span>PHOTOMETRIC FILENAME : <strong id="reportFileName"></strong></span></div>
+        <article class="report-page"><h3>DESCRIPTION INFORMATION (From Photometric File)</h3><pre id="reportDescription"></pre></article>
+        <article class="report-page"><h3>CHARACTERISTICS</h3><div id="reportCharacteristics"></div></article>
+        <article class="report-page"><h3>CANDELA TABULATION</h3><div class="table-scroll" id="reportCandela"></div></article>
+        <article class="report-page"><h3>ZONAL LUMEN SUMMARY</h3><div class="table-scroll" id="reportZonal"></div></article>
+        <article class="report-page"><h3>UGR TABLE - CORRECTED</h3><pre id="reportUGR"></pre></article>
+        <article class="report-page"><h3>POLAR GRAPH</h3><canvas id="reportPolar" width="720" height="720" aria-label="Report polar graph"></canvas></article>
+      </div>
+    </section>
+  </main>
+</div>
+<script src="shape-control.js"></script>
+<script src="app.js"></script>
+<script src="ugr-standard.js"></script>
+<script src="polar-display-fix.js"></script>
+<script>
+(() => {
+  const cleanUGRText = () => {
+    const ugr = document.getElementById('reportUGR');
+    if (!ugr) return;
+    if (ugr.textContent.includes('UGR table is not calculated in this browser version')) {
+      ugr.textContent = 'Unable to calculate UGR - No candela in offending zones';
+    }
+  };
+  window.addEventListener('DOMContentLoaded', () => {
+    const ugr = document.getElementById('reportUGR');
+    if (!ugr) return;
+    new MutationObserver(cleanUGRText).observe(ugr, { childList: true, characterData: true, subtree: true });
+    cleanUGRText();
+  });
+})();
+</script>
+<script src="i18n.js"></script>
+<script src="full-report-bridge.js"></script>
+<script defer src="../assets/wechat-follow.js"></script>
+<script defer src="../assets/visitor-counter.js"></script>
+</body>
+</html>
