@@ -47,12 +47,16 @@ if (typeof SPECTRAL_MATH.blackbodyXy !== 'function' ||
 // - spd: 401 values from 380nm to 780nm at 1nm spacing, or
 // - spdSamples: [[wavelengthNm, relativePower], ...] measured from the chip datasheet.
 // When spd/spdSamples is present, the Gaussian peak/sigma model is bypassed.
-const CHANNELS_4CH = [
+const FALLBACK_CHANNELS_4CH = [
     { id: 'red',       name: 'Red',        nameCN: '红',   peak: 625, sigma: 15, color: '#ff3b3b', colorRGB: [255,59,59],    waveLabel: '625 nm' },
     { id: 'green',     name: 'Green',      nameCN: '绿',   peak: 525, sigma: 20, color: '#2dff6e', colorRGB: [45,255,110],   waveLabel: '525 nm' },
     { id: 'blue',      name: 'Blue',       nameCN: '蓝',   peak: 460, sigma: 15, color: '#3b7dff', colorRGB: [59,125,255],   waveLabel: '460 nm' },
     { id: 'warmwhite', name: 'Warm White', nameCN: '暖白',  peak: null, sigma: null, color: '#ffc966', colorRGB: [255,201,102], waveLabel: '3000K', isWarmWhite: true }
 ];
+
+const CHANNELS_4CH = Array.isArray(window.DEFAULT_RGBW_CHANNELS)
+    ? window.DEFAULT_RGBW_CHANNELS
+    : FALLBACK_CHANNELS_4CH;
 
 const CHANNELS_6CH = [
     { id: 'red',   name: 'Red',   nameCN: '红',   peak: 625, sigma: 15, color: '#ff3b3b', colorRGB: [255,59,59],   waveLabel: '625 nm' },
@@ -544,12 +548,26 @@ function renderCIE() {
 
     drawCctLocusLabels(cieCtx, ticks, w, h, pad);
 
-    // 4. Draw active channels' gamut boundary
+    // 4. Draw the convex gamut boundary. Broadband white channels naturally
+    // remain inside the RGB hull instead of becoming an extra polygon vertex.
     const activeCh = getActiveChannels();
-    // Filter broadband/WW channels for polygon, sort by peak to form convex hull
-    const polyCh = activeCh
-        .filter(ch => !ch.isWarmWhite && ch.peak)
-        .sort((a, b) => a.peak - b.peak);
+    const gamutCandidates = activeCh
+        .filter(ch => ch.chromaticity && Number.isFinite(ch.chromaticity.x) && Number.isFinite(ch.chromaticity.y))
+        .map(ch => ({ ch, x: ch.chromaticity.x, y: ch.chromaticity.y }))
+        .sort((a, b) => a.x - b.x || a.y - b.y);
+    const cross = (o, a, b) => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+    const lower = [];
+    const upper = [];
+    for (const point of gamutCandidates) {
+        while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], point) <= 0) lower.pop();
+        lower.push(point);
+    }
+    for (let i = gamutCandidates.length - 1; i >= 0; i--) {
+        const point = gamutCandidates[i];
+        while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], point) <= 0) upper.pop();
+        upper.push(point);
+    }
+    const polyCh = lower.slice(0, -1).concat(upper.slice(0, -1)).map(point => point.ch);
     
     if (polyCh.length >= 3) {
         cieCtx.strokeStyle = accentColor;
@@ -594,7 +612,7 @@ function renderCIE() {
             cieCtx.fillStyle = textColor;
             cieCtx.font = 'bold 8.5px "JetBrains Mono", monospace';
             const pct = channelValues[ch.id] || 0;
-            const labelStr = `${ch.isWarmWhite ? 'WW' : (ch.waveLabel.replace(' nm', ''))} (${pct}%)`;
+            const labelStr = `${ch.isWhiteChannel ? ch.name : ch.waveLabel.replace(' nm', '')} (${pct}%)`;
             cieCtx.fillText(labelStr, pt.x + 6, pt.y + 11);
         }
     }
@@ -1776,7 +1794,8 @@ function parseSPDText(text, fileName = 'Imported SPD') {
         }
 
         const headerName = headers[c + 1] && headers[c + 1].trim();
-        const color = IMPORT_COLORS[c % IMPORT_COLORS.length];
+        const isWhiteChannel = /^(w|ww|cw|nw|white|warm\s*white|cool\s*white|neutral\s*white)$/i.test(headerName || '');
+        const color = isWhiteChannel ? '#d4a12a' : IMPORT_COLORS[c % IMPORT_COLORS.length];
         channels.push({
             id: `imported-${c + 1}`,
             name: headerName || `Channel ${c + 1}`,
@@ -1784,9 +1803,10 @@ function parseSPDText(text, fileName = 'Imported SPD') {
             peak: peakSample[0],
             sigma: null,
             color,
-            colorRGB: IMPORT_COLOR_RGB[c % IMPORT_COLOR_RGB.length],
-            waveLabel: `${Math.round(peakSample[0])} nm`,
+            colorRGB: isWhiteChannel ? [212,161,42] : IMPORT_COLOR_RGB[c % IMPORT_COLOR_RGB.length],
+            waveLabel: isWhiteChannel ? (headerName || 'W') : `${Math.round(peakSample[0])} nm`,
             spdSamples: samples,
+            isWhiteChannel,
             imported: true,
             sourceName: fileName
         });
