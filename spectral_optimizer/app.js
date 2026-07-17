@@ -518,6 +518,23 @@ function renderCIE() {
         }
     }
 
+    const comparisonBaseline = getActiveComparisonBaseline(activeCh);
+    if (comparisonBaseline) {
+        const baselinePt = projectXY(comparisonBaseline.xy.x, comparisonBaseline.xy.y, w, h, pad);
+        cieCtx.save();
+        cieCtx.strokeStyle = isLightTheme ? 'rgba(74, 74, 74, 0.72)' : 'rgba(190, 190, 190, 0.78)';
+        cieCtx.fillStyle = isLightTheme ? 'rgba(74, 74, 74, 0.9)' : 'rgba(220, 220, 220, 0.92)';
+        cieCtx.lineWidth = 1.5;
+        cieCtx.setLineDash([3, 3]);
+        cieCtx.beginPath();
+        cieCtx.arc(baselinePt.x, baselinePt.y, 7, 0, 2 * Math.PI);
+        cieCtx.stroke();
+        cieCtx.beginPath();
+        cieCtx.arc(baselinePt.x, baselinePt.y, 2.5, 0, 2 * Math.PI);
+        cieCtx.fill();
+        cieCtx.restore();
+    }
+
     // 6. Draw current mixed color point (Target)
     const mPt = projectXY(currentX, currentY, w, h, pad);
     
@@ -927,6 +944,21 @@ function baselineMatchesActiveChannels(channels) {
         baselineSnapshot.channelIds.every((id, index) => id === channels[index].id);
 }
 
+function getActiveComparisonBaseline(channels = getActiveChannels()) {
+    if (!compareSpectrumEnabled || !baselineMatchesActiveChannels(channels)) return null;
+
+    const snapshot = baselineSnapshot;
+    const hasValidSpd = Array.isArray(snapshot.normalizedSpd) &&
+        snapshot.normalizedSpd.length === NUM_POINTS &&
+        snapshot.normalizedSpd.every(Number.isFinite);
+    const hasValidXy = snapshot.xy &&
+        Number.isFinite(snapshot.xy.x) && Number.isFinite(snapshot.xy.y);
+
+    return hasValidSpd && hasValidXy && hasValidMetamerMetrics(snapshot.metrics)
+        ? snapshot
+        : null;
+}
+
 function syncMetamerControls(metrics) {
     const hasValidMetrics = hasValidMetamerMetrics(metrics);
     const hasBaseline = hasValidMetrics && baselineMatchesActiveChannels(getActiveChannels());
@@ -1274,6 +1306,23 @@ function renderSPD() {
     }
 
     // ── Plot border ──
+    const comparisonBaseline = getActiveComparisonBaseline(channels);
+    if (comparisonBaseline) {
+        ctx.save();
+        ctx.setLineDash([6, 4]);
+        ctx.strokeStyle = 'rgba(90, 90, 90, 0.72)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let i = 0; i < NUM_POINTS; i++) {
+            const x = plotX + (i / (NUM_POINTS - 1)) * plotW;
+            const y = plotY + plotH - comparisonBaseline.normalizedSpd[i] * plotH;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+        ctx.restore();
+    }
+
     ctx.strokeStyle = 'rgba(42, 37, 30, 0.18)';
     ctx.lineWidth = 1.2;
     ctx.strokeRect(plotX, plotY, plotW, plotH);
@@ -1356,6 +1405,10 @@ function updateMetrics() {
         barColor: '#a6e96b'
     });
 
+    const comparisonBaseline = getActiveComparisonBaseline();
+    updateMetricDelta(valRf, m.rf, comparisonBaseline?.metrics.rf);
+    updateMetricDelta(valRg, m.rg, comparisonBaseline?.metrics.rg);
+
     prevMetrics = { cct: m.cct, ra: m.ra, r9: m.r9, rf: m.rf, melanopicEDI: m.melanopicEDI, cs: m.cs, caf: m.caf, rg: m.rg };
 }
 
@@ -1371,6 +1424,16 @@ function updateMetricCard(id, valueEl, barEl, newVal, oldVal, opts) {
         void card.offsetWidth; // trigger reflow
         card.classList.add('pulse');
     }
+}
+
+function updateMetricDelta(valueEl, value, baselineValue) {
+    if (!Number.isFinite(value) || !Number.isFinite(baselineValue)) return;
+
+    const delta = Math.round(value - baselineValue);
+    const deltaEl = document.createElement('span');
+    deltaEl.className = `metric-delta metric-delta-${delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'neutral'}`;
+    deltaEl.textContent = `(${delta >= 0 ? '+' : ''}${delta})`;
+    valueEl.append(' ', deltaEl);
 }
 
 // ═══════════════════════════════════════════════

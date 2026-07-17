@@ -817,6 +817,26 @@ main {
     line-height: 1;
 }
 
+.metric-delta {
+    display: inline-block;
+    margin-left: 0.08em;
+    font-size: 0.56em;
+    font-weight: 600;
+    vertical-align: 0.18em;
+}
+
+.metric-delta-positive {
+    color: #77bd46;
+}
+
+.metric-delta-negative {
+    color: #df6b45;
+}
+
+.metric-delta-neutral {
+    color: var(--text-muted);
+}
+
 .metric-unit {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.65rem;
