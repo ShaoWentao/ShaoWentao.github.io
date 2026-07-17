@@ -1,5 +1,11 @@
 const assert = require('node:assert/strict');
-const { optimizeMetamer } = require('./metamer-optimizer.js');
+const {
+    optimizeMetamer,
+    resolveComparisonBaseline,
+    getBaselineTargetXy,
+    deltaUvBetween,
+    formatRoundedMetricDelta
+} = require('./metamer-optimizer.js');
 
 const targetXy = { x: 0.3127, y: 0.3290 };
 const channels = [
@@ -133,5 +139,47 @@ assert.equal(invalidNeighborResult.feasible, true,
     'a valid seed remains usable when its neighboring candidates are chromatically invalid');
 assert.deepEqual(invalidNeighborResult.values, baselineValues,
     'chromatically invalid neighbors are not ranked as search candidates');
+
+const lockedBaseline = Object.freeze({
+    channelIds: Object.freeze(['red', 'green', 'blue']),
+    xy: Object.freeze({ x: targetXy.x, y: targetXy.y }),
+    uv: Object.freeze(xyToUv(targetXy.x, targetXy.y))
+});
+assert.equal(resolveComparisonBaseline({
+    metamerModeEnabled: false,
+    compareSpectrumEnabled: true,
+    baselineSnapshot: lockedBaseline,
+    activeChannelIds: ['red', 'green', 'blue']
+}), null, 'comparison baseline is unavailable while metamer mode is off');
+assert.equal(resolveComparisonBaseline({
+    metamerModeEnabled: true,
+    compareSpectrumEnabled: true,
+    baselineSnapshot: lockedBaseline,
+    activeChannelIds: ['red', 'green', 'blue']
+}), lockedBaseline, 'comparison baseline resolves while metamer mode and comparison are active');
+assert.equal(resolveComparisonBaseline({
+    metamerModeEnabled: true,
+    compareSpectrumEnabled: true,
+    baselineSnapshot: lockedBaseline,
+    activeChannelIds: ['red', 'green', 'cyan']
+}), null, 'comparison baseline is invalidated by a channel-set change');
+
+const mutableTarget = { x: 0.4, y: 0.4 };
+const lockedTarget = getBaselineTargetXy(lockedBaseline);
+mutableTarget.x = 0.2;
+assert.deepEqual(lockedTarget, targetXy,
+    'baseline target remains independent of mutable CCT/Duv-derived target state');
+assert.notEqual(lockedTarget, lockedBaseline.xy,
+    'baseline target is returned as a defensive copy');
+
+const currentUv = xyToUv(targetXy.x + 0.0005, targetXy.y);
+assert.equal(deltaUvBetween(lockedBaseline.uv, currentUv),
+    Math.hypot(currentUv.u - lockedBaseline.uv.u, currentUv.v - lockedBaseline.uv.v),
+    'displayed chromaticity delta is the pairwise baseline/current distance');
+
+assert.equal(formatRoundedMetricDelta(100.4, 100), '(0)', 'zero delta has no plus sign');
+assert.equal(formatRoundedMetricDelta(102, 100), '(+2)', 'positive delta has a plus sign');
+assert.equal(formatRoundedMetricDelta(98, 100), '(-2)', 'negative delta has a minus sign');
+assert.equal(formatRoundedMetricDelta(NaN, 100), '', 'invalid metric delta is omitted');
 
 console.log('metamer-optimizer tests passed');

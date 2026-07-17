@@ -17,6 +17,44 @@
         return Math.max(0, Math.min(100, Number.isFinite(value) ? value : 0));
     }
 
+    function resolveComparisonBaseline(options) {
+        const {
+            metamerModeEnabled,
+            compareSpectrumEnabled,
+            baselineSnapshot,
+            activeChannelIds
+        } = options || {};
+        if (!metamerModeEnabled || !compareSpectrumEnabled || !baselineSnapshot ||
+            !Array.isArray(activeChannelIds) || !Array.isArray(baselineSnapshot.channelIds) ||
+            baselineSnapshot.channelIds.length !== activeChannelIds.length) return null;
+
+        return baselineSnapshot.channelIds.every((id, index) => id === activeChannelIds[index])
+            ? baselineSnapshot
+            : null;
+    }
+
+    function getBaselineTargetXy(baselineSnapshot) {
+        const xy = baselineSnapshot && baselineSnapshot.xy;
+        if (!xy || !Number.isFinite(xy.x) || !Number.isFinite(xy.y)) {
+            throw new TypeError('baselineSnapshot.xy must be finite');
+        }
+        return { x: xy.x, y: xy.y };
+    }
+
+    function deltaUvBetween(firstUv, secondUv) {
+        if (!firstUv || !secondUv ||
+            !Number.isFinite(firstUv.u) || !Number.isFinite(firstUv.v) ||
+            !Number.isFinite(secondUv.u) || !Number.isFinite(secondUv.v)) return NaN;
+        return Math.hypot(secondUv.u - firstUv.u, secondUv.v - firstUv.v);
+    }
+
+    function formatRoundedMetricDelta(value, baselineValue) {
+        if (!Number.isFinite(value) || !Number.isFinite(baselineValue)) return '';
+        const delta = Math.round(value - baselineValue);
+        if (delta === 0) return '(0)';
+        return `(${delta > 0 ? '+' : ''}${delta})`;
+    }
+
     function combineSpd(channels, values) {
         const length = channels[0].spd.length;
         const combined = new Float64Array(length);
@@ -208,5 +246,11 @@
         };
     }
 
-    return { optimizeMetamer };
+    return {
+        optimizeMetamer,
+        resolveComparisonBaseline,
+        getBaselineTargetXy,
+        deltaUvBetween,
+        formatRoundedMetricDelta
+    };
 });

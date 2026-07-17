@@ -1677,7 +1677,15 @@ footer {
     opacity: 0.5;
 }
 
-.metamer-status {
+.metamer-readout {
+    min-width: 0;
+    overflow: hidden;
+    display: grid;
+    gap: 1px;
+}
+
+.metamer-status,
+.metamer-colour-delta {
     min-width: 0;
     overflow: hidden;
     color: var(--text-secondary);
@@ -1685,6 +1693,15 @@ footer {
     line-height: 1.25;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.metamer-colour-delta {
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.metamer-colour-delta.outside-tolerance {
+    color: var(--coral);
 }
 
 .preset-action-container {
@@ -2091,7 +2108,8 @@ footer {
         font-size: 0.62rem;
     }
 
-    .metamer-status {
+    .metamer-status,
+    .metamer-colour-delta {
         font-size: 0.6rem;
     }
 

@@ -24,6 +24,8 @@ for (let i = 0; i < NUM_POINTS; i++) {
 const CIE_DATA = window.CIE_SPECTRAL_DATA || {};
 const SPECTRAL_MATH = window.SpectralMath || {};
 const COLOUR_QUALITY = window.ColourQuality || {};
+const METAMER_OPTIMIZER = window.METAMER_OPTIMIZER || {};
+const METAMER_CHROMATICITY_TOLERANCE = 0.002;
 
 // ═══════════════════════════════════════════════
 // CHANNEL DEFINITIONS
@@ -74,6 +76,7 @@ let metamerModeEnabled = false;
 let targetRg = 100;
 let baselineSnapshot = null;
 let compareSpectrumEnabled = false;
+let isMetamerOptimizing = false;
 
 // ═══════════════════════════════════════════════
 // DOM REFERENCES
@@ -142,6 +145,7 @@ const targetRgVal = document.getElementById('target-rg-val');
 const setBaselineBtn = document.getElementById('set-baseline-btn');
 const compareSpectrumCheckbox = document.getElementById('compare-spectrum-checkbox');
 const metamerStatus = document.getElementById('metamer-status');
+const metamerColourDelta = document.getElementById('metamer-colour-delta');
 
 // Metric card elements for Rg
 const valRg = document.getElementById('val-rg');
@@ -951,9 +955,14 @@ function baselineMatchesActiveChannels(channels) {
 }
 
 function getActiveComparisonBaseline(channels = getActiveChannels()) {
-    if (!compareSpectrumEnabled || !baselineMatchesActiveChannels(channels)) return null;
+    const snapshot = METAMER_OPTIMIZER.resolveComparisonBaseline({
+        metamerModeEnabled,
+        compareSpectrumEnabled,
+        baselineSnapshot,
+        activeChannelIds: channels.map(channel => channel.id)
+    });
+    if (!snapshot) return null;
 
-    const snapshot = baselineSnapshot;
     const hasValidSpd = Array.isArray(snapshot.normalizedSpd) &&
         snapshot.normalizedSpd.length === NUM_POINTS &&
         snapshot.normalizedSpd.every(Number.isFinite);
@@ -968,16 +977,17 @@ function getActiveComparisonBaseline(channels = getActiveChannels()) {
 function syncMetamerControls(metrics) {
     const hasValidMetrics = hasValidMetamerMetrics(metrics);
     const hasBaseline = hasValidMetrics && baselineMatchesActiveChannels(getActiveChannels());
+    const comparisonAvailable = metamerModeEnabled && hasBaseline;
 
     if (hasValidMetrics && !Number.isFinite(targetRg)) updateTargetRgControl(metrics.rg);
-    if (targetRgSlider) targetRgSlider.disabled = !hasValidMetrics;
-    if (setBaselineBtn) setBaselineBtn.disabled = !hasValidMetrics;
+    if (targetRgSlider) targetRgSlider.disabled = isMetamerOptimizing || !hasValidMetrics;
+    if (setBaselineBtn) setBaselineBtn.disabled = isMetamerOptimizing || !hasValidMetrics;
     if (compareSpectrumCheckbox) {
-        compareSpectrumCheckbox.disabled = !hasBaseline;
-        if (!hasBaseline) compareSpectrumCheckbox.checked = false;
+        compareSpectrumCheckbox.disabled = isMetamerOptimizing || !comparisonAvailable;
+        if (!comparisonAvailable) compareSpectrumCheckbox.checked = false;
     }
-    if (!hasBaseline) compareSpectrumEnabled = false;
-    if (runOptimizeBtn) runOptimizeBtn.disabled = metamerModeEnabled && !hasValidMetrics;
+    if (!comparisonAvailable) compareSpectrumEnabled = false;
+    if (runOptimizeBtn) runOptimizeBtn.disabled = isMetamerOptimizing || (metamerModeEnabled && !hasValidMetrics);
 
     if (!hasValidMetrics && metamerModeEnabled) {
         updateTargetRgControl(NaN);
@@ -1009,6 +1019,48 @@ function syncChannelSliderPrecision() {
     }
 }
 
+function normalizeChannelValuesToDisplayedPrecision() {
+    for (const channel of getActiveChannels()) {
+        const value = channelValues[channel.id] || 0;
+        channelValues[channel.id] = Math.max(0, Math.min(100, Math.round(value)));
+    }
+}
+
+function resetComparisonVisibility() {
+    compareSpectrumEnabled = false;
+    if (compareSpectrumCheckbox) {
+        compareSpectrumCheckbox.checked = false;
+        compareSpectrumCheckbox.disabled = true;
+    }
+}
+
+function clearMetamerColourDelta() {
+    if (!metamerColourDelta) return;
+    metamerColourDelta.textContent = '';
+    metamerColourDelta.removeAttribute('data-delta-uv');
+    metamerColourDelta.classList.remove('outside-tolerance');
+}
+
+function updateMetamerColourDelta(combined) {
+    const channels = getActiveChannels();
+    if (!metamerModeEnabled || !baselineMatchesActiveChannels(channels)) {
+        clearMetamerColourDelta();
+        return;
+    }
+
+    const currentXy = xyFromSPD(combined);
+    const currentUv = xyToUv(currentXy.x, currentXy.y);
+    const deltaUv = METAMER_OPTIMIZER.deltaUvBetween(baselineSnapshot.uv, currentUv);
+    if (!Number.isFinite(deltaUv)) {
+        clearMetamerColourDelta();
+        return;
+    }
+
+    metamerColourDelta.textContent = `Baseline/current Delta u'v': ${deltaUv.toFixed(6)}`;
+    metamerColourDelta.dataset.deltaUv = deltaUv.toFixed(9);
+    metamerColourDelta.classList.toggle('outside-tolerance', deltaUv > METAMER_CHROMATICITY_TOLERANCE);
+}
+
 function captureBaseline() {
     const channels = getActiveChannels();
     const combined = getCombinedSPD();
@@ -1036,11 +1088,8 @@ function captureBaseline() {
 
 function clearBaseline(message = '') {
     baselineSnapshot = null;
-    compareSpectrumEnabled = false;
-    if (compareSpectrumCheckbox) {
-        compareSpectrumCheckbox.checked = false;
-        compareSpectrumCheckbox.disabled = true;
-    }
+    resetComparisonVisibility();
+    clearMetamerColourDelta();
     if (message && metamerModeEnabled) setMetamerStatus(message);
 }
 
@@ -1054,9 +1103,9 @@ function metamerOptimizerChannels(channels) {
     });
 }
 
-function runMetamerOptimization() {
-    if (!metamerModeEnabled) return;
-    if (!window.METAMER_OPTIMIZER || typeof window.METAMER_OPTIMIZER.optimizeMetamer !== 'function') {
+async function runMetamerOptimization() {
+    if (!metamerModeEnabled || isMetamerOptimizing) return;
+    if (typeof METAMER_OPTIMIZER.optimizeMetamer !== 'function') {
         setMetamerStatus('Metamer optimizer is unavailable.');
         return;
     }
@@ -1070,33 +1119,50 @@ function runMetamerOptimization() {
         return;
     }
 
-    const result = window.METAMER_OPTIMIZER.optimizeMetamer({
-        channels: metamerOptimizerChannels(channels),
-        baselineValues: baselineSnapshot.values.slice(),
-        targetXy: getTargetXY(targetCCT, targetDuv),
-        targetRg,
-        evaluateSpd(spd) {
-            const xy = xyFromSPD(spd);
-            return { ...calculateMetrics(spd), xy };
-        },
-        xyToUv
-    });
+    const lockedBaseline = baselineSnapshot;
+    isMetamerOptimizing = true;
+    syncMetamerControls(metrics);
+    if (metamerDependentControls) metamerDependentControls.setAttribute('aria-busy', 'true');
+    setMetamerStatus('Optimizing Rg...');
 
-    if (!result.feasible || !result.values) {
-        setMetamerStatus('No feasible Rg result found for the active colour point.');
-        scheduleUpdate();
-        return;
-    }
+    try {
+        await yieldForPaint();
+        if (!metamerModeEnabled || baselineSnapshot !== lockedBaseline) return;
 
-    const valuesById = {};
-    for (let index = 0; index < channels.length; index++) {
-        valuesById[channels[index].id] = result.values[index];
+        const result = METAMER_OPTIMIZER.optimizeMetamer({
+            channels: metamerOptimizerChannels(channels),
+            baselineValues: lockedBaseline.values.slice(),
+            targetXy: METAMER_OPTIMIZER.getBaselineTargetXy(lockedBaseline),
+            targetRg,
+            evaluateSpd(spd) {
+                const xy = xyFromSPD(spd);
+                return { ...calculateMetrics(spd), xy };
+            },
+            xyToUv
+        });
+
+        if (!result.feasible || !result.values) {
+            setMetamerStatus('No feasible Rg result found for the baseline colour point.');
+            scheduleUpdate();
+            return;
+        }
+
+        const valuesById = {};
+        for (let index = 0; index < channels.length; index++) {
+            valuesById[channels[index].id] = result.values[index];
+        }
+        applyValuesImmediate(valuesById);
+        setMetamerStatus(result.exact
+            ? `Target achieved: ${Math.round(result.achievedRg)}`
+            : `Closest Rg found in current search: ${Math.round(result.achievedRg)}`);
+    } catch (error) {
+        console.error('Metamer optimization failed:', error);
+        setMetamerStatus('Metamer optimization failed.');
+    } finally {
+        isMetamerOptimizing = false;
+        if (metamerDependentControls) metamerDependentControls.removeAttribute('aria-busy');
+        syncMetamerControls(calculateMetrics(getCombinedSPD()));
     }
-    applyValuesImmediate(valuesById);
-    const rgStatus = result.exact
-        ? `Target achieved: ${Math.round(result.achievedRg)}`
-        : `Closest Rg found in current search: ${Math.round(result.achievedRg)}`;
-    setMetamerStatus(`${rgStatus} | Delta u'v': ${result.deltaUv.toFixed(6)}`);
 }
 
 // ═══════════════════════════════════════════════
@@ -1345,6 +1411,7 @@ function updateMetrics() {
     const combined = getCombinedSPD();
     const m = calculateMetrics(combined);
     if (metamerModeEnabled) syncMetamerControls(m);
+    updateMetamerColourDelta(combined);
 
     // CCT
     updateMetricCard('cct', valCCT, barCCT, m.cct, prevMetrics.cct, {
@@ -1434,12 +1501,13 @@ function updateMetricCard(id, valueEl, barEl, newVal, oldVal, opts) {
 }
 
 function updateMetricDelta(valueEl, value, baselineValue) {
-    if (!Number.isFinite(value) || !Number.isFinite(baselineValue)) return;
+    const text = METAMER_OPTIMIZER.formatRoundedMetricDelta(value, baselineValue);
+    if (!text) return;
 
     const delta = Math.round(value - baselineValue);
     const deltaEl = document.createElement('span');
     deltaEl.className = `metric-delta metric-delta-${delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'neutral'}`;
-    deltaEl.textContent = `(${delta >= 0 ? '+' : ''}${delta})`;
+    deltaEl.textContent = text;
     valueEl.append(' ', deltaEl);
 }
 
@@ -2128,6 +2196,10 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function yieldForPaint() {
+    return new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)));
+}
+
 // ═══════════════════════════════════════════════
 // RENDER LOOP & DEBOUNCE
 // ═══════════════════════════════════════════════
@@ -2301,8 +2373,7 @@ if (targetCctSlider) {
     targetCctSlider.addEventListener('input', () => {
         targetCCT = parseInt(targetCctSlider.value);
         targetCctVal.textContent = `${targetCCT} K`;
-        if (metamerModeEnabled) runMetamerOptimization();
-        else runRealtimeOptimizer();
+        if (!metamerModeEnabled) runRealtimeOptimizer();
         scheduleUpdate();
     });
 }
@@ -2310,8 +2381,7 @@ if (targetDuvSlider) {
     targetDuvSlider.addEventListener('input', () => {
         targetDuv = parseFloat(targetDuvSlider.value);
         targetDuvVal.textContent = `${targetDuv >= 0 ? '+' : ''}${targetDuv.toFixed(4)}`;
-        if (metamerModeEnabled) runMetamerOptimization();
-        else runRealtimeOptimizer();
+        if (!metamerModeEnabled) runRealtimeOptimizer();
         scheduleUpdate();
     });
 }
@@ -2328,7 +2398,11 @@ if (metamerModeCheckbox) {
         metamerModeEnabled = metamerModeCheckbox.checked;
         if (metamerDependentControls) metamerDependentControls.hidden = !metamerModeEnabled;
         if (!metamerModeEnabled) {
-            if (runOptimizeBtn) runOptimizeBtn.disabled = false;
+            normalizeChannelValuesToDisplayedPrecision();
+            resetComparisonVisibility();
+            clearMetamerColourDelta();
+            setMetamerStatus('');
+            syncMetamerControls(calculateMetrics(getCombinedSPD()));
             syncChannelSliderPrecision();
             scheduleUpdate();
             return;
@@ -2388,8 +2462,7 @@ document.querySelectorAll('.opt-preset-btn').forEach(btn => {
             targetDuvSlider.value = duv;
             targetDuvVal.textContent = `${duv >= 0 ? '+' : ''}${duv.toFixed(4)}`;
         }
-        if (metamerModeEnabled) runMetamerOptimization();
-        else runRealtimeOptimizer();
+        if (!metamerModeEnabled) runRealtimeOptimizer();
         scheduleUpdate();
     });
 });
