@@ -19,19 +19,27 @@ function close(actual, expected, tolerance, label) {
         `${label}: expected ${expected} +/- ${tolerance}, got ${actual}`);
 }
 
+const referenceMinNm = 380;
+const referenceMaxNm = 780;
+const referenceStart = (referenceMinNm - cieData.lambdaMin) / cieData.step;
+const referenceLength = (referenceMaxNm - referenceMinNm) / cieData.step + 1;
 const cieWavelengths = Float64Array.from(
-    { length: cieData.xBar.length },
-    (_, index) => cieData.lambdaMin + index * cieData.step
+    { length: referenceLength },
+    (_, index) => referenceMinNm + index * cieData.step
 );
+const cieXBar = cieData.xBar.slice(referenceStart, referenceStart + referenceLength);
+const cieYBar = cieData.yBar.slice(referenceStart, referenceStart + referenceLength);
+const cieZBar = cieData.zBar.slice(referenceStart, referenceStart + referenceLength);
 
-// Full 360-830 nm integrations use the CIE 1931 2 degree observer
-// (DOI 10.25039/CIE.DS.xvudnb9b) and CODATA 2022 c2 = hc/k.
+// Expected xy values are numerical integration references over exactly
+// 380-780 nm (inclusive, 1 nm), using the CIE 1931 2 degree observer data
+// (CIE dataset DOI 10.25039/CIE.DS.xvudnb9b) and CODATA 2022 c2 = hc/k.
 const blackbodyReferences = [
-    { temperature: 1000, x: 0.652725233, y: 0.344486434 },
-    { temperature: 1600, x: 0.573225692, y: 0.399268627 },
-    { temperature: 6500, x: 0.313526940, y: 0.323629970 },
-    { temperature: 12000, x: 0.271784176, y: 0.277564091 },
-    { temperature: 20000, x: 0.256457314, y: 0.257631320 }
+    { temperature: 1000, x: 0.652722149395, y: 0.344489234044 },
+    { temperature: 1600, x: 0.573222467311, y: 0.399270433328 },
+    { temperature: 6500, x: 0.313551672187, y: 0.323688856154 },
+    { temperature: 12000, x: 0.271819139843, y: 0.277663178319 },
+    { temperature: 20000, x: 0.256495769162, y: 0.257750514027 }
 ];
 
 for (const reference of blackbodyReferences) {
@@ -44,12 +52,12 @@ for (const reference of blackbodyReferences) {
     const xy = blackbodyXy(
         reference.temperature,
         cieWavelengths,
-        cieData.xBar,
-        cieData.yBar,
-        cieData.zBar
+        cieXBar,
+        cieYBar,
+        cieZBar
     );
-    close(xy.x, reference.x, 1.5e-4, `${reference.temperature} K x`);
-    close(xy.y, reference.y, 1.5e-4, `${reference.temperature} K y`);
+    close(xy.x, reference.x, 1e-9, `${reference.temperature} K x`);
+    close(xy.y, reference.y, 1e-9, `${reference.temperature} K y`);
 }
 
 for (const invalidTemperature of [0, -1, NaN, Infinity, '6500']) {
@@ -64,6 +72,15 @@ for (const invalidTemperature of [0, -1, NaN, Infinity, '6500']) {
 
 assert.deepEqual(blackbodySpd(6500, null), [], 'safe SPD for missing wavelengths');
 assert.deepEqual(blackbodySpd(6500, [380, NaN, 780]), [0, 0, 0], 'safe SPD for malformed wavelengths');
+const fakeArrayLike = { 0: 380, 1: 500, 2: 780, length: 3 };
+const fakeHugeArrayLike = { length: Number.MAX_SAFE_INTEGER };
+assert.deepEqual(blackbodySpd(6500, fakeArrayLike), [], 'safe SPD for array-like wavelengths');
+assert.deepEqual(blackbodySpd(6500, fakeHugeArrayLike), [], 'safe SPD for huge array-like wavelengths');
+assert.deepEqual(
+    blackbodyXy(6500, fakeHugeArrayLike, fakeHugeArrayLike, fakeHugeArrayLike, fakeHugeArrayLike),
+    { x: 0, y: 0 },
+    'safe xy for huge array-like inputs'
+);
 
 for (const malformed of [
     [[380, 500], [1], [1, 1], [1, 1]],

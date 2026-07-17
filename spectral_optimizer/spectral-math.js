@@ -41,9 +41,21 @@
     }
 
     const SECOND_RADIATION_CONSTANT_NM_K = 1.438776877e7;
+    // Covers 0.1 nm samples across a 1,000 nm spectrum while bounding work and allocation.
+    const MAX_SPECTRAL_SAMPLE_COUNT = 10_000;
+
+    function isSpectralArray(values) {
+        const isTypedArray = ArrayBuffer.isView(values)
+            && Number.isSafeInteger(values.BYTES_PER_ELEMENT)
+            && values.BYTES_PER_ELEMENT > 0;
+        return (Array.isArray(values) || isTypedArray)
+            && Number.isSafeInteger(values.length)
+            && values.length >= 0
+            && values.length <= MAX_SPECTRAL_SAMPLE_COUNT;
+    }
 
     function safeZeroArray(values) {
-        if (values == null || !Number.isSafeInteger(values.length) || values.length < 0) return [];
+        if (!isSpectralArray(values)) return [];
         return new Array(values.length).fill(0);
     }
 
@@ -82,7 +94,7 @@
 
     function blackbodyXy(temperature, wavelengths, xBar, yBar, zBar) {
         const arrays = [wavelengths, xBar, yBar, zBar];
-        if (arrays.some(values => values == null || !Number.isSafeInteger(values.length))
+        if (arrays.some(values => !isSpectralArray(values))
             || wavelengths.length < 2
             || arrays.some(values => values.length !== wavelengths.length)) {
             return { x: 0, y: 0 };
