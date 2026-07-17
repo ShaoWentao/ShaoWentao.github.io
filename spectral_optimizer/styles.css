@@ -41,7 +41,7 @@ body {
     align-self: start;
 }
 
-/* Keep the CIE 1931 diagram square at every viewport width. */
+/* Keep the CIE 1931 diagram square and both chart cards aligned on desktop. */
 .visualization-area,
 .charts-row,
 .spd-panel,
@@ -53,15 +53,19 @@ body {
     display: grid;
     grid-template-columns: minmax(0, 1.65fr) minmax(300px, 1fr);
     gap: 18px;
-    align-items: start;
-    grid-auto-rows: max-content;
+    align-items: stretch;
 }
 
 .spd-panel,
 .cie-panel {
     overflow: hidden;
-    align-self: start;
-    height: auto;
+    align-self: stretch;
+    height: 100%;
+}
+
+.spd-panel {
+    display: flex;
+    flex-direction: column;
 }
 
 .canvas-wrapper {
@@ -86,6 +90,13 @@ body {
 @media (max-width: 1180px) {
     .charts-row {
         grid-template-columns: 1fr;
+        align-items: start;
+    }
+
+    .spd-panel,
+    .cie-panel {
+        height: auto;
+        align-self: start;
     }
 
     .cie-panel {
