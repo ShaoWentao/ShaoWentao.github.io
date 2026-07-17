@@ -1,5 +1,6 @@
 const assert = require('node:assert/strict');
 const { CLA2_DATA } = require('./circadian-data.js');
+const { calculateCLA2, claToCS } = require('./circadian-math.js');
 
 const keys = ['photopic', 'scotopic', 'melanopsin', 'sConeMacular', 'photopicMacular'];
 const goldenSamples = Object.freeze({
@@ -39,4 +40,136 @@ assert.throws(() => {
   CLA2_DATA.melanopsin = [];
 }, TypeError);
 
-console.log('circadian data integrity tests passed');
+function illuminantAValue(wavelength) {
+  const c2 = 1.435e7;
+  const temperature = 2848;
+  return 100 * Math.pow(560 / wavelength, 5)
+    * (Math.exp(c2 / (temperature * 560)) - 1)
+    / (Math.exp(c2 / (temperature * wavelength)) - 1);
+}
+
+const referenceA = { wavelengths: [], values: [] };
+for (let wavelength = 380; wavelength <= 730; wavelength += 5) {
+  referenceA.wavelengths.push(wavelength);
+  referenceA.values.push(illuminantAValue(wavelength));
+}
+
+assert.ok(Math.abs(claToCS(355.7, 1, 1) - 0.35) < 1e-12);
+
+const a1000 = calculateCLA2({
+  wavelengths: referenceA.wavelengths,
+  values: referenceA.values,
+  illuminanceLux: 1000,
+  durationHours: 1,
+  fieldFactor: 1
+});
+assert.ok(Math.abs(a1000.cla - 813) <= 2, `Illuminant A CLA was ${a1000.cla}`);
+assert.equal(a1000.blueYellowState, 'inactive');
+
+const equivalentCondition = calculateCLA2({
+  wavelengths: referenceA.wavelengths,
+  values: referenceA.values,
+  illuminanceLux: 1000,
+  durationHours: 2,
+  fieldFactor: 0.5
+});
+assert.equal(equivalentCondition.cla, a1000.cla);
+assert.equal(equivalentCondition.cs, a1000.cs);
+
+const strongerCondition = calculateCLA2({
+  wavelengths: referenceA.wavelengths,
+  values: referenceA.values,
+  illuminanceLux: 1000,
+  durationHours: 2,
+  fieldFactor: 2
+});
+assert.equal(strongerCondition.cla, a1000.cla);
+assert.ok(strongerCondition.cs > a1000.cs);
+
+const warm = calculateCLA2({
+  wavelengths: [380, 500, 600, 730],
+  values: [0, 0, 1, 0],
+  illuminanceLux: 500
+});
+const cool = calculateCLA2({
+  wavelengths: [380, 430, 460, 500, 730],
+  values: [0, 0.2, 1, 0.2, 0],
+  illuminanceLux: 500
+});
+assert.equal(warm.blueYellowState, 'inactive');
+assert.equal(cool.blueYellowState, 'active');
+assert.ok(cool.cla > warm.cla);
+
+const clippedFarRed = calculateCLA2({
+  wavelengths: [380, 709, 710, 711, 730],
+  values: [0, 0, 1, 0, 0],
+  illuminanceLux: 500
+});
+assert.equal(clippedFarRed.cla, 0);
+assert.equal(clippedFarRed.cs, 0);
+
+const zero = calculateCLA2({
+  wavelengths: [380, 555, 730],
+  values: [0, 0, 0],
+  illuminanceLux: 1000
+});
+assert.deepEqual(zero, {
+  cla: 0,
+  cs: 0,
+  blueYellowState: 'inactive',
+  durationHours: 1,
+  fieldFactor: 1
+});
+
+for (const malformed of [
+  {},
+  { wavelengths: [380, 730], values: [1], illuminanceLux: 1000 },
+  { wavelengths: [380, 500, 730], values: [1, NaN, 1], illuminanceLux: 1000 },
+  { wavelengths: [380, 500, 500], values: [1, 1, 1], illuminanceLux: 1000 },
+  { wavelengths: [380, 500, 730], values: [1, -1, 1], illuminanceLux: 1000 },
+  { wavelengths: [380, 500, 730], values: [1, 1, 1], illuminanceLux: 0 }
+]) {
+  const result = calculateCLA2(malformed);
+  assert.equal(result.cla, 0);
+  assert.equal(result.cs, 0);
+  assert.ok(Number.isFinite(result.cla));
+  assert.ok(Number.isFinite(result.cs));
+}
+
+const scaledA = calculateCLA2({
+  wavelengths: referenceA.wavelengths,
+  values: referenceA.values.map((value) => value * 1e-9),
+  illuminanceLux: 1000
+});
+assert.ok(Math.abs(scaledA.cla - a1000.cla) < 1e-9);
+
+const clampedConditions = calculateCLA2({
+  wavelengths: referenceA.wavelengths,
+  values: referenceA.values,
+  illuminanceLux: 1000,
+  durationHours: 99,
+  fieldFactor: 3
+});
+assert.equal(clampedConditions.durationHours, 3);
+assert.equal(clampedConditions.fieldFactor, 1);
+assert.equal(claToCS(100, -10, 3), claToCS(100, 0.5, 1));
+assert.equal(claToCS(-100, 1, 1), 0);
+assert.equal(claToCS(Number.NaN, 1, 1), 0);
+assert.equal(claToCS(Number.POSITIVE_INFINITY, 1, 1), 0.7);
+
+const repeatedA = calculateCLA2({
+  wavelengths: referenceA.wavelengths,
+  values: referenceA.values,
+  illuminanceLux: 1000,
+  durationHours: 1.5,
+  fieldFactor: 2
+});
+assert.deepEqual(repeatedA, calculateCLA2({
+  wavelengths: referenceA.wavelengths,
+  values: referenceA.values,
+  illuminanceLux: 1000,
+  durationHours: 1.5,
+  fieldFactor: 2
+}));
+
+console.log('circadian data and calculation tests passed');
