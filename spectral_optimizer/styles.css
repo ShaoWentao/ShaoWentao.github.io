@@ -2166,7 +2166,7 @@ footer {
     #card-rg { order: 5; }
     #card-mel { order: 6; }
     #card-cs { order: 7; }
-    #card-caf { order: 8; }
+    #card-medi { order: 8; }
 
     .optimizer-section {
         width: 100%;
@@ -2264,6 +2264,11 @@ footer {
 
     .optimizer-action-stack {
         grid-template-rows: minmax(0, 1fr) auto;
+    }
+
+    .optimizer-action-stack.export-only {
+        display: flex;
+        align-items: stretch;
     }
 
     .export-recipe-btn {

@@ -71,7 +71,6 @@ let importedChannels = null;
 let importedSourceName = '';
 let channelValues = {};   // id -> 0..100
 let showD65 = false;
-let isOptimizing = false;
 let animFrameId = null;
 let metamerModeEnabled = false;
 let targetRg = 100;
@@ -95,7 +94,6 @@ const spdImportBtn = document.getElementById('spd-import-btn');
 const spdImportStatus = document.getElementById('spd-import-status');
 const preserveChannelPower = document.getElementById('preserve-channel-power');
 const d65Toggle = document.getElementById('d65-toggle');
-const optimizerProgress = document.getElementById('optimizer-progress');
 const emitterPreview = document.getElementById('emitter-preview');
 const emitterDisc = document.getElementById('emitter-disc');
 const emitterPreviewStatus = document.getElementById('emitter-preview-status');
@@ -109,23 +107,17 @@ const valR9 = document.getElementById('val-r9');
 const valRf = document.getElementById('val-rf');
 const valMel = document.getElementById('val-mel');
 const valCS  = document.getElementById('val-cs');
-const valCAF = document.getElementById('val-caf');
+const valMedi = document.getElementById('val-medi');
 const barCCT = document.getElementById('bar-cct');
 const barCRI = document.getElementById('bar-cri');
 const barR9 = document.getElementById('bar-r9');
 const barRf = document.getElementById('bar-rf');
 const barMel = document.getElementById('bar-mel');
 const barCS  = document.getElementById('bar-cs');
-const barCAF = document.getElementById('bar-caf');
+const barMedi = document.getElementById('bar-medi');
 const csStatus = document.getElementById('cs-status');
 
 // Optimizer elements
-const optimizeButtons = document.querySelectorAll('.optimize-btn');
-const progressIter = document.getElementById('progress-iter');
-const progressBarFill = document.getElementById('progress-bar-fill');
-const progressCS = document.getElementById('progress-cs');
-const progressTarget = document.getElementById('progress-target');
-const progressError = document.getElementById('progress-error');
 
 // CIE 1931 DOM References
 const cieCanvas = document.getElementById('cie-canvas');
@@ -143,7 +135,6 @@ const targetDuvSlider = document.getElementById('target-duv-slider');
 const targetDuvVal = document.getElementById('target-duv-val');
 const eyeIlluminanceSlider = document.getElementById('eye-illuminance');
 const eyeIlluminanceVal = document.getElementById('eye-illuminance-val');
-const runOptimizeBtn = document.getElementById('run-optimize-btn');
 const exportRecipeBtn = document.getElementById('export-recipe-btn');
 const metamerModeCheckbox = document.getElementById('metamer-mode-checkbox');
 const metamerDependentControls = document.getElementById('metamer-dependent-controls');
@@ -835,7 +826,7 @@ function calculateMetrics(combinedSPD) {
     if (totalPower < 1e-10) {
         currentX = 0.3127;
         currentY = 0.3290;
-        return { cct: 0, ra: 0, r9: 0, rf: 0, rg: 0, melanopicEDI: 0, cs: 0, caf: 0, cla: 0 };
+        return { cct: 0, ra: 0, r9: 0, rf: 0, rg: 0, melanopicDER: 0, melanopicEDI: 0, cs: 0, cla: 0 };
     }
 
     const sum = X + Y + Z;
@@ -850,16 +841,16 @@ function calculateMetrics(combinedSPD) {
         : { ra: estimateCRI(combinedSPD), r9: 0, rf: 0, rg: estimateRg(combinedSPD, cct) };
     const melanopicDER = melanopicDERFromSums(melSum, vSum);
     const { CLA, CS } = simplifiedCSFromDER(melanopicDER);
-    const caf = vSum > 1e-10 ? melSum / vSum : 0;
+    const melanopicEDI = eyeIlluminance * melanopicDER;
     return {
         cct: Math.round(cct),
         ra: quality.ra,
         r9: quality.r9,
         rf: quality.rf,
         rg: quality.rg,
-        melanopicEDI: melanopicDER,
+        melanopicDER,
+        melanopicEDI,
         cs: CS,
-        caf,
         cla: CLA
     };
 }
@@ -994,7 +985,6 @@ function syncMetamerControls(metrics) {
         if (!comparisonAvailable) compareSpectrumCheckbox.checked = false;
     }
     if (!comparisonAvailable) compareSpectrumEnabled = false;
-    if (runOptimizeBtn) runOptimizeBtn.disabled = isMetamerOptimizing || (metamerModeEnabled && !hasValidMetrics);
 
     if (!hasValidMetrics && metamerModeEnabled) {
         updateTargetRgControl(NaN);
@@ -1412,7 +1402,7 @@ function renderSPD() {
 // METRICS DISPLAY
 // ═══════════════════════════════════════════════
 
-let prevMetrics = { cct: 0, ra: 0, r9: 0, rf: 0, rg: 0, melanopicEDI: 0, cs: 0, caf: 0 };
+let prevMetrics = { cct: 0, ra: 0, r9: 0, rf: 0, rg: 0, melanopicDER: 0, melanopicEDI: 0, cs: 0 };
 
 function updateMetrics() {
     const combined = getCombinedSPD();
@@ -1448,9 +1438,9 @@ function updateMetrics() {
     });
 
     // Melanopic EDI
-    updateMetricCard('mel', valMel, barMel, m.melanopicEDI, prevMetrics.melanopicEDI, {
+    updateMetricCard('mel', valMel, barMel, m.melanopicDER, prevMetrics.melanopicDER, {
         format: v => v > 0 ? v.toFixed(2) : '--',
-        barFill: Math.min(100, m.melanopicEDI * 50),
+        barFill: Math.min(100, m.melanopicDER * 50),
         barColor: '#e4b85b'
     });
 
@@ -1473,10 +1463,10 @@ function updateMetrics() {
         csStatus.className = 'cs-status sleep';
     }
 
-    // CAF
-    updateMetricCard('caf', valCAF, barCAF, m.caf, prevMetrics.caf, {
-        format: v => v > 0 ? v.toFixed(3) : '--',
-        barFill: Math.min(100, m.caf * 50),
+    // CIE S 026 melanopic equivalent daylight illuminance
+    updateMetricCard('medi', valMedi, barMedi, m.melanopicEDI, prevMetrics.melanopicEDI, {
+        format: v => v > 0 ? Math.round(v).toLocaleString() : '--',
+        barFill: Math.min(100, m.melanopicEDI / 2.5),
         barColor: '#ff6b25'
     });
 
@@ -1491,7 +1481,7 @@ function updateMetrics() {
     updateMetricDelta(valRf, m.rf, comparisonBaseline?.metrics.rf);
     updateMetricDelta(valRg, m.rg, comparisonBaseline?.metrics.rg);
 
-    prevMetrics = { cct: m.cct, ra: m.ra, r9: m.r9, rf: m.rf, melanopicEDI: m.melanopicEDI, cs: m.cs, caf: m.caf, rg: m.rg };
+    prevMetrics = { cct: m.cct, ra: m.ra, r9: m.r9, rf: m.rf, melanopicDER: m.melanopicDER, melanopicEDI: m.melanopicEDI, cs: m.cs, rg: m.rg };
 }
 
 function updateMetricCard(id, valueEl, barEl, newVal, oldVal, opts) {
@@ -1768,9 +1758,9 @@ function exportCurrentRecipe() {
             r9: metrics.r9,
             rf: metrics.rf,
             rg: metrics.rg,
-            melanopicDer: metrics.melanopicEDI,
+            melanopicDer: metrics.melanopicDER,
+            melanopicEdiLux: metrics.melanopicEDI,
             circadianStimulus: metrics.cs,
-            caf: metrics.caf
         },
         channels: channels.map(channel => ({
             id: channel.id,
@@ -2084,14 +2074,6 @@ function easeInOutCubic(t) {
 // AI OPTIMIZER
 // ═══════════════════════════════════════════════
 
-optimizeButtons.forEach(btn => {
-    const target = Number(btn.dataset.targetCs || NaN);
-    const targetCCT = Number(btn.dataset.targetCct || NaN);
-    if (!Number.isFinite(target)) return;
-    btn.dataset.targetCs = String(target);
-    btn.addEventListener('click', () => runOptimizer(target, targetCCT));
-});
-
 function computeCCTFromValues(channels, values) {
     const spd = combinedSPDFromValues(channels, values);
     const { X, Y, Z } = xyzFromSPD(spd);
@@ -2236,47 +2218,6 @@ function optimizeValuesForScene(channels, targetCCT, targetDuv) {
     };
 }
 
-async function runOptimizer(tgtCCT, tgtDuv) {
-    if (isOptimizing) return;
-    if (animFrameId !== null) {
-        cancelAnimationFrame(animFrameId);
-        animFrameId = null;
-    }
-    isOptimizing = true;
-    if (runOptimizeBtn) runOptimizeBtn.disabled = true;
-    document.querySelectorAll('.opt-preset-btn').forEach(btn => btn.disabled = true);
-    optimizerProgress.style.display = 'block';
-    progressTarget.textContent = `${tgtCCT} K / ${tgtDuv >= 0 ? '+' : ''}${tgtDuv.toFixed(4)}`;
-
-    const channels = getActiveChannels();
-    const n = channels.length;
-
-    const solved = optimizeValuesForScene(channels, tgtCCT, tgtDuv);
-    const values = solved.values;
-    progressIter.textContent = '1 / 1';
-    progressBarFill.style.width = '100%';
-    progressCS.textContent = solved.cct.toFixed(0) + ' K';
-    progressError.textContent = solved.error.toFixed(4);
-
-    const finalValues = {};
-    for (let c = 0; c < n; c++) {
-        finalValues[channels[c].id] = Math.round(values[c]);
-    }
-    animateToValues(finalValues, 400);
-
-    await sleep(500);
-
-    isOptimizing = false;
-    if (runOptimizeBtn) runOptimizeBtn.disabled = false;
-    document.querySelectorAll('.opt-preset-btn').forEach(btn => btn.disabled = false);
-
-    setTimeout(() => {
-        if (!isOptimizing) {
-            optimizerProgress.style.display = 'none';
-        }
-    }, 3000);
-}
-
 function applyValuesImmediate(vals) {
     const channels = getActiveChannels();
     for (const ch of channels) {
@@ -2380,7 +2321,7 @@ function init() {
 
     document.querySelectorAll('.target-row input[type="range"]').forEach(syncTargetSliderFill);
 
-    scheduleUpdate();
+    runRealtimeOptimizer();
 
     // Handle resize
     let resizeTimer;
@@ -2395,90 +2336,23 @@ function init() {
 
 function runRealtimeOptimizer() {
     const channels = getActiveChannels();
-    const n = channels.length;
-    if (n === 0) return;
-
-    if (Math.abs(targetDuv) < 1e-9) {
-        const fitted = fitChannelsToReference(getPlanckianSPD(targetCCT));
-        applyValuesImmediate(fitted);
-        return;
-    }
-    
-    const currentVals = channels.map(ch => channelValues[ch.id] || 0);
-    let bestVals = [...currentVals];
-    const tXy = getTargetXY(targetCCT, targetDuv);
-    
-    function loss(values) {
-        const spd = combinedSPDFromValues(channels, values);
-        const { X, Y, Z } = xyzFromSPD(spd);
-        const sum = X + Y + Z;
-        if (sum <= 1e-12) return 999.0;
-        
-        const x = X / sum;
-        const y = Y / sum;
-        const cct = estimateCCTFromXYZ(X, Y, Z);
-        const cctError = Number.isFinite(cct) && cct > 0 ? Math.log(cct / targetCCT) : 2;
-        const xyError = (x - tXy.x) * (x - tXy.x) + (y - tXy.y) * (y - tXy.y);
-        
-        const avg = values.reduce((sum, v) => sum + v, 0) / n;
-        const dimmingPenalty = (100.0 - avg) * 0.000005;
-
-        return cctError * cctError * 1.5 + xyError * 980.0 + dimmingPenalty;
-    }
-    
-    let bestLoss = loss(bestVals);
-    let stepSize = 8.0;
-    for (let iter = 0; iter < 3; iter++) {
-        let improved = false;
-        for (let i = 0; i < n; i++) {
-            const original = bestVals[i];
-            
-            bestVals[i] = Math.max(0, Math.min(100, original + stepSize));
-            let lPlus = loss(bestVals);
-            
-            bestVals[i] = Math.max(0, Math.min(100, original - stepSize));
-            let lMinus = loss(bestVals);
-            
-            if (lPlus < bestLoss && lPlus < lMinus) {
-                bestLoss = lPlus;
-                bestVals[i] = Math.max(0, Math.min(100, original + stepSize));
-                improved = true;
-            } else if (lMinus < bestLoss) {
-                bestLoss = lMinus;
-                bestVals[i] = Math.max(0, Math.min(100, original - stepSize));
-                improved = true;
-            } else {
-                bestVals[i] = original;
-            }
-        }
-        stepSize *= 0.5;
-        if (!improved && stepSize < 0.5) break;
-    }
-    
-    for (let i = 0; i < n; i++) {
-        channelValues[channels[i].id] = Math.round(bestVals[i]);
-    }
-    
-    channels.forEach(ch => {
-        const val = channelValues[ch.id];
-        const input = document.getElementById(`ch-slider-${ch.id}`);
-        const valDisp = document.getElementById(`ch-val-${ch.id}`);
-        if (input) {
-            input.value = val;
-            input.style.setProperty('--slider-fill', `${val}%`);
-        }
-        if (valDisp) {
-            valDisp.textContent = `${val}%`;
-        }
+    if (!channels.length || metamerModeEnabled) return;
+    const solved = optimizeValuesForScene(channels, targetCCT, targetDuv);
+    const valuesById = {};
+    channels.forEach((channel, index) => {
+        valuesById[channel.id] = solved.values[index];
     });
+    applyValuesImmediate(valuesById);
 }
+
+const runRealtimeOptimizerDebounced = debounce(runRealtimeOptimizer, 90);
 
 // Wire CCT, Duv, and Rg target sliders
 if (targetCctSlider) {
     targetCctSlider.addEventListener('input', () => {
         targetCCT = parseInt(targetCctSlider.value);
         targetCctVal.textContent = `${targetCCT} K`;
-        if (!metamerModeEnabled) runRealtimeOptimizer();
+        if (!metamerModeEnabled) runRealtimeOptimizerDebounced();
         scheduleUpdate();
     });
 }
@@ -2486,7 +2360,7 @@ if (targetDuvSlider) {
     targetDuvSlider.addEventListener('input', () => {
         targetDuv = parseFloat(targetDuvSlider.value);
         targetDuvVal.textContent = `${targetDuv >= 0 ? '+' : ''}${targetDuv.toFixed(4)}`;
-        if (!metamerModeEnabled) runRealtimeOptimizer();
+        if (!metamerModeEnabled) runRealtimeOptimizerDebounced();
         scheduleUpdate();
     });
 }
@@ -2567,18 +2441,10 @@ document.querySelectorAll('.opt-preset-btn').forEach(btn => {
             targetDuvSlider.value = duv;
             targetDuvVal.textContent = `${duv >= 0 ? '+' : ''}${duv.toFixed(4)}`;
         }
-        if (!metamerModeEnabled) runRealtimeOptimizer();
+        if (!metamerModeEnabled) runRealtimeOptimizerDebounced();
         scheduleUpdate();
     });
 });
-
-// Wire Optimize Now action button
-if (runOptimizeBtn) {
-    runOptimizeBtn.addEventListener('click', () => {
-        if (metamerModeEnabled) runMetamerOptimization();
-        else runOptimizer(targetCCT, targetDuv);
-    });
-}
 
 function syncTargetSliderFill(slider) {
     if (!slider) return;

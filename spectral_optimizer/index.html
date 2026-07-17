@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20260717-export2">
+    <link rel="stylesheet" href="styles.css?v=20260717-realtime1">
 </head>
 <body>
     <div class="bg-grid" aria-hidden="true"></div>
@@ -181,7 +181,7 @@
                 <div class="metric-card glass-card" id="card-cs">
                     <div class="metric-icon">CS</div>
                     <div class="metric-info">
-                        <span class="metric-label">CS 近似值</span>
+                        <span class="metric-label">CS 工程近似</span>
                         <div class="metric-value-row">
                             <span class="metric-value" id="val-cs">--</span>
                             <span class="metric-unit">/0.7</span>
@@ -191,16 +191,16 @@
                     <div class="cs-status" id="cs-status">--</div>
                 </div>
 
-                <div class="metric-card glass-card" id="card-caf">
-                    <div class="metric-icon">CAF</div>
+                <div class="metric-card glass-card" id="card-medi">
+                    <div class="metric-icon">EDI</div>
                     <div class="metric-info">
-                        <span class="metric-label">CAF 昼夜因子</span>
+                        <span class="metric-label">Melanopic EDI</span>
                         <div class="metric-value-row">
-                            <span class="metric-value" id="val-caf">--</span>
-                            <span class="metric-unit">ratio</span>
+                            <span class="metric-value" id="val-medi">--</span>
+                            <span class="metric-unit">lux</span>
                         </div>
                     </div>
-                    <div class="metric-bar" id="bar-caf"></div>
+                    <div class="metric-bar" id="bar-medi"></div>
                 </div>
 
                 <div class="metric-card glass-card" id="card-rg">
@@ -219,9 +219,9 @@
         <div class="optimizer-header">
             <h2>
                 <span class="ai-badge">ALG</span>
-                光谱智能优化 <span>Spectral Optimizer</span>
+                光谱实时优化 <span>Real-time Optimizer</span>
             </h2>
-            <p class="optimizer-desc">使用确定性通道权重算法，逼近目标色温与 Duv。</p>
+            <p class="optimizer-desc">目标参数变化后，自动运行确定性通道权重算法并更新光谱。</p>
         </div>
 
         <div class="optimizer-grid">
@@ -262,7 +262,7 @@
                 </div>
             </div>
 
-            <!-- Right: Presets & Action Button -->
+            <!-- Right: Presets & Export -->
             <div class="preset-action-container">
                 <div class="optimizer-presets-grid">
                     <button class="opt-preset-btn" data-cct="4000" data-duv="0.0010" title="Morning Alert (4000K, Duv +0.0010)">晨间唤醒</button>
@@ -271,11 +271,7 @@
                     <button class="opt-preset-btn" data-cct="2700" data-duv="-0.0010" title="Evening Relax (2700K, Duv -0.0010)">夜间舒缓</button>
                     <button class="opt-preset-btn" data-cct="2200" data-duv="-0.0020" title="Night Low-CS (2200K, Duv -0.0020)">夜间低刺激</button>
                 </div>
-                <div class="optimizer-action-stack">
-                    <button class="run-optimize-btn" id="run-optimize-btn">
-                        <span>开始智能光谱优化</span>
-                        <small>Optimize Now</small>
-                    </button>
+                <div class="optimizer-action-stack export-only">
                     <button class="export-recipe-btn" id="export-recipe-btn" type="button">
                         <span>导出配方</span>
                         <small>Export Recipe</small>
@@ -284,29 +280,6 @@
             </div>
         </div>
 
-        <div class="optimizer-progress" id="optimizer-progress" style="display: none;">
-            <div class="progress-header">
-                <span class="progress-label">优化中 Optimizing...</span>
-                <span class="progress-iter" id="progress-iter">0 / 200</span>
-            </div>
-            <div class="progress-bar-track">
-                <div class="progress-bar-fill" id="progress-bar-fill"></div>
-            </div>
-            <div class="progress-metrics">
-                <div class="progress-metric">
-                    <span>当前 CS</span>
-                    <span class="progress-value" id="progress-cs">0.00</span>
-                </div>
-                <div class="progress-metric">
-                    <span>目标 CCT / Duv</span>
-                    <span class="progress-value" id="progress-target">0.00</span>
-                </div>
-                <div class="progress-metric">
-                    <span>误差 Error</span>
-                    <span class="progress-value" id="progress-error">0.00</span>
-                </div>
-            </div>
-        </div>
     </section>
         </section>
     </main>
@@ -321,6 +294,6 @@
     <script src="colour-quality-data.js?v=20260717-rg2"></script>
     <script src="colour-quality.js?v=20260717-rg2"></script>
     <script src="metamer-optimizer.js?v=20260717-rg2"></script>
-    <script src="app.js?v=20260717-emitter1"></script>
+    <script src="app.js?v=20260717-realtime1"></script>
 </body>
 </html>
