@@ -121,7 +121,8 @@ const barMel = document.getElementById('bar-mel');
 const barCS  = document.getElementById('bar-cs');
 const barMedi = document.getElementById('bar-medi');
 const valCLA2 = document.getElementById('val-cla2');
-const cardCS = document.getElementById('card-cs');
+const cla2Conditions = document.getElementById('cla2-conditions');
+const circadianStatus = document.getElementById('circadian-status');
 
 // Optimizer elements
 
@@ -169,6 +170,12 @@ const VISUAL_FIELD_LABELS = Object.freeze({
     0.5: '上方视野 Superior',
     1: '中央视野 Central',
     2: '全视野 Full field'
+});
+
+const VISUAL_FIELD_COMPACT_LABELS = Object.freeze({
+    0.5: 'Sup',
+    1: 'Ctr',
+    2: 'Full'
 });
 
 let isLightTheme = false;
@@ -1424,10 +1431,19 @@ let prevMetrics = { cct: 0, ra: 0, r9: 0, rf: 0, rg: 0, melanopicDER: 0, melanop
 
 function updateCircadianConditionLabels() {
     if (exposureDurationVal) exposureDurationVal.textContent = `${exposureDurationHours.toFixed(1)} h`;
-    if (cardCS) {
+    if (cla2Conditions) {
         const fieldLabel = VISUAL_FIELD_LABELS[visualFieldFactor] || VISUAL_FIELD_LABELS[1];
-        cardCS.title = `Rea CLA 2.0 / CS · ${exposureDurationHours.toFixed(1)} h · ${fieldLabel}`;
+        const conditionText = `Rea CLA 2.0 model with a ${exposureDurationHours.toFixed(1)} hour duration and ${fieldLabel} visual field.`;
+        if (cla2Conditions.textContent !== conditionText) cla2Conditions.textContent = conditionText;
     }
+}
+
+function announceCircadianConditionUpdate(metrics) {
+    if (!circadianStatus) return;
+    const fieldLabel = VISUAL_FIELD_LABELS[visualFieldFactor] || VISUAL_FIELD_LABELS[1];
+    const cs = metrics.cs > 0 ? metrics.cs.toFixed(3) : '0';
+    const cla = metrics.cla > 0 ? Math.round(metrics.cla).toLocaleString() : '0';
+    circadianStatus.textContent = `Rea CLA 2.0 conditions: ${exposureDurationHours.toFixed(1)} hours, ${fieldLabel}. CS ${cs}; CLA ${cla}.`;
 }
 
 function renderCircadianMetric(metrics) {
@@ -1436,15 +1452,18 @@ function renderCircadianMetric(metrics) {
         barFill: (metrics.cs / 0.7) * 100,
         barColor: metrics.cs > 0.3 ? '#a6e96b' : metrics.cs > 0.1 ? '#e4b85b' : '#ff6b25'
     });
-    valCLA2.textContent = `CLA 2.0 ${metrics.cla > 0 ? Math.round(metrics.cla).toLocaleString() : '--'}`;
+    const compactFieldLabel = VISUAL_FIELD_COMPACT_LABELS[visualFieldFactor] || VISUAL_FIELD_COMPACT_LABELS[1];
+    const cla = metrics.cla > 0 ? Math.round(metrics.cla).toLocaleString() : '--';
+    valCLA2.textContent = `Rea CLA2 ${cla} · ${exposureDurationHours.toFixed(1)}h · ${compactFieldLabel}`;
     updateCircadianConditionLabels();
 }
 
-function refreshCircadianMetricOnly() {
+function refreshCircadianMetricOnly(announce = false) {
     const circadian = calculateCircadianMetrics(getCombinedSPD());
     renderCircadianMetric(circadian);
     prevMetrics.cs = circadian.cs;
     prevMetrics.cla = circadian.cla;
+    if (announce) announceCircadianConditionUpdate(circadian);
 }
 
 function updateMetrics() {
@@ -2409,7 +2428,7 @@ if (exposureDurationSlider) {
         exposureDurationHours = Math.min(3, Math.max(0.5, Number(exposureDurationSlider.value) || 1));
         syncTargetSliderFill(exposureDurationSlider);
         updateCircadianConditionLabels();
-        refreshCircadianMetricOnly();
+        refreshCircadianMetricOnly(true);
     });
 }
 
@@ -2418,7 +2437,7 @@ if (visualFieldSelect) {
         const nextFieldFactor = Number(visualFieldSelect.value);
         visualFieldFactor = [0.5, 1, 2].includes(nextFieldFactor) ? nextFieldFactor : 1;
         updateCircadianConditionLabels();
-        refreshCircadianMetricOnly();
+        refreshCircadianMetricOnly(true);
     });
 }
 

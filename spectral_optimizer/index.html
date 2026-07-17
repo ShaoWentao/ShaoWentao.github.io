@@ -178,17 +178,19 @@
                     <div class="metric-bar" id="bar-mel"></div>
                 </div>
 
-                <div class="metric-card glass-card" id="card-cs" title="Rea CLA 2.0 / CS · 1.0 h · 中央视野 Central">
+                <div class="metric-card glass-card" id="card-cs">
                     <div class="metric-icon">CS</div>
                     <div class="metric-info">
                         <span class="metric-label">昼夜节律刺激 CS</span>
                         <div class="metric-value-row">
-                            <span class="metric-value" id="val-cs">--</span>
+                            <span class="metric-value" id="val-cs" aria-describedby="cla2-conditions">--</span>
                             <span class="metric-unit">/0.7</span>
                         </div>
                     </div>
                     <div class="metric-bar" id="bar-cs"></div>
-                    <div class="metric-secondary" id="val-cla2">CLA 2.0 --</div>
+                    <div class="metric-secondary" id="val-cla2">Rea CLA2 -- · 1.0 h · Central</div>
+                    <span class="visually-hidden" id="cla2-conditions">Rea CLA 2.0 model with a 1.0 hour duration and Central visual field.</span>
+                    <span class="visually-hidden" id="circadian-status" role="status" aria-live="polite" aria-atomic="true"></span>
                 </div>
 
                 <div class="metric-card glass-card" id="card-medi">
