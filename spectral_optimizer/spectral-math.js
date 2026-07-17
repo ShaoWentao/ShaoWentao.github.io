@@ -40,6 +40,82 @@
         return { x, y };
     }
 
+    const SECOND_RADIATION_CONSTANT_NM_K = 1.438776877e7;
+
+    function safeZeroArray(values) {
+        if (values == null || !Number.isSafeInteger(values.length) || values.length < 0) return [];
+        return new Array(values.length).fill(0);
+    }
+
+    function blackbodySpd(temperature, wavelengths) {
+        const safeResult = safeZeroArray(wavelengths);
+        if (safeResult.length === 0
+            || typeof temperature !== 'number'
+            || !Number.isFinite(temperature)
+            || temperature <= 0) {
+            return safeResult;
+        }
+
+        const logRadiance = new Array(wavelengths.length);
+        let maximum = -Infinity;
+        for (let index = 0; index < wavelengths.length; index++) {
+            const wavelength = wavelengths[index];
+            if (typeof wavelength !== 'number' || !Number.isFinite(wavelength) || wavelength <= 0) {
+                return safeResult;
+            }
+
+            const exponent = SECOND_RADIATION_CONSTANT_NM_K / (wavelength * temperature);
+            const logDenominator = exponent > 50
+                ? exponent + Math.log1p(-Math.exp(-exponent))
+                : Math.log(Math.expm1(exponent));
+            const value = -5 * Math.log(wavelength) - logDenominator;
+            logRadiance[index] = value;
+            maximum = Math.max(maximum, value);
+        }
+
+        if (!Number.isFinite(maximum)) return safeResult;
+        return logRadiance.map(value => {
+            const normalized = Math.exp(value - maximum);
+            return Number.isFinite(normalized) ? normalized : 0;
+        });
+    }
+
+    function blackbodyXy(temperature, wavelengths, xBar, yBar, zBar) {
+        const arrays = [wavelengths, xBar, yBar, zBar];
+        if (arrays.some(values => values == null || !Number.isSafeInteger(values.length))
+            || wavelengths.length < 2
+            || arrays.some(values => values.length !== wavelengths.length)) {
+            return { x: 0, y: 0 };
+        }
+
+        for (let index = 0; index < wavelengths.length; index++) {
+            if (typeof wavelengths[index] !== 'number'
+                || !Number.isFinite(wavelengths[index])
+                || wavelengths[index] <= 0
+                || (index > 0 && wavelengths[index] <= wavelengths[index - 1])
+                || !Number.isFinite(xBar[index])
+                || !Number.isFinite(yBar[index])
+                || !Number.isFinite(zBar[index])) {
+                return { x: 0, y: 0 };
+            }
+        }
+
+        const spd = blackbodySpd(temperature, wavelengths);
+        let X = 0;
+        let Y = 0;
+        let Z = 0;
+        for (let index = 1; index < wavelengths.length; index++) {
+            const interval = wavelengths[index] - wavelengths[index - 1];
+            X += interval * (spd[index - 1] * xBar[index - 1] + spd[index] * xBar[index]) / 2;
+            Y += interval * (spd[index - 1] * yBar[index - 1] + spd[index] * yBar[index]) / 2;
+            Z += interval * (spd[index - 1] * zBar[index - 1] + spd[index] * zBar[index]) / 2;
+        }
+
+        const total = X + Y + Z;
+        if (!(total > 0) || !Number.isFinite(total)) return { x: 0, y: 0 };
+        return { x: X / total, y: Y / total };
+    }
+
     function distanceSquaredToLocus(mired, targetUv) {
         const temperature = 1e6 / mired;
         const xy = planckianXy(temperature);
@@ -135,6 +211,8 @@
     return {
         xyToUv,
         planckianXy,
+        blackbodySpd,
+        blackbodyXy,
         estimateCctAndDuvFromXy,
         targetXyFromCctDuv,
         normalizeImportedChannels,
