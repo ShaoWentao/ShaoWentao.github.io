@@ -87,9 +87,19 @@
         }
     }
 
+    function loadVisitorCounter() {
+        if (typeof document === 'undefined' || document.querySelector('script[data-visitor-counter-loader]')) return;
+        const script = document.createElement('script');
+        script.defer = true;
+        script.dataset.visitorCounterLoader = 'true';
+        script.src = '../assets/visitor-counter.js';
+        document.head.appendChild(script);
+    }
+
     setupPresetTemperatures();
     setupPresetOptimizerSync();
     setupPresetsToggle();
+    loadVisitorCounter();
 
     function freezeScene(scene) {
         return Object.freeze(scene);
