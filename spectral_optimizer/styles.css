@@ -1836,7 +1836,8 @@ footer {
 }
 
 .opt-preset-btn {
-    padding: 8px 4px;
+    min-width: 0;
+    padding: 7px 4px;
     font-size: 0.72rem;
     font-weight: 600;
     background: rgba(255, 255, 255, 0.03);
@@ -1848,7 +1849,22 @@ footer {
     font-family: inherit;
 }
 
-.opt-preset-btn:hover {
+.opt-preset-btn span,
+.opt-preset-btn small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.opt-preset-btn small {
+    margin-top: 1px;
+    color: var(--text-muted);
+    font-size: 0.56rem;
+    font-weight: 500;
+}
+
+.opt-preset-btn:hover:not(:disabled) {
     background: rgba(228, 184, 91, 0.08);
     border-color: rgba(228, 184, 91, 0.42);
     color: var(--text-primary);
@@ -1883,9 +1899,55 @@ footer {
     margin-top: 1px;
 }
 
+.opt-preset-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
 .optimizer-action-stack {
     display: grid;
     gap: 6px;
+}
+
+.journey-controls {
+    display: grid;
+    grid-template-columns: 32px 32px minmax(62px, 1fr);
+    align-items: center;
+    gap: 5px;
+}
+
+.journey-icon-btn {
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid rgba(201, 148, 45, 0.34);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.58);
+    color: var(--text-primary);
+    cursor: pointer;
+    font: 0.72rem/1 'JetBrains Mono', monospace;
+}
+
+.journey-icon-btn:hover:not(:disabled),
+.journey-icon-btn:focus-visible {
+    border-color: rgba(201, 148, 45, 0.72);
+    background: rgba(255, 249, 236, 0.9);
+    outline: none;
+}
+
+.journey-icon-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.42;
+}
+
+.journey-status {
+    min-width: 0;
+    color: var(--text-secondary);
+    font: 0.66rem/1 'JetBrains Mono', monospace;
+    text-align: right;
+    white-space: nowrap;
 }
 
 .export-recipe-btn {
@@ -2291,17 +2353,25 @@ footer {
         font-size: 0.62rem;
     }
 
+    .opt-preset-btn small {
+        font-size: 0.5rem;
+    }
+
     .run-optimize-btn {
         padding: 7px;
     }
 
     .optimizer-action-stack {
-        grid-template-rows: minmax(0, 1fr) auto;
+        grid-template-rows: 28px minmax(0, 1fr);
     }
 
-    .optimizer-action-stack.export-only {
-        display: flex;
-        align-items: stretch;
+    .journey-controls {
+        grid-template-columns: 28px 28px minmax(0, 1fr);
+    }
+
+    .journey-icon-btn {
+        width: 28px;
+        height: 28px;
     }
 
     .export-recipe-btn {

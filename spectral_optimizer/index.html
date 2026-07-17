@@ -231,7 +231,7 @@
             <div class="target-controls">
                 <div class="target-row">
                     <label for="target-cct-slider">目标色温 Target CCT: <span id="target-cct-val">4000 K</span></label>
-                    <input type="range" id="target-cct-slider" min="1700" max="12000" step="100" value="4000">
+                    <input type="range" id="target-cct-slider" min="1600" max="12000" step="100" value="4000">
                 </div>
                 <div class="target-row">
                     <label for="target-duv-slider">目标 Duv 偏差: <span id="target-duv-val">+0.0000</span></label>
@@ -279,13 +279,23 @@
             <!-- Right: Presets & Export -->
             <div class="preset-action-container">
                 <div class="optimizer-presets-grid">
-                    <button class="opt-preset-btn" data-cct="4000" data-duv="0.0010" title="Morning Alert (4000K, Duv +0.0010)">晨间唤醒</button>
-                    <button class="opt-preset-btn" data-cct="5000" data-duv="0.0020" title="Daytime Focus (5000K, Duv +0.0020)">工作专注</button>
-                    <button class="opt-preset-btn" data-cct="3500" data-duv="0.0000" title="Balanced Meeting (3500K, Duv 0.0000)">会议舒适</button>
-                    <button class="opt-preset-btn" data-cct="2700" data-duv="-0.0010" title="Evening Relax (2700K, Duv -0.0010)">夜间舒缓</button>
-                    <button class="opt-preset-btn" data-cct="2200" data-duv="-0.0020" title="Night Low-CS (2200K, Duv -0.0020)">夜间低刺激</button>
+                    <button class="opt-preset-btn" data-scene="morning-transition" data-cct="3500" data-duv="0" data-lux="250" type="button" title="Morning Transition · 3500 K · 250 lux"><span>晨间过渡</span><small>Morning Transition</small></button>
+                    <button class="opt-preset-btn" data-scene="daytime-focus" data-cct="5000" data-duv="0" data-lux="400" type="button" title="Daytime Focus · 5000 K · 400 lux"><span>日间专注</span><small>Daytime Focus</small></button>
+                    <button class="opt-preset-btn" data-scene="collaboration" data-cct="4000" data-duv="0" data-lux="300" type="button" title="Collaboration · 4000 K · 300 lux"><span>协作交流</span><small>Collaboration</small></button>
+                    <button class="opt-preset-btn" data-scene="colour-vitality" data-cct="3500" data-duv="0" data-lux="300" type="button" title="Colour Vitality · 3500 K · 300 lux"><span>色彩活力</span><small>Colour Vitality</small></button>
+                    <button class="opt-preset-btn" data-scene="evening-wind-down" data-cct="2700" data-duv="0" data-lux="75" type="button" title="Evening Wind-down · 2700 K · 75 lux"><span>夜间放松</span><small>Evening Wind-down</small></button>
+                    <button class="opt-preset-btn" data-scene="night-low-disturbance" data-cct="2000" data-duv="0" data-lux="10" type="button" title="Night Low Disturbance · 2000 K · 10 lux"><span>夜间低干扰</span><small>Night Low Disturbance</small></button>
                 </div>
-                <div class="optimizer-action-stack export-only">
+                <div class="optimizer-action-stack">
+                    <div class="journey-controls" role="group" aria-label="CCT journey controls">
+                        <button class="journey-icon-btn" id="cct-journey-play" type="button" aria-label="Play CCT journey" title="Play CCT journey">
+                            <span aria-hidden="true">&#9654;</span>
+                        </button>
+                        <button class="journey-icon-btn" id="cct-journey-stop" type="button" aria-label="Stop CCT journey" title="Stop CCT journey" disabled>
+                            <span aria-hidden="true">&#9632;</span>
+                        </button>
+                        <span class="journey-status" id="cct-journey-status" role="status" aria-live="polite">1600 K</span>
+                    </div>
                     <button class="export-recipe-btn" id="export-recipe-btn" type="button">
                         <span>导出配方</span>
                         <small>Export Recipe</small>
@@ -310,6 +320,7 @@
     <script src="metamer-optimizer.js?v=20260717-rg2"></script>
     <script src="circadian-data.js?v=20260717-cla2"></script>
     <script src="circadian-math.js?v=20260717-cla2"></script>
-    <script src="app.js?v=20260717-cla2"></script>
+    <script src="cct-journey.js?v=20260717-scenes1"></script>
+    <script src="app.js?v=20260717-scenes1"></script>
 </body>
 </html>

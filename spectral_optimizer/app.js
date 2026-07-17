@@ -25,11 +25,17 @@ const CIE_DATA = window.CIE_SPECTRAL_DATA || {};
 const SPECTRAL_MATH = window.SpectralMath || {};
 const COLOUR_QUALITY = window.ColourQuality || {};
 const METAMER_OPTIMIZER = window.METAMER_OPTIMIZER || {};
+const CCT_JOURNEY = window.CctJourney || {};
 const calculateCLA2 = window.calculateCLA2;
 const METAMER_CHROMATICITY_TOLERANCE = 0.002;
 
 if (typeof calculateCLA2 !== 'function') {
     throw new Error('CLA 2.0 calculation module failed to load.');
+}
+if (typeof SPECTRAL_MATH.blackbodyXy !== 'function' ||
+    typeof CCT_JOURNEY.buildCctJourney !== 'function' ||
+    !Array.isArray(CCT_JOURNEY.HUMAN_CENTRED_SCENES)) {
+    throw new Error('CCT journey modules failed to load.');
 }
 
 // ═══════════════════════════════════════════════
@@ -82,6 +88,14 @@ let targetRg = 100;
 let baselineSnapshot = null;
 let compareSpectrumEnabled = false;
 let isMetamerOptimizing = false;
+const cctAnimation = {
+    timer: null,
+    index: 0,
+    status: 'stopped',
+    cache: new Map(),
+    channelSignature: '',
+    lockedControls: new Map()
+};
 
 // ═══════════════════════════════════════════════
 // DOM REFERENCES
@@ -132,6 +146,7 @@ const cieCtx = cieCanvas ? cieCanvas.getContext('2d') : null;
 const cieCanvasWrapper = document.getElementById('cie-canvas-wrapper');
 
 let cieOffscreenCanvas = null;
+const blackbodyXyCache = new Map();
 let currentX = 0.3127;
 let currentY = 0.3290;
 
@@ -154,6 +169,9 @@ const setBaselineBtn = document.getElementById('set-baseline-btn');
 const compareSpectrumCheckbox = document.getElementById('compare-spectrum-checkbox');
 const metamerStatus = document.getElementById('metamer-status');
 const metamerColourDelta = document.getElementById('metamer-colour-delta');
+const cctJourneyPlayBtn = document.getElementById('cct-journey-play');
+const cctJourneyStopBtn = document.getElementById('cct-journey-stop');
+const cctJourneyStatus = document.getElementById('cct-journey-status');
 
 // Metric card elements for Rg
 const valRg = document.getElementById('val-rg');
@@ -276,6 +294,58 @@ function planckianXY(T) {
         y = -0.9549476 * x * x * x - 1.37418593 * x * x + 2.09137015 * x - 0.16851597;
     }
     return { x, y };
+}
+
+function integratedBlackbodyXy(temperature) {
+    if (blackbodyXyCache.has(temperature)) return blackbodyXyCache.get(temperature);
+    const xy = SPECTRAL_MATH.blackbodyXy(
+        temperature,
+        wavelengths,
+        preCieX,
+        preCieY,
+        preCieZ
+    );
+    const integrated = Number.isFinite(xy.x) && Number.isFinite(xy.y) ? xy : planckianXY(temperature);
+    blackbodyXyCache.set(temperature, integrated);
+    return integrated;
+}
+
+function drawCctLocusLabels(context, temperatures, width, height, pad) {
+    const occupied = [];
+    const offsets = [[5, -5], [5, 11], [-5, -5], [-5, 11], [8, 3], [-8, 3]];
+    context.textBaseline = 'alphabetic';
+
+    for (const temperature of temperatures) {
+        const xy = integratedBlackbodyXy(temperature);
+        const point = projectXY(xy.x, xy.y, width, height, pad);
+        const label = `${temperature}K`;
+        const labelWidth = context.measureText(label).width;
+        let placement = null;
+
+        for (const [offsetX, offsetY] of offsets) {
+            const alignRight = offsetX < 0;
+            const x = point.x + offsetX - (alignRight ? labelWidth : 0);
+            const y = point.y + offsetY;
+            const box = { x: x - 2, y: y - 9, width: labelWidth + 4, height: 12 };
+            const inside = box.x >= 2 && box.y >= 2 && box.x + box.width <= width - 2 && box.y + box.height <= height - 2;
+            const collides = occupied.some(other =>
+                box.x < other.x + other.width && box.x + box.width > other.x &&
+                box.y < other.y + other.height && box.y + box.height > other.y
+            );
+            if (inside && !collides) {
+                placement = { x, y, box };
+                break;
+            }
+        }
+
+        context.beginPath();
+        context.arc(point.x, point.y, 2, 0, 2 * Math.PI);
+        context.fill();
+        if (placement) {
+            occupied.push(placement.box);
+            context.fillText(label, placement.x, placement.y);
+        }
+    }
 }
 
 function projectXY(x, y, w, h, pad = 35) {
@@ -454,8 +524,8 @@ function renderCIE() {
     cieCtx.beginPath();
     
     let first = true;
-    for (let t = 1700; t <= 15000; t += 100) {
-        const xy = planckianXY(t);
+    for (let t = 1000; t <= 20000; t += 100) {
+        const xy = integratedBlackbodyXy(t);
         const pt = projectXY(xy.x, xy.y, w, h, pad);
         if (first) {
             cieCtx.moveTo(pt.x, pt.y);
@@ -467,21 +537,12 @@ function renderCIE() {
     cieCtx.stroke();
 
     // Draw CCT ticks on Planckian Locus
-    const ticks = [2000, 3000, 4000, 6500, 10000];
+    const ticks = [1000, 1600, 3000, 4000, 6500, 12000, 20000];
     cieCtx.fillStyle = isLightTheme ? '#221e18' : '#ffffff';
     cieCtx.font = '8px "JetBrains Mono", monospace';
     cieCtx.lineWidth = 1;
 
-    for (const t of ticks) {
-        const xy = planckianXY(t);
-        const pt = projectXY(xy.x, xy.y, w, h, pad);
-        cieCtx.beginPath();
-        cieCtx.arc(pt.x, pt.y, 2, 0, 2 * Math.PI);
-        cieCtx.fill();
-        
-        // Offset text label
-        cieCtx.fillText(`${t}K`, pt.x + 4, pt.y - 4);
-    }
+    drawCctLocusLabels(cieCtx, ticks, w, h, pad);
 
     // 4. Draw active channels' gamut boundary
     const activeCh = getActiveChannels();
@@ -562,7 +623,24 @@ function renderCIE() {
         cieCtx.restore();
     }
 
-    // 6. Draw current mixed color point (Target)
+    // 6. Draw the requested target independently from the achieved colour point.
+    const neutralTargetXy = integratedBlackbodyXy(targetCCT);
+    const requestedTargetXy = Math.abs(targetDuv) < 1e-12
+        ? neutralTargetXy
+        : getTargetXY(targetCCT, targetDuv);
+    const targetPt = projectXY(requestedTargetXy.x, requestedTargetXy.y, w, h, pad);
+    cieCtx.save();
+    cieCtx.strokeStyle = '#ff6b25';
+    cieCtx.lineWidth = 1.5;
+    cieCtx.setLineDash([3, 2]);
+    cieCtx.beginPath();
+    cieCtx.arc(targetPt.x, targetPt.y, 6, 0, 2 * Math.PI);
+    cieCtx.stroke();
+    cieCtx.setLineDash([]);
+    cieCtx.fillStyle = textColor;
+    cieCtx.font = 'bold 8px "JetBrains Mono", monospace';
+    cieCtx.fillText(`Target ${targetCCT}K`, targetPt.x + 8, targetPt.y - 7);
+    cieCtx.restore();
     
     // Outer blinking halo
     const pulse = 6 + 3 * Math.sin(Date.now() / 150);
@@ -584,8 +662,13 @@ function renderCIE() {
     // Floating text metadata
     cieCtx.fillStyle = textColor;
     cieCtx.font = 'bold 9px "JetBrains Mono", monospace';
-    const cctVal = Number(valCCT.textContent.replace(/,/g, '')) || 0;
-    cieCtx.fillText(`${cctVal}K (${currentX.toFixed(3)}, ${currentY.toFixed(3)})`, mPt.x + 10, mPt.y + 3);
+    const achievedEstimate = SPECTRAL_MATH.estimateCctAndDuvFromXy
+        ? SPECTRAL_MATH.estimateCctAndDuvFromXy(currentX, currentY)
+        : null;
+    const cctVal = achievedEstimate && Number.isFinite(achievedEstimate.cct)
+        ? Math.round(achievedEstimate.cct)
+        : 0;
+    cieCtx.fillText(`Actual ${cctVal}K (${currentX.toFixed(3)}, ${currentY.toFixed(3)})`, mPt.x + 10, mPt.y + 3);
 }
 
 // ═══════════════════════════════════════════════
@@ -995,12 +1078,13 @@ function syncMetamerControls(metrics) {
     const hasValidMetrics = hasValidMetamerMetrics(metrics);
     const hasBaseline = hasValidMetrics && baselineMatchesActiveChannels(getActiveChannels());
     const comparisonAvailable = metamerModeEnabled && hasBaseline;
+    const playbackLocked = cctAnimation.status !== 'stopped';
 
     if (hasValidMetrics && !Number.isFinite(targetRg)) updateTargetRgControl(metrics.rg);
-    if (targetRgSlider) targetRgSlider.disabled = isMetamerOptimizing || !hasValidMetrics;
-    if (setBaselineBtn) setBaselineBtn.disabled = isMetamerOptimizing || !hasValidMetrics;
+    if (targetRgSlider) targetRgSlider.disabled = playbackLocked || isMetamerOptimizing || !hasValidMetrics;
+    if (setBaselineBtn) setBaselineBtn.disabled = playbackLocked || isMetamerOptimizing || !hasValidMetrics;
     if (compareSpectrumCheckbox) {
-        compareSpectrumCheckbox.disabled = isMetamerOptimizing || !comparisonAvailable;
+        compareSpectrumCheckbox.disabled = playbackLocked || isMetamerOptimizing || !comparisonAvailable;
         if (!comparisonAvailable) compareSpectrumCheckbox.checked = false;
     }
     if (!comparisonAvailable) compareSpectrumEnabled = false;
@@ -1851,6 +1935,7 @@ window.addEventListener('dragover', event => {
 
 window.addEventListener('drop', event => {
     event.preventDefault();
+    if (cctAnimation.status !== 'stopped') return;
     const file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
     if (!file) return;
     if (!/\.(csv|txt|tsv)$/i.test(file.name)) {
@@ -2155,7 +2240,41 @@ function optimizerSeedForTarget(channels, targetCS, targetCCT = 4000) {
     });
 }
 
-function optimizeValuesForScene(channels, targetCCT, targetDuv) {
+function prioritizeColourVitality(channels, solution) {
+    if (channels.length < 4 || typeof METAMER_OPTIMIZER.optimizeMetamer !== 'function') return solution;
+
+    const baselineSpd = combinedSPDFromValues(channels, solution.values);
+    const baselineXy = xyFromSPD(baselineSpd);
+    const baselineMetrics = calculateMetrics(baselineSpd);
+    if (!hasValidMetamerMetrics(baselineMetrics)) return solution;
+
+    try {
+        const result = METAMER_OPTIMIZER.optimizeMetamer({
+            channels: metamerOptimizerChannels(channels),
+            baselineValues: solution.values.slice(),
+            targetXy: baselineXy,
+            targetRg: 110,
+            evaluateSpd(spd) {
+                return { ...calculateMetrics(spd), xy: xyFromSPD(spd) };
+            },
+            xyToUv
+        });
+        if (!result.feasible || !result.values) return solution;
+
+        const finalSpd = combinedSPDFromValues(channels, result.values);
+        const finalXy = xyFromSPD(finalSpd);
+        return {
+            values: result.values.slice(),
+            cct: computeCCTFromValues(channels, result.values),
+            error: Math.hypot(finalXy.x - baselineXy.x, finalXy.y - baselineXy.y)
+        };
+    } catch (error) {
+        console.warn('Colour Vitality Rg preference was not feasible:', error);
+        return solution;
+    }
+}
+
+function optimizeValuesForScene(channels, targetCCT, targetDuv, emphasis = '') {
     const n = channels.length;
 
     // A neutral CCT target must use the same full-spectrum fit as the CCT
@@ -2167,11 +2286,14 @@ function optimizeValuesForScene(channels, targetCCT, targetDuv) {
         const finalSpd = combinedSPDFromValues(channels, values);
         const finalXy = xyFromSPD(finalSpd);
         const targetXyLoc = getTargetXY(targetCCT, 0);
-        return {
+        const solution = {
             values,
             cct: computeCCTFromValues(channels, values),
             error: Math.hypot(finalXy.x - targetXyLoc.x, finalXy.y - targetXyLoc.y)
         };
+        return emphasis === 'high-fidelity-and-rg-105-115'
+            ? prioritizeColourVitality(channels, solution)
+            : solution;
     }
 
     const seeds = [
@@ -2280,6 +2402,172 @@ function applyValuesImmediate(vals) {
     scheduleUpdate();
 }
 
+function syncCctAndDuvControls() {
+    if (targetCctSlider) {
+        targetCctSlider.value = targetCCT;
+        targetCctVal.textContent = `${targetCCT} K`;
+        syncTargetSliderFill(targetCctSlider);
+    }
+    if (targetDuvSlider) {
+        targetDuvSlider.value = targetDuv;
+        targetDuvVal.textContent = `${targetDuv >= 0 ? '+' : ''}${targetDuv.toFixed(4)}`;
+        syncTargetSliderFill(targetDuvSlider);
+    }
+}
+
+function activeChannelSignature(channels) {
+    let hash = 2166136261;
+    for (const channel of channels) {
+        const identity = `${channel.id}:${channel.peak || 0}:${channel.isWarmWhite ? 1 : 0}`;
+        for (let index = 0; index < identity.length; index++) {
+            hash ^= identity.charCodeAt(index);
+            hash = Math.imul(hash, 16777619);
+        }
+        for (let index = 0; index < NUM_POINTS; index += 16) {
+            hash ^= Math.round(getChannelSPDValue(channel, wavelengths[index]) * 1e6);
+            hash = Math.imul(hash, 16777619);
+        }
+    }
+    return `${channels.length}:${(hash >>> 0).toString(16)}`;
+}
+
+function solutionValuesById(channels, solution) {
+    const valuesById = {};
+    channels.forEach((channel, index) => {
+        valuesById[channel.id] = solution.values[index];
+    });
+    return valuesById;
+}
+
+function solveJourneyNode(cctK) {
+    const channels = getActiveChannels();
+    const signature = activeChannelSignature(channels);
+    cctAnimation.channelSignature = signature;
+    const cacheKey = `${signature}:${cctK}`;
+    let valuesById = cctAnimation.cache.get(cacheKey);
+
+    if (!valuesById) {
+        valuesById = solutionValuesById(channels, optimizeValuesForScene(channels, cctK, 0));
+        cctAnimation.cache.set(cacheKey, Object.freeze({ ...valuesById }));
+    }
+    return valuesById;
+}
+
+function setInvalidatingControlsLocked(locked) {
+    const controls = document.querySelectorAll([
+        '#mode-checkbox',
+        '#spd-import-btn',
+        '#preserve-channel-power',
+        '#target-cct-slider',
+        '#target-duv-slider',
+        '#metamer-mode-checkbox',
+        '#target-rg-slider',
+        '#set-baseline-btn',
+        '#compare-spectrum-checkbox',
+        '.channel-slider',
+        '.preset-btn',
+        '.opt-preset-btn'
+    ].join(','));
+
+    if (locked) {
+        cctAnimation.lockedControls.clear();
+        controls.forEach(control => {
+            cctAnimation.lockedControls.set(control, control.disabled);
+            control.disabled = true;
+        });
+        return;
+    }
+
+    cctAnimation.lockedControls.forEach((wasDisabled, control) => {
+        if (control.isConnected) control.disabled = wasDisabled;
+    });
+    cctAnimation.lockedControls.clear();
+    syncMetamerControls(calculateMetrics(getCombinedSPD()));
+}
+
+function updateCctJourneyControls() {
+    const playing = cctAnimation.status === 'playing';
+    if (cctJourneyPlayBtn) {
+        cctJourneyPlayBtn.querySelector('span').textContent = playing ? '\u275A\u275A' : '\u25B6';
+        cctJourneyPlayBtn.setAttribute('aria-label', playing ? 'Pause CCT journey' : 'Play CCT journey');
+        cctJourneyPlayBtn.title = playing ? 'Pause CCT journey' : 'Play CCT journey';
+    }
+    if (cctJourneyStopBtn) cctJourneyStopBtn.disabled = cctAnimation.status === 'stopped';
+}
+
+function stopCctJourney() {
+    if (cctAnimation.timer !== null) {
+        clearInterval(cctAnimation.timer);
+        cctAnimation.timer = null;
+    }
+    cctAnimation.index = 0;
+    cctAnimation.status = 'stopped';
+    setInvalidatingControlsLocked(false);
+    updateCctJourneyControls();
+    if (cctJourneyStatus) cctJourneyStatus.textContent = `${targetCCT} K`;
+}
+
+function pauseCctJourney() {
+    if (cctAnimation.status !== 'playing') return;
+    if (cctAnimation.timer !== null) {
+        clearInterval(cctAnimation.timer);
+        cctAnimation.timer = null;
+    }
+    cctAnimation.status = 'paused';
+    updateCctJourneyControls();
+    if (cctJourneyStatus) cctJourneyStatus.textContent = `Paused · ${targetCCT} K`;
+}
+
+function advanceCctJourney() {
+    if (cctAnimation.status !== 'playing') return;
+    const journey = CCT_JOURNEY.buildCctJourney();
+    if (cctAnimation.index >= journey.length) {
+        stopCctJourney();
+        return;
+    }
+
+    const cctK = journey[cctAnimation.index++];
+    targetCCT = cctK;
+    targetDuv = 0;
+    syncCctAndDuvControls();
+    applyValuesImmediate(solveJourneyNode(cctK));
+    if (cctJourneyStatus) cctJourneyStatus.textContent = `${cctK} K`;
+
+    if (cctAnimation.index >= journey.length) stopCctJourney();
+}
+
+function playCctJourney() {
+    if (cctAnimation.status === 'playing' || cctAnimation.timer !== null) return;
+    runRealtimeOptimizerDebounced.cancel();
+    if (cctAnimation.status === 'stopped') cctAnimation.index = 0;
+    cctAnimation.status = 'playing';
+    setInvalidatingControlsLocked(true);
+    updateCctJourneyControls();
+    advanceCctJourney();
+    if (cctAnimation.status === 'playing' && cctAnimation.timer === null) {
+        cctAnimation.timer = setInterval(advanceCctJourney, 300);
+    }
+}
+
+function applyHumanCentredScene(scene) {
+    if (!scene) return;
+    stopCctJourney();
+    runRealtimeOptimizerDebounced.cancel();
+    targetCCT = scene.cctK;
+    targetDuv = 0;
+    eyeIlluminance = scene.illuminanceLux;
+    syncCctAndDuvControls();
+    if (eyeIlluminanceSlider) {
+        eyeIlluminanceSlider.value = eyeIlluminance;
+        eyeIlluminanceVal.textContent = `${eyeIlluminance} lux`;
+        syncTargetSliderFill(eyeIlluminanceSlider);
+    }
+
+    const channels = getActiveChannels();
+    const solution = optimizeValuesForScene(channels, targetCCT, 0, scene.emphasis);
+    applyValuesImmediate(solutionValuesById(channels, solution));
+}
+
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -2313,10 +2601,15 @@ function scheduleUpdate() {
 
 function debounce(fn, delay) {
     let timer;
-    return function(...args) {
+    function debounced(...args) {
         clearTimeout(timer);
         timer = setTimeout(() => fn.apply(this, args), delay);
+    }
+    debounced.cancel = () => {
+        clearTimeout(timer);
+        timer = null;
     };
+    return debounced;
 }
 
 // ═══════════════════════════════════════════════
@@ -2365,6 +2658,7 @@ function init() {
     updateCircadianConditionLabels();
 
     document.querySelectorAll('.target-row input[type="range"]').forEach(syncTargetSliderFill);
+    updateCctJourneyControls();
 
     runRealtimeOptimizer();
 
@@ -2488,26 +2782,30 @@ if (compareSpectrumCheckbox) {
     });
 }
 
-// Wire optimizer presets
+// Wire human-centred scenes
 document.querySelectorAll('.opt-preset-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-        const cct = parseInt(btn.dataset.cct);
-        const duv = parseFloat(btn.dataset.duv || "0.0");
-        targetCCT = cct;
-        targetDuv = duv;
-        
-        if (targetCctSlider) {
-            targetCctSlider.value = cct;
-            targetCctVal.textContent = `${cct} K`;
-        }
-        if (targetDuvSlider) {
-            targetDuvSlider.value = duv;
-            targetDuvVal.textContent = `${duv >= 0 ? '+' : ''}${duv.toFixed(4)}`;
-        }
-        if (!metamerModeEnabled) runRealtimeOptimizerDebounced();
-        scheduleUpdate();
+        const scene = typeof CCT_JOURNEY.sceneById === 'function'
+            ? CCT_JOURNEY.sceneById(btn.dataset.scene)
+            : CCT_JOURNEY.HUMAN_CENTRED_SCENES.find(item => item.id === btn.dataset.scene);
+        applyHumanCentredScene(scene);
     });
 });
+
+if (cctJourneyPlayBtn) {
+    cctJourneyPlayBtn.addEventListener('click', () => {
+        if (cctAnimation.status === 'playing') pauseCctJourney();
+        else playCctJourney();
+    });
+}
+
+if (cctJourneyStopBtn) cctJourneyStopBtn.addEventListener('click', stopCctJourney);
+
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden && cctAnimation.status !== 'stopped') stopCctJourney();
+});
+window.addEventListener('pagehide', stopCctJourney);
+window.addEventListener('beforeunload', stopCctJourney);
 
 function syncTargetSliderFill(slider) {
     if (!slider) return;
