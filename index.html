@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Digital Lighting Workspace | Shao Wentao</title>
-<meta name="description" content="A unified workspace for lighting brand pages, newsletter archives, and browser-based IES tools.">
+<meta name="description" content="A unified workspace for lighting brand pages, newsletter archives, and browser-based lighting tools.">
 <style>
   :root {
     --bg: #050505;
@@ -511,7 +511,7 @@
 
   .tool-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 16px;
   }
 
@@ -686,6 +686,10 @@
     }
 
     .project-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .tool-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
@@ -985,7 +989,7 @@
       <span class="brand-mark">DL</span>
       <span class="brand-name">
         <strong>Digital Lighting Workspace</strong>
-        <span>Pages, newsletters and IES tools</span>
+        <span>Pages, newsletters and lighting tools</span>
       </span>
     </a>
     <nav class="nav-links" aria-label="Primary navigation">
@@ -1009,10 +1013,11 @@
           <h1>Lighting pages,<br>IES tools,<br>and newsletters.</h1>
           <p>
             A unified entry for CDN Lighting and Mayalit materials, product storytelling,
-            partner newsletters, and browser tools for photometric file work.
+            partner newsletters, and browser tools for photometric and spectrum work.
           </p>
           <div class="cta-row">
             <a class="btn primary" href="ies-editor/">Open IES Editor</a>
+            <a class="btn" href="spectral_optimizer/">Open Spectrum Optimizer</a>
             <a class="btn" href="ies-report/">Generate IES Report</a>
             <a class="btn" href="#newsletter">Browse newsletters</a>
           </div>
@@ -1029,6 +1034,7 @@
             <a href="bach-flash/"><b>02</b><span><strong>BACH Flash</strong><span>Product storytelling page</span></span><span>></span></a>
             <a href="cdn-newsletter/Mayalit/202607/"><b>03</b><span><strong>Mayalit Newsletter</strong><span>Online training notice</span></span><span>></span></a>
             <a href="ies-editor/"><b>04</b><span><strong>IES Editor</strong><span>Generate and inspect files</span></span><span>></span></a>
+            <a href="spectral_optimizer/"><b>05</b><span><strong>Spectrum Optimizer</strong><span>Multi-channel SPD simulation</span></span><span>></span></a>
           </div>
         </div>
       </div>
@@ -1109,6 +1115,10 @@
         <a class="tool" href="ies-report/">
           <div><div class="tool-icon">PDF</div><h3>IES Report</h3><p>Read IES files and create editable bilingual photometric report pages for printing or PDF output.</p></div>
           <span class="open-link">Open report</span>
+        </a>
+        <a class="tool" href="spectral_optimizer/">
+          <div><div class="tool-icon">SPD</div><h3>Spectrum Optimizer</h3><p>Import multi-channel SPD data, fit daylight references, and evaluate color quality for lighting scenes.</p></div>
+          <span class="open-link">Open tool</span>
         </a>
       </div>
     </section>
