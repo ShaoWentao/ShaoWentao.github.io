@@ -1,7 +1,8 @@
 // CLA 2.0 spectral functions on a 1 nm 380-730 nm grid.
-// Derived from Light-and-Health-Research-Center/cscalc consts.json and
-// lightMetricFunctions.js at bd833cb148c86450eb23cd3d67228afaf5ad1676.
-// Macular functions use the calculator default thickness of 1.
+// Independently reconstructed from the scientific definitions cited in Rea et al.
+// (2021) and its 2022 corrigendum. The official LHRC calculator revision was used
+// only as a numerical cross-check; no upstream source code is copied.
+// Macular functions use a thickness of 1.
 const CLA2_DATA = Object.freeze({
   wavelengths: Object.freeze([
     380, 381, 382, 383, 384, 385, 386, 387, 388, 389,
