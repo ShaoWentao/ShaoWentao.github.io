@@ -8,6 +8,8 @@
     const TARGET_RG_MIN = 80;
     const TARGET_RG_MAX = 130;
     const MAX_CORNER_SEEDS = 64;
+    const INTERIOR_LEVELS = [25, 75];
+    const MAX_REFINEMENT_SEEDS = 16;
     const STEP_SIZES = [24, 12, 6, 3, 1, 0.5];
     const EPSILON = 1e-10;
 
@@ -78,6 +80,13 @@
             }
             seeds.push(corner);
         }
+        for (let mask = 0; mask < cornerCount; mask++) {
+            const interior = baselineValues.slice();
+            for (let channelIndex = 0; channelIndex < variedChannels; channelIndex++) {
+                interior[channelIndex] = INTERIOR_LEVELS[(mask >> channelIndex) & 1];
+            }
+            seeds.push(interior);
+        }
         return seeds;
     }
 
@@ -93,9 +102,12 @@
 
         if (!Array.isArray(channels) || channels.length === 0 ||
             !Array.isArray(suppliedBaseline) || suppliedBaseline.length !== channels.length ||
-            !targetXy || !Number.isFinite(targetRg) ||
+            !Number.isFinite(targetRg) ||
             typeof evaluateSpd !== 'function' || typeof xyToUv !== 'function') {
             throw new Error('Invalid metamer optimizer options');
+        }
+        if (!targetXy || !Number.isFinite(targetXy.x) || !Number.isFinite(targetXy.y)) {
+            throw new TypeError('targetXy.x and targetXy.y must be finite');
         }
         if (targetRg < TARGET_RG_MIN || targetRg > TARGET_RG_MAX) {
             throw new RangeError('targetRg must be between 80 and 130');
@@ -108,16 +120,16 @@
         function addCandidate(values) {
             const boundedValues = values.map(clampPercentage);
             const key = boundedValues.join(',');
-            if (candidates.has(key)) return;
+            if (candidates.has(key)) return candidates.get(key);
 
             const metrics = evaluateSpd(combineSpd(channels, boundedValues));
             const xy = readXy(metrics || {});
             const uv = xyToUv(xy.x, xy.y);
             const deltaUv = Math.hypot(uv.u - targetUv.u, uv.v - targetUv.v);
             if (!Number.isFinite(deltaUv) || !Number.isFinite(metrics.rg) || !Number.isFinite(metrics.rf) ||
-                deltaUv > CHROMATICITY_TOLERANCE) return;
+                deltaUv > CHROMATICITY_TOLERANCE) return null;
 
-            candidates.set(key, {
+            const candidate = {
                 values: boundedValues,
                 achievedRg: metrics.rg,
                 achievedRf: metrics.rf,
@@ -125,7 +137,9 @@
                 rgError: Math.abs(metrics.rg - targetRg),
                 rfPenalty: Math.max(0, RF_FLOOR - metrics.rf),
                 distance: distanceFromBaseline(boundedValues, baselineValues)
-            });
+            };
+            candidates.set(key, candidate);
+            return candidate;
         }
 
         function exploreSeed(seed, requireRfFloor) {
@@ -153,9 +167,20 @@
             }
         }
 
-        for (const seed of buildSeeds(baselineValues)) addCandidate(seed);
-        exploreSeed(baselineValues, false);
-        exploreSeed(baselineValues, true);
+        const promisingSeeds = [];
+        for (const seed of buildSeeds(baselineValues)) {
+            const candidate = addCandidate(seed);
+            if (candidate && candidate.achievedRf >= RF_FLOOR) promisingSeeds.push(candidate);
+        }
+        promisingSeeds.sort((left, right) => {
+            if (isBetter(left, right)) return -1;
+            if (isBetter(right, left)) return 1;
+            return 0;
+        });
+        for (const candidate of promisingSeeds.slice(0, MAX_REFINEMENT_SEEDS)) {
+            exploreSeed(candidate.values, false);
+            exploreSeed(candidate.values, true);
+        }
 
         let best = null;
         for (const candidate of candidates.values()) {

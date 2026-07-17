@@ -58,6 +58,16 @@ assert.equal(unreachable.achievedRg, 115,
 
 assert.throws(() => optimize(79), RangeError, 'targets below 80 are rejected');
 assert.throws(() => optimize(131), RangeError, 'targets above 130 are rejected');
+assert.throws(() => optimizeMetamer({
+    channels,
+    baselineValues,
+    targetXy: { x: NaN, y: targetXy.y },
+    targetRg: 100,
+    evaluateSpd,
+    xyToUv() {
+        throw new Error('xyToUv should not be called for an invalid target');
+    }
+}), TypeError, 'non-finite target chromaticity is rejected before xyToUv');
 
 const noFeasibleResult = optimizeMetamer({
     channels,
@@ -84,7 +94,7 @@ const separatedResult = optimizeMetamer({
     targetXy,
     targetRg: 110,
     evaluateSpd(spd) {
-        const combined = spd[0] === 1 && spd[1] === 1;
+        const combined = spd[0] === 0.25 && spd[1] === 0.75;
         return {
             x: targetXy.x,
             y: targetXy.y,
@@ -95,12 +105,12 @@ const separatedResult = optimizeMetamer({
     xyToUv
 });
 assert.equal(separatedResult.feasible, true,
-    'a valid combined seed is found without requiring valid intermediate moves');
-assert.deepEqual(separatedResult.values, [100, 100],
-    'the separated feasible channel combination is selected');
+    'an interior feasible seed is found without requiring valid intermediate moves');
+assert.deepEqual(separatedResult.values, [25, 75],
+    'the separated interior channel combination is selected');
 assert.equal(separatedResult.achievedRf, 85,
-    'the separated feasible channel combination preserves the Rf floor');
+    'the separated interior channel combination preserves the Rf floor');
 assert.equal(separatedResult.exact, true,
-    'the separated feasible channel combination reaches the target');
+    'the separated interior channel combination reaches the target');
 
 console.log('metamer-optimizer tests passed');
