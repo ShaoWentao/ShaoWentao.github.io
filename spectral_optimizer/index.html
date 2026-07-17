@@ -227,6 +227,24 @@
                     <label for="eye-illuminance">眼部照度 Eye illuminance: <span id="eye-illuminance-val">300 lux</span></label>
                     <input type="range" id="eye-illuminance" min="10" max="1000" step="10" value="300">
                 </div>
+                <div class="metamer-controls" id="metamer-controls">
+                    <label class="metamer-mode-toggle" for="metamer-mode-checkbox">
+                        <input type="checkbox" id="metamer-mode-checkbox">
+                        <span>Same colour point</span>
+                    </label>
+                    <div class="metamer-dependent-controls" id="metamer-dependent-controls" hidden>
+                        <label class="metamer-target-control" for="target-rg-slider">
+                            <span>Target Rg: <strong id="target-rg-val">100</strong></span>
+                            <input type="range" id="target-rg-slider" min="80" max="130" step="1" value="100">
+                        </label>
+                        <button class="set-baseline-btn" id="set-baseline-btn" type="button">Set baseline</button>
+                        <label class="compare-spectrum-control" for="compare-spectrum-checkbox">
+                            <input type="checkbox" id="compare-spectrum-checkbox">
+                            <span>Compare spectrum</span>
+                        </label>
+                        <span class="metamer-status" id="metamer-status" role="status" aria-live="polite"></span>
+                    </div>
+                </div>
             </div>
 
             <!-- Right: Presets & Action Button -->

@@ -70,6 +70,10 @@ let channelValues = {};   // id -> 0..100
 let showD65 = false;
 let isOptimizing = false;
 let animFrameId = null;
+let metamerModeEnabled = false;
+let targetRg = 100;
+let baselineSnapshot = null;
+let compareSpectrumEnabled = false;
 
 // ═══════════════════════════════════════════════
 // DOM REFERENCES
@@ -131,6 +135,13 @@ const targetDuvVal = document.getElementById('target-duv-val');
 const eyeIlluminanceSlider = document.getElementById('eye-illuminance');
 const eyeIlluminanceVal = document.getElementById('eye-illuminance-val');
 const runOptimizeBtn = document.getElementById('run-optimize-btn');
+const metamerModeCheckbox = document.getElementById('metamer-mode-checkbox');
+const metamerDependentControls = document.getElementById('metamer-dependent-controls');
+const targetRgSlider = document.getElementById('target-rg-slider');
+const targetRgVal = document.getElementById('target-rg-val');
+const setBaselineBtn = document.getElementById('set-baseline-btn');
+const compareSpectrumCheckbox = document.getElementById('compare-spectrum-checkbox');
+const metamerStatus = document.getElementById('metamer-status');
 
 // Metric card elements for Rg
 const valRg = document.getElementById('val-rg');
@@ -888,6 +899,102 @@ function getCombinedSPD() {
     return combined;
 }
 
+function setMetamerStatus(message) {
+    if (metamerStatus) metamerStatus.textContent = message;
+}
+
+function updateTargetRgControl(value) {
+    targetRg = Math.max(80, Math.min(130, Math.round(value)));
+    if (targetRgSlider) targetRgSlider.value = targetRg;
+    if (targetRgVal) targetRgVal.textContent = targetRg;
+}
+
+function baselineMatchesActiveChannels(channels) {
+    return Boolean(baselineSnapshot) &&
+        baselineSnapshot.channelIds.length === channels.length &&
+        baselineSnapshot.channelIds.every((id, index) => id === channels[index].id);
+}
+
+function captureBaseline() {
+    const channels = getActiveChannels();
+    const combined = getCombinedSPD();
+    const xy = xyFromSPD(combined);
+    const uv = xyToUv(xy.x, xy.y);
+    const percentages = {};
+    for (const channel of channels) percentages[channel.id] = channelValues[channel.id] || 0;
+
+    baselineSnapshot = Object.freeze({
+        channelIds: Object.freeze(channels.map(channel => channel.id)),
+        values: Object.freeze(channels.map(channel => channelValues[channel.id] || 0)),
+        percentages: Object.freeze(percentages),
+        normalizedSpd: Object.freeze(normalizeArray(combined)),
+        xy: Object.freeze({ x: xy.x, y: xy.y }),
+        uv: Object.freeze({ u: uv.u, v: uv.v }),
+        metrics: Object.freeze({ ...calculateMetrics(combined) })
+    });
+
+    setMetamerStatus(`Baseline set: Rg ${Math.round(baselineSnapshot.metrics.rg)}.`);
+    scheduleUpdate();
+}
+
+function clearBaseline(message = '') {
+    baselineSnapshot = null;
+    compareSpectrumEnabled = false;
+    if (compareSpectrumCheckbox) compareSpectrumCheckbox.checked = false;
+    if (message && metamerModeEnabled) setMetamerStatus(message);
+}
+
+function metamerOptimizerChannels(channels) {
+    return channels.map(channel => {
+        const spd = new Array(NUM_POINTS);
+        for (let index = 0; index < NUM_POINTS; index++) {
+            spd[index] = getChannelSPDValue(channel, wavelengths[index]);
+        }
+        return { id: channel.id, spd };
+    });
+}
+
+function runMetamerOptimization() {
+    if (!metamerModeEnabled) return;
+    if (!window.METAMER_OPTIMIZER || typeof window.METAMER_OPTIMIZER.optimizeMetamer !== 'function') {
+        setMetamerStatus('Metamer optimizer is unavailable.');
+        return;
+    }
+
+    const channels = getActiveChannels();
+    if (!baselineMatchesActiveChannels(channels)) {
+        setMetamerStatus('Set a baseline before changing Rg.');
+        return;
+    }
+
+    const result = window.METAMER_OPTIMIZER.optimizeMetamer({
+        channels: metamerOptimizerChannels(channels),
+        baselineValues: baselineSnapshot.values.slice(),
+        targetXy: getTargetXY(targetCCT, targetDuv),
+        targetRg,
+        evaluateSpd(spd) {
+            const xy = xyFromSPD(spd);
+            return { ...calculateMetrics(spd), xy };
+        },
+        xyToUv
+    });
+
+    if (!result.feasible || !result.values) {
+        setMetamerStatus('No feasible Rg result found for the active colour point.');
+        scheduleUpdate();
+        return;
+    }
+
+    const valuesById = {};
+    for (let index = 0; index < channels.length; index++) {
+        valuesById[channels[index].id] = result.values[index];
+    }
+    applyValuesImmediate(valuesById);
+    setMetamerStatus(result.exact
+        ? `Target achieved: ${Math.round(result.achievedRg)}`
+        : `Closest Rg found in current search: ${Math.round(result.achievedRg)}`);
+}
+
 // ═══════════════════════════════════════════════
 // CANVAS RENDERING
 // ═══════════════════════════════════════════════
@@ -1230,7 +1337,7 @@ function buildChannelSliders() {
                 <span class="channel-value" id="ch-val-${ch.id}" style="color: ${ch.color};">${channelValues[ch.id]}%</span>
             </div>
             <input type="range" class="channel-slider" id="ch-slider-${ch.id}"
-                   min="0" max="100" value="${channelValues[ch.id]}"
+                   min="0" max="100" step="0.5" value="${channelValues[ch.id]}"
                    style="--ch-color: ${ch.color}; --slider-fill: ${channelValues[ch.id]}%;"
                    aria-label="${ch.name} channel duty cycle">
         `;
@@ -1239,9 +1346,9 @@ function buildChannelSliders() {
         // Slider event
         const slider = row.querySelector('.channel-slider');
         slider.addEventListener('input', debounce(() => {
-            const val = parseInt(slider.value);
+            const val = parseFloat(slider.value);
             channelValues[ch.id] = val;
-            document.getElementById(`ch-val-${ch.id}`).textContent = `${val}%`;
+            document.getElementById(`ch-val-${ch.id}`).textContent = `${Number.isInteger(val) ? val : val.toFixed(1)}%`;
             slider.style.setProperty('--slider-fill', `${val}%`);
             scheduleUpdate();
         }, 8));
@@ -1361,6 +1468,7 @@ function parseSPDText(text, fileName = 'Imported SPD') {
 }
 
 function loadImportedChannels(channels, fileName) {
+    clearBaseline('Baseline cleared: imported channel set changed.');
     importedChannels = channels;
     currentMode = channels.length;
     channelValues = {};
@@ -1411,6 +1519,7 @@ window.addEventListener('drop', event => {
 // ═══════════════════════════════════════════════
 
 modeCheckbox.addEventListener('change', () => {
+    clearBaseline('Baseline cleared: channel mode changed.');
     importedChannels = null;
     setImportStatus('已切换回内置模拟通道');
     currentMode = modeCheckbox.checked ? 6 : 4;
@@ -1870,7 +1979,10 @@ function applyValuesImmediate(vals) {
             slider.value = vals[ch.id];
             slider.style.setProperty('--slider-fill', `${vals[ch.id]}%`);
         }
-        if (label) label.textContent = `${vals[ch.id]}%`;
+        if (label) {
+            const value = vals[ch.id];
+            label.textContent = `${Number.isInteger(value) ? value : value.toFixed(1)}%`;
+        }
     }
     scheduleUpdate();
 }
@@ -2052,7 +2164,8 @@ if (targetCctSlider) {
     targetCctSlider.addEventListener('input', () => {
         targetCCT = parseInt(targetCctSlider.value);
         targetCctVal.textContent = `${targetCCT} K`;
-        runRealtimeOptimizer();
+        if (metamerModeEnabled) runMetamerOptimization();
+        else runRealtimeOptimizer();
         scheduleUpdate();
     });
 }
@@ -2060,7 +2173,8 @@ if (targetDuvSlider) {
     targetDuvSlider.addEventListener('input', () => {
         targetDuv = parseFloat(targetDuvSlider.value);
         targetDuvVal.textContent = `${targetDuv >= 0 ? '+' : ''}${targetDuv.toFixed(4)}`;
-        runRealtimeOptimizer();
+        if (metamerModeEnabled) runMetamerOptimization();
+        else runRealtimeOptimizer();
         scheduleUpdate();
     });
 }
@@ -2068,6 +2182,42 @@ if (eyeIlluminanceSlider) {
     eyeIlluminanceSlider.addEventListener('input', () => {
         eyeIlluminance = parseInt(eyeIlluminanceSlider.value, 10);
         eyeIlluminanceVal.textContent = `${eyeIlluminance} lux`;
+        scheduleUpdate();
+    });
+}
+
+if (metamerModeCheckbox) {
+    metamerModeCheckbox.addEventListener('change', () => {
+        metamerModeEnabled = metamerModeCheckbox.checked;
+        if (metamerDependentControls) metamerDependentControls.hidden = !metamerModeEnabled;
+        if (!metamerModeEnabled) {
+            scheduleUpdate();
+            return;
+        }
+
+        const metrics = calculateMetrics(getCombinedSPD());
+        updateTargetRgControl(metrics.rg);
+        setMetamerStatus(baselineSnapshot
+            ? 'Choose a target Rg.'
+            : 'Set a baseline before changing Rg.');
+        scheduleUpdate();
+    });
+}
+
+if (targetRgSlider) {
+    targetRgSlider.addEventListener('input', debounce(() => {
+        updateTargetRgControl(parseInt(targetRgSlider.value, 10));
+        runMetamerOptimization();
+    }, 80));
+}
+
+if (setBaselineBtn) {
+    setBaselineBtn.addEventListener('click', captureBaseline);
+}
+
+if (compareSpectrumCheckbox) {
+    compareSpectrumCheckbox.addEventListener('change', () => {
+        compareSpectrumEnabled = compareSpectrumCheckbox.checked;
         scheduleUpdate();
     });
 }
@@ -2088,7 +2238,8 @@ document.querySelectorAll('.opt-preset-btn').forEach(btn => {
             targetDuvSlider.value = duv;
             targetDuvVal.textContent = `${duv >= 0 ? '+' : ''}${duv.toFixed(4)}`;
         }
-        runRealtimeOptimizer();
+        if (metamerModeEnabled) runMetamerOptimization();
+        else runRealtimeOptimizer();
         scheduleUpdate();
     });
 });
@@ -2096,7 +2247,8 @@ document.querySelectorAll('.opt-preset-btn').forEach(btn => {
 // Wire Optimize Now action button
 if (runOptimizeBtn) {
     runOptimizeBtn.addEventListener('click', () => {
-        runOptimizer(targetCCT, targetDuv);
+        if (metamerModeEnabled) runMetamerOptimization();
+        else runOptimizer(targetCCT, targetDuv);
     });
 }
 
