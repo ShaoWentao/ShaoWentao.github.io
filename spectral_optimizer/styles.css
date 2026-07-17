@@ -1,5 +1,36 @@
 @import url("./styles-original.css?v=20260717");
 
+/* Keep the document in the normal vertical flow so every section remains reachable. */
+html,
+body {
+    width: 100%;
+    height: auto;
+    min-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto !important;
+    overscroll-behavior-y: auto;
+}
+
+body {
+    position: static;
+    touch-action: pan-y;
+}
+
+#app-main,
+.visualization-area {
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    overflow: visible;
+}
+
+.controls-panel {
+    position: static;
+    top: auto;
+    max-height: none;
+    overflow: visible;
+}
+
 /* Keep the CIE 1931 diagram square at every viewport width. */
 .visualization-area,
 .charts-row,
