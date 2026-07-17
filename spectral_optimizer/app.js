@@ -1093,9 +1093,10 @@ function runMetamerOptimization() {
         valuesById[channels[index].id] = result.values[index];
     }
     applyValuesImmediate(valuesById);
-    setMetamerStatus(result.exact
+    const rgStatus = result.exact
         ? `Target achieved: ${Math.round(result.achievedRg)}`
-        : `Closest Rg found in current search: ${Math.round(result.achievedRg)}`);
+        : `Closest Rg found in current search: ${Math.round(result.achievedRg)}`;
+    setMetamerStatus(`${rgStatus} | Delta u'v': ${result.deltaUv.toFixed(6)}`);
 }
 
 // ═══════════════════════════════════════════════
