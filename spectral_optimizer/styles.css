@@ -1650,6 +1650,13 @@ footer {
     background: rgba(255, 249, 236, 0.84);
 }
 
+.set-baseline-btn:disabled,
+.metamer-target-control input:disabled,
+.compare-spectrum-control input:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
 .metamer-status {
     min-width: 0;
     overflow: hidden;

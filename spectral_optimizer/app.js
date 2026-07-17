@@ -904,9 +904,21 @@ function setMetamerStatus(message) {
 }
 
 function updateTargetRgControl(value) {
+    if (!Number.isFinite(value) || value <= 0) {
+        targetRg = null;
+        if (targetRgVal) targetRgVal.textContent = '--';
+        return false;
+    }
     targetRg = Math.max(80, Math.min(130, Math.round(value)));
     if (targetRgSlider) targetRgSlider.value = targetRg;
     if (targetRgVal) targetRgVal.textContent = targetRg;
+    return true;
+}
+
+function hasValidMetamerMetrics(metrics) {
+    return Boolean(metrics) &&
+        Number.isFinite(metrics.rg) && metrics.rg > 0 &&
+        Number.isFinite(metrics.rf) && metrics.rf > 0;
 }
 
 function baselineMatchesActiveChannels(channels) {
@@ -915,9 +927,55 @@ function baselineMatchesActiveChannels(channels) {
         baselineSnapshot.channelIds.every((id, index) => id === channels[index].id);
 }
 
+function syncMetamerControls(metrics) {
+    const hasValidMetrics = hasValidMetamerMetrics(metrics);
+    const hasBaseline = hasValidMetrics && baselineMatchesActiveChannels(getActiveChannels());
+
+    if (hasValidMetrics && !Number.isFinite(targetRg)) updateTargetRgControl(metrics.rg);
+    if (targetRgSlider) targetRgSlider.disabled = !hasValidMetrics;
+    if (setBaselineBtn) setBaselineBtn.disabled = !hasValidMetrics;
+    if (compareSpectrumCheckbox) {
+        compareSpectrumCheckbox.disabled = !hasBaseline;
+        if (!hasBaseline) compareSpectrumCheckbox.checked = false;
+    }
+    if (!hasBaseline) compareSpectrumEnabled = false;
+    if (runOptimizeBtn) runOptimizeBtn.disabled = metamerModeEnabled && !hasValidMetrics;
+
+    if (!hasValidMetrics && metamerModeEnabled) {
+        updateTargetRgControl(NaN);
+        setMetamerStatus('Valid spectral data is required to optimize Rg.');
+    }
+
+    return hasValidMetrics;
+}
+
+function channelDisplayValue(value) {
+    return metamerModeEnabled && !Number.isInteger(value)
+        ? value.toFixed(1)
+        : String(Math.round(value));
+}
+
+function syncChannelSliderPrecision() {
+    const step = metamerModeEnabled ? '0.5' : '1';
+    for (const channel of getActiveChannels()) {
+        const value = channelValues[channel.id] || 0;
+        const slider = document.getElementById(`ch-slider-${channel.id}`);
+        const label = document.getElementById(`ch-val-${channel.id}`);
+        const uiValue = metamerModeEnabled ? value : Math.round(value);
+        if (slider) {
+            slider.step = step;
+            slider.value = uiValue;
+            slider.style.setProperty('--slider-fill', `${uiValue}%`);
+        }
+        if (label) label.textContent = `${channelDisplayValue(value)}%`;
+    }
+}
+
 function captureBaseline() {
     const channels = getActiveChannels();
     const combined = getCombinedSPD();
+    const metrics = calculateMetrics(combined);
+    if (!syncMetamerControls(metrics)) return;
     const xy = xyFromSPD(combined);
     const uv = xyToUv(xy.x, xy.y);
     const percentages = {};
@@ -930,9 +988,10 @@ function captureBaseline() {
         normalizedSpd: Object.freeze(normalizeArray(combined)),
         xy: Object.freeze({ x: xy.x, y: xy.y }),
         uv: Object.freeze({ u: uv.u, v: uv.v }),
-        metrics: Object.freeze({ ...calculateMetrics(combined) })
+        metrics: Object.freeze({ ...metrics })
     });
 
+    syncMetamerControls(metrics);
     setMetamerStatus(`Baseline set: Rg ${Math.round(baselineSnapshot.metrics.rg)}.`);
     scheduleUpdate();
 }
@@ -940,7 +999,10 @@ function captureBaseline() {
 function clearBaseline(message = '') {
     baselineSnapshot = null;
     compareSpectrumEnabled = false;
-    if (compareSpectrumCheckbox) compareSpectrumCheckbox.checked = false;
+    if (compareSpectrumCheckbox) {
+        compareSpectrumCheckbox.checked = false;
+        compareSpectrumCheckbox.disabled = true;
+    }
     if (message && metamerModeEnabled) setMetamerStatus(message);
 }
 
@@ -960,6 +1022,9 @@ function runMetamerOptimization() {
         setMetamerStatus('Metamer optimizer is unavailable.');
         return;
     }
+
+    const metrics = calculateMetrics(getCombinedSPD());
+    if (!syncMetamerControls(metrics)) return;
 
     const channels = getActiveChannels();
     if (!baselineMatchesActiveChannels(channels)) {
@@ -1223,6 +1288,7 @@ let prevMetrics = { cct: 0, ra: 0, r9: 0, rf: 0, rg: 0, melanopicEDI: 0, cs: 0, 
 function updateMetrics() {
     const combined = getCombinedSPD();
     const m = calculateMetrics(combined);
+    if (metamerModeEnabled) syncMetamerControls(m);
 
     // CCT
     updateMetricCard('cct', valCCT, barCCT, m.cct, prevMetrics.cct, {
@@ -1325,6 +1391,8 @@ function buildChannelSliders() {
     // Use the current mode's channels
     for (const ch of allChannels) {
         const row = document.createElement('div');
+        const value = channelValues[ch.id];
+        const uiValue = metamerModeEnabled ? value : Math.round(value);
         row.className = 'channel-row fade-in';
         row.id = `ch-row-${ch.id}`;
         row.innerHTML = `
@@ -1334,11 +1402,11 @@ function buildChannelSliders() {
                     <span>${ch.nameCN} ${ch.name}</span>
                     <span class="channel-wavelength">${ch.waveLabel}</span>
                 </span>
-                <span class="channel-value" id="ch-val-${ch.id}" style="color: ${ch.color};">${channelValues[ch.id]}%</span>
+                <span class="channel-value" id="ch-val-${ch.id}" style="color: ${ch.color};">${channelDisplayValue(value)}%</span>
             </div>
             <input type="range" class="channel-slider" id="ch-slider-${ch.id}"
-                   min="0" max="100" step="0.5" value="${channelValues[ch.id]}"
-                   style="--ch-color: ${ch.color}; --slider-fill: ${channelValues[ch.id]}%;"
+                   min="0" max="100" step="${metamerModeEnabled ? '0.5' : '1'}" value="${uiValue}"
+                   style="--ch-color: ${ch.color}; --slider-fill: ${uiValue}%;"
                    aria-label="${ch.name} channel duty cycle">
         `;
         channelsContainer.appendChild(row);
@@ -1346,9 +1414,9 @@ function buildChannelSliders() {
         // Slider event
         const slider = row.querySelector('.channel-slider');
         slider.addEventListener('input', debounce(() => {
-            const val = parseFloat(slider.value);
+            const val = metamerModeEnabled ? parseFloat(slider.value) : parseInt(slider.value, 10);
             channelValues[ch.id] = val;
-            document.getElementById(`ch-val-${ch.id}`).textContent = `${Number.isInteger(val) ? val : val.toFixed(1)}%`;
+            document.getElementById(`ch-val-${ch.id}`).textContent = `${channelDisplayValue(val)}%`;
             slider.style.setProperty('--slider-fill', `${val}%`);
             scheduleUpdate();
         }, 8));
@@ -1975,14 +2043,13 @@ function applyValuesImmediate(vals) {
         channelValues[ch.id] = vals[ch.id];
         const slider = document.getElementById(`ch-slider-${ch.id}`);
         const label = document.getElementById(`ch-val-${ch.id}`);
+        const uiValue = metamerModeEnabled ? vals[ch.id] : Math.round(vals[ch.id]);
         if (slider) {
-            slider.value = vals[ch.id];
-            slider.style.setProperty('--slider-fill', `${vals[ch.id]}%`);
+            slider.step = metamerModeEnabled ? '0.5' : '1';
+            slider.value = uiValue;
+            slider.style.setProperty('--slider-fill', `${uiValue}%`);
         }
-        if (label) {
-            const value = vals[ch.id];
-            label.textContent = `${Number.isInteger(value) ? value : value.toFixed(1)}%`;
-        }
+        if (label) label.textContent = `${channelDisplayValue(vals[ch.id])}%`;
     }
     scheduleUpdate();
 }
@@ -2191,15 +2258,23 @@ if (metamerModeCheckbox) {
         metamerModeEnabled = metamerModeCheckbox.checked;
         if (metamerDependentControls) metamerDependentControls.hidden = !metamerModeEnabled;
         if (!metamerModeEnabled) {
+            if (runOptimizeBtn) runOptimizeBtn.disabled = false;
+            syncChannelSliderPrecision();
             scheduleUpdate();
             return;
         }
 
         const metrics = calculateMetrics(getCombinedSPD());
+        if (!syncMetamerControls(metrics)) {
+            syncChannelSliderPrecision();
+            scheduleUpdate();
+            return;
+        }
         updateTargetRgControl(metrics.rg);
         setMetamerStatus(baselineSnapshot
             ? 'Choose a target Rg.'
             : 'Set a baseline before changing Rg.');
+        syncChannelSliderPrecision();
         scheduleUpdate();
     });
 }
@@ -2217,6 +2292,11 @@ if (setBaselineBtn) {
 
 if (compareSpectrumCheckbox) {
     compareSpectrumCheckbox.addEventListener('change', () => {
+        if (compareSpectrumCheckbox.disabled || !baselineMatchesActiveChannels(getActiveChannels())) {
+            compareSpectrumCheckbox.checked = false;
+            compareSpectrumEnabled = false;
+            return;
+        }
         compareSpectrumEnabled = compareSpectrumCheckbox.checked;
         scheduleUpdate();
     });
