@@ -132,6 +132,58 @@ body {
     margin-top: 10px;
 }
 
+/* Give the real-time optimizer enough room for readable controls. */
+.optimizer-section {
+    height: auto !important;
+    min-height: 0;
+    padding: 20px 22px 22px;
+    overflow: visible;
+}
+
+.optimizer-header {
+    margin-bottom: 4px;
+}
+
+.optimizer-grid {
+    grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.9fr);
+    gap: 24px;
+    margin-top: 18px;
+    align-items: start;
+}
+
+.target-controls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.target-row {
+    min-width: 0;
+    padding: 12px 14px;
+}
+
+.metamer-controls {
+    grid-column: 1 / -1;
+}
+
+.preset-action-container {
+    gap: 14px;
+}
+
+.optimizer-presets-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.opt-preset-btn {
+    min-height: 54px;
+    padding: 9px 8px;
+}
+
+.optimizer-action-stack {
+    gap: 8px;
+}
+
 @media (max-width: 1180px) {
     .charts-row {
         grid-template-columns: 1fr;
@@ -147,5 +199,20 @@ body {
     .cie-panel {
         width: min(100%, 680px);
         justify-self: center;
+    }
+
+    .optimizer-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 720px) {
+    .optimizer-section {
+        padding: 16px;
+    }
+
+    .target-controls,
+    .optimizer-presets-grid {
+        grid-template-columns: 1fr;
     }
 }
