@@ -5,6 +5,9 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function() {
     const CHROMATICITY_TOLERANCE = 0.002;
     const RF_FLOOR = 80;
+    const TARGET_RG_MIN = 80;
+    const TARGET_RG_MAX = 130;
+    const MAX_CORNER_SEEDS = 64;
     const STEP_SIZES = [24, 12, 6, 3, 1, 0.5];
     const EPSILON = 1e-10;
 
@@ -64,8 +67,18 @@
         return compareValues(candidate.values, current.values) < 0;
     }
 
-    function meetsRfFloor(candidate) {
-        return candidate && candidate.achievedRf >= RF_FLOOR;
+    function buildSeeds(baselineValues) {
+        const seeds = [baselineValues];
+        const variedChannels = Math.min(baselineValues.length, Math.log2(MAX_CORNER_SEEDS));
+        const cornerCount = 2 ** variedChannels;
+        for (let mask = 0; mask < cornerCount; mask++) {
+            const corner = baselineValues.slice();
+            for (let channelIndex = 0; channelIndex < variedChannels; channelIndex++) {
+                corner[channelIndex] = (mask & (1 << channelIndex)) ? 100 : 0;
+            }
+            seeds.push(corner);
+        }
+        return seeds;
     }
 
     function optimizeMetamer(options) {
@@ -83,6 +96,9 @@
             !targetXy || !Number.isFinite(targetRg) ||
             typeof evaluateSpd !== 'function' || typeof xyToUv !== 'function') {
             throw new Error('Invalid metamer optimizer options');
+        }
+        if (targetRg < TARGET_RG_MIN || targetRg > TARGET_RG_MAX) {
+            throw new RangeError('targetRg must be between 80 and 130');
         }
 
         const baselineValues = suppliedBaseline.map(clampPercentage);
@@ -112,17 +128,7 @@
             });
         }
 
-        const seeds = [baselineValues];
-        for (let index = 0; index < channels.length; index++) {
-            const zeroSeed = baselineValues.slice();
-            zeroSeed[index] = 0;
-            seeds.push(zeroSeed);
-            const fullSeed = baselineValues.slice();
-            fullSeed[index] = 100;
-            seeds.push(fullSeed);
-        }
-
-        for (const seed of seeds) {
+        function exploreSeed(seed, requireRfFloor) {
             let current = seed.slice();
             addCandidate(current);
             for (const step of STEP_SIZES) {
@@ -137,13 +143,19 @@
                     const lowerCandidate = candidates.get(lower.map(clampPercentage).join(','));
                     const upperCandidate = candidates.get(upper.map(clampPercentage).join(','));
                     const currentCandidate = candidates.get(current.map(clampPercentage).join(','));
-                    let bestMove = meetsRfFloor(currentCandidate) ? currentCandidate : null;
-                    if (meetsRfFloor(lowerCandidate) && isBetter(lowerCandidate, bestMove)) bestMove = lowerCandidate;
-                    if (meetsRfFloor(upperCandidate) && isBetter(upperCandidate, bestMove)) bestMove = upperCandidate;
+                    const isAllowed = candidate => !requireRfFloor ||
+                        (candidate && candidate.achievedRf >= RF_FLOOR);
+                    let bestMove = isAllowed(currentCandidate) ? currentCandidate : null;
+                    if (isAllowed(lowerCandidate) && isBetter(lowerCandidate, bestMove)) bestMove = lowerCandidate;
+                    if (isAllowed(upperCandidate) && isBetter(upperCandidate, bestMove)) bestMove = upperCandidate;
                     if (bestMove) current = bestMove.values.slice();
                 }
             }
         }
+
+        for (const seed of buildSeeds(baselineValues)) addCandidate(seed);
+        exploreSeed(baselineValues, false);
+        exploreSeed(baselineValues, true);
 
         let best = null;
         for (const candidate of candidates.values()) {
@@ -151,18 +163,13 @@
         }
 
         if (!best) {
-            for (const candidate of candidates.values()) {
-                if (isBetter(candidate, best)) best = candidate;
-            }
-        }
-
-        if (!best) {
             return {
-                values: baselineValues,
-                achievedRg: NaN,
-                achievedRf: NaN,
-                deltaUv: Infinity,
-                exact: false
+                values: null,
+                achievedRg: null,
+                achievedRf: null,
+                deltaUv: null,
+                exact: false,
+                feasible: false
             };
         }
 
@@ -171,7 +178,8 @@
             achievedRg: best.achievedRg,
             achievedRf: best.achievedRf,
             deltaUv: best.deltaUv,
-            exact: best.rgError <= EPSILON && best.achievedRf >= RF_FLOOR
+            exact: best.rgError <= EPSILON,
+            feasible: true
         };
     }
 
