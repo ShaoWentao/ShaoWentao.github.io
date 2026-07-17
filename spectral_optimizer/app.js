@@ -518,25 +518,31 @@ function renderCIE() {
         }
     }
 
+    const mPt = projectXY(currentX, currentY, w, h, pad);
     const comparisonBaseline = getActiveComparisonBaseline(activeCh);
     if (comparisonBaseline) {
         const baselinePt = projectXY(comparisonBaseline.xy.x, comparisonBaseline.xy.y, w, h, pad);
+        const separation = Math.hypot(mPt.x - baselinePt.x, mPt.y - baselinePt.y);
         cieCtx.save();
         cieCtx.strokeStyle = isLightTheme ? 'rgba(74, 74, 74, 0.72)' : 'rgba(190, 190, 190, 0.78)';
-        cieCtx.fillStyle = isLightTheme ? 'rgba(74, 74, 74, 0.9)' : 'rgba(220, 220, 220, 0.92)';
         cieCtx.lineWidth = 1.5;
+        if (separation >= 6) {
+            cieCtx.setLineDash([2, 3]);
+            cieCtx.globalAlpha = 0.55;
+            cieCtx.beginPath();
+            cieCtx.moveTo(baselinePt.x, baselinePt.y);
+            cieCtx.lineTo(mPt.x, mPt.y);
+            cieCtx.stroke();
+            cieCtx.globalAlpha = 1;
+        }
         cieCtx.setLineDash([3, 3]);
         cieCtx.beginPath();
         cieCtx.arc(baselinePt.x, baselinePt.y, 7, 0, 2 * Math.PI);
         cieCtx.stroke();
-        cieCtx.beginPath();
-        cieCtx.arc(baselinePt.x, baselinePt.y, 2.5, 0, 2 * Math.PI);
-        cieCtx.fill();
         cieCtx.restore();
     }
 
     // 6. Draw current mixed color point (Target)
-    const mPt = projectXY(currentX, currentY, w, h, pad);
     
     // Outer blinking halo
     const pulse = 6 + 3 * Math.sin(Date.now() / 150);
@@ -1254,6 +1260,23 @@ function renderSPD() {
     }
 
     // ── Combined SPD curve (main) ──
+    const comparisonBaseline = getActiveComparisonBaseline(channels);
+    if (comparisonBaseline) {
+        ctx.save();
+        ctx.setLineDash([6, 4]);
+        ctx.strokeStyle = 'rgba(90, 90, 90, 0.72)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let i = 0; i < NUM_POINTS; i++) {
+            const x = plotX + (i / (NUM_POINTS - 1)) * plotW;
+            const y = plotY + plotH - comparisonBaseline.normalizedSpd[i] * plotH;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+        ctx.restore();
+    }
+
     if (maxCombined > 1e-6) {
         // Contrast halo
         ctx.beginPath();
@@ -1306,23 +1329,6 @@ function renderSPD() {
     }
 
     // ── Plot border ──
-    const comparisonBaseline = getActiveComparisonBaseline(channels);
-    if (comparisonBaseline) {
-        ctx.save();
-        ctx.setLineDash([6, 4]);
-        ctx.strokeStyle = 'rgba(90, 90, 90, 0.72)';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        for (let i = 0; i < NUM_POINTS; i++) {
-            const x = plotX + (i / (NUM_POINTS - 1)) * plotW;
-            const y = plotY + plotH - comparisonBaseline.normalizedSpd[i] * plotH;
-            if (i === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-        }
-        ctx.stroke();
-        ctx.restore();
-    }
-
     ctx.strokeStyle = 'rgba(42, 37, 30, 0.18)';
     ctx.lineWidth = 1.2;
     ctx.strokeRect(plotX, plotY, plotW, plotH);
