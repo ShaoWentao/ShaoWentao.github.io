@@ -31,6 +31,7 @@ body {
     max-height: none;
     overflow: visible;
     align-self: start;
+    grid-template-rows: max-content max-content max-content !important;
 }
 
 .controls-panel {
@@ -135,9 +136,11 @@ body {
 /* Give the real-time optimizer enough room for readable controls. */
 .optimizer-section {
     height: auto !important;
-    min-height: 0;
+    min-height: max-content;
     padding: 20px 22px 22px;
     overflow: visible;
+    align-self: start;
+    box-sizing: border-box;
 }
 
 .optimizer-header {
@@ -149,6 +152,8 @@ body {
     gap: 24px;
     margin-top: 18px;
     align-items: start;
+    height: auto;
+    min-height: 0;
 }
 
 .target-controls {
@@ -168,6 +173,8 @@ body {
 
 .preset-action-container {
     gap: 14px;
+    height: auto;
+    min-height: 0;
 }
 
 .optimizer-presets-grid {
