@@ -172,12 +172,6 @@ const VISUAL_FIELD_LABELS = Object.freeze({
     2: '全视野 Full field'
 });
 
-const VISUAL_FIELD_COMPACT_LABELS = Object.freeze({
-    0.5: 'Sup',
-    1: 'Ctr',
-    2: 'Full'
-});
-
 let isLightTheme = false;
 function updateThemeState() {
     isLightTheme = document.documentElement.getAttribute('data-theme') === 'light' || 
@@ -1452,9 +1446,9 @@ function renderCircadianMetric(metrics) {
         barFill: (metrics.cs / 0.7) * 100,
         barColor: metrics.cs > 0.3 ? '#a6e96b' : metrics.cs > 0.1 ? '#e4b85b' : '#ff6b25'
     });
-    const compactFieldLabel = VISUAL_FIELD_COMPACT_LABELS[visualFieldFactor] || VISUAL_FIELD_COMPACT_LABELS[1];
     const cla = metrics.cla > 0 ? Math.round(metrics.cla).toLocaleString() : '--';
-    valCLA2.textContent = `Rea CLA2 ${cla} · ${exposureDurationHours.toFixed(1)}h · ${compactFieldLabel}`;
+    const fieldLabel = VISUAL_FIELD_LABELS[visualFieldFactor] || VISUAL_FIELD_LABELS[1];
+    valCLA2.textContent = `CLA 2.0 ${cla}\n${exposureDurationHours.toFixed(1)} h · ${fieldLabel}`;
     updateCircadianConditionLabels();
 }
 

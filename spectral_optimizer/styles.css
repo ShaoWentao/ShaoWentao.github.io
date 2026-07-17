@@ -867,14 +867,13 @@ main {
 /* CLA 2.0 secondary readout */
 .metric-secondary {
     max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
     font-size: 0.62rem;
     font-weight: 600;
     color: var(--gold);
     font-family: 'JetBrains Mono', monospace;
     line-height: 1.2;
-    white-space: nowrap;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
 }
 
 .visually-hidden {
@@ -2117,7 +2116,7 @@ footer {
     .visualization-area {
         min-height: 0;
         display: grid;
-        grid-template-rows: minmax(300px, 1fr) 88px 142px;
+        grid-template-rows: minmax(300px, 1fr) 104px 142px;
         gap: 10px;
     }
 
@@ -2154,7 +2153,7 @@ footer {
 
     .metric-card {
         min-height: 0;
-        height: 88px;
+        height: 104px;
         padding: 8px 7px 7px;
         gap: 3px;
     }
@@ -2181,6 +2180,11 @@ footer {
 
     .metric-unit {
         font-size: 0.52rem;
+    }
+
+    .metric-secondary {
+        font-size: 0.56rem;
+        line-height: 1.25;
     }
 
     #card-cct { order: 1; }
