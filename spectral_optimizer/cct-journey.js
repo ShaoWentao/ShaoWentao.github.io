@@ -5,42 +5,6 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
     'use strict';
 
-    function setupPresetsToggle() {
-        if (typeof document === 'undefined') return;
-
-        function mount() {
-            const section = document.querySelector('.presets-section');
-            const heading = section && section.querySelector('h3');
-            const buttons = section && section.querySelector('.preset-buttons');
-            if (!section || !heading || !buttons || section.querySelector('.presets-toggle')) return;
-
-            const toggle = document.createElement('button');
-            toggle.type = 'button';
-            toggle.className = 'presets-toggle';
-            toggle.setAttribute('aria-expanded', 'false');
-            toggle.setAttribute('aria-controls', 'preset-buttons');
-            toggle.innerHTML = '<strong>快速预设 <span>Presets</span></strong><span class="presets-toggle-icon" aria-hidden="true">⌄</span>';
-
-            buttons.id = 'preset-buttons';
-            buttons.hidden = true;
-            heading.replaceWith(toggle);
-
-            toggle.addEventListener('click', function () {
-                const expanded = toggle.getAttribute('aria-expanded') === 'true';
-                toggle.setAttribute('aria-expanded', String(!expanded));
-                buttons.hidden = expanded;
-            });
-        }
-
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', mount, { once: true });
-        } else {
-            mount();
-        }
-    }
-
-    setupPresetsToggle();
-
     function freezeScene(scene) {
         return Object.freeze(scene);
     }
