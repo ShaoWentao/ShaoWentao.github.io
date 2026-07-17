@@ -1834,7 +1834,8 @@ footer {
     }
 
     .page-hero {
-        max-width: 1600px;
+        width: 100%;
+        max-width: none;
         height: 76px;
         padding: 12px 24px 8px;
         display: grid;
@@ -1885,6 +1886,8 @@ footer {
     }
 
     main {
+        width: 100%;
+        max-width: none;
         height: calc(100vh - 76px);
         grid-template-columns: 278px minmax(0, 1fr);
         gap: 12px;
