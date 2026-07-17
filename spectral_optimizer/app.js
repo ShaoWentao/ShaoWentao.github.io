@@ -25,7 +25,12 @@ const CIE_DATA = window.CIE_SPECTRAL_DATA || {};
 const SPECTRAL_MATH = window.SpectralMath || {};
 const COLOUR_QUALITY = window.ColourQuality || {};
 const METAMER_OPTIMIZER = window.METAMER_OPTIMIZER || {};
+const calculateCLA2 = window.calculateCLA2;
 const METAMER_CHROMATICITY_TOLERANCE = 0.002;
+
+if (typeof calculateCLA2 !== 'function') {
+    throw new Error('CLA 2.0 calculation module failed to load.');
+}
 
 // ═══════════════════════════════════════════════
 // CHANNEL DEFINITIONS
@@ -115,7 +120,8 @@ const barRf = document.getElementById('bar-rf');
 const barMel = document.getElementById('bar-mel');
 const barCS  = document.getElementById('bar-cs');
 const barMedi = document.getElementById('bar-medi');
-const csStatus = document.getElementById('cs-status');
+const valCLA2 = document.getElementById('val-cla2');
+const cardCS = document.getElementById('card-cs');
 
 // Optimizer elements
 
@@ -135,6 +141,9 @@ const targetDuvSlider = document.getElementById('target-duv-slider');
 const targetDuvVal = document.getElementById('target-duv-val');
 const eyeIlluminanceSlider = document.getElementById('eye-illuminance');
 const eyeIlluminanceVal = document.getElementById('eye-illuminance-val');
+const exposureDurationSlider = document.getElementById('exposure-duration');
+const exposureDurationVal = document.getElementById('exposure-duration-val');
+const visualFieldSelect = document.getElementById('visual-field-factor');
 const exportRecipeBtn = document.getElementById('export-recipe-btn');
 const metamerModeCheckbox = document.getElementById('metamer-mode-checkbox');
 const metamerDependentControls = document.getElementById('metamer-dependent-controls');
@@ -153,6 +162,14 @@ const barRg = document.getElementById('bar-rg');
 let targetCCT = 4000;
 let targetDuv = 0.0;
 let eyeIlluminance = 300;
+let exposureDurationHours = 1;
+let visualFieldFactor = 1;
+
+const VISUAL_FIELD_LABELS = Object.freeze({
+    0.5: '上方视野 Superior',
+    1: '中央视野 Central',
+    2: '全视野 Full field'
+});
 
 let isLightTheme = false;
 function updateThemeState() {
@@ -754,12 +771,6 @@ function melanopicDERFromSums(melSum, vSum) {
     return D65_MELANOPIC_RATIO > 1e-10 ? melanopicRatio / D65_MELANOPIC_RATIO : 0;
 }
 
-function simplifiedCSFromDER(melanopicDER) {
-    const CLA = eyeIlluminance * Math.max(melanopicDER, 0);
-    const CS = 0.7 * (1 - 1 / (1 + Math.pow(CLA / 355.7, 1.1026)));
-    return { CLA, CS };
-}
-
 function wavelengthToRGB(lambda) {
     const anchors = [
         [380, 72, 0, 120],
@@ -808,6 +819,16 @@ function wavelengthToRGB(lambda) {
 // METRICS CALCULATION
 // ═══════════════════════════════════════════════
 
+function calculateCircadianMetrics(combinedSPD) {
+    return calculateCLA2({
+        wavelengths,
+        values: combinedSPD,
+        illuminanceLux: eyeIlluminance,
+        durationHours: exposureDurationHours,
+        fieldFactor: visualFieldFactor
+    });
+}
+
 function calculateMetrics(combinedSPD) {
     let X = 0, Y = 0, Z = 0;
     let melSum = 0, vSum = 0;
@@ -826,7 +847,18 @@ function calculateMetrics(combinedSPD) {
     if (totalPower < 1e-10) {
         currentX = 0.3127;
         currentY = 0.3290;
-        return { cct: 0, ra: 0, r9: 0, rf: 0, rg: 0, melanopicDER: 0, melanopicEDI: 0, cs: 0, cla: 0 };
+        return {
+            cct: 0,
+            ra: 0,
+            r9: 0,
+            rf: 0,
+            rg: 0,
+            melanopicDER: 0,
+            melanopicEDI: 0,
+            cs: 0,
+            cla: 0,
+            blueYellowState: 'inactive'
+        };
     }
 
     const sum = X + Y + Z;
@@ -840,8 +872,8 @@ function calculateMetrics(combinedSPD) {
         ? COLOUR_QUALITY.calculateColourQuality(qualitySpd)
         : { ra: estimateCRI(combinedSPD), r9: 0, rf: 0, rg: estimateRg(combinedSPD, cct) };
     const melanopicDER = melanopicDERFromSums(melSum, vSum);
-    const { CLA, CS } = simplifiedCSFromDER(melanopicDER);
     const melanopicEDI = eyeIlluminance * melanopicDER;
+    const circadian = calculateCircadianMetrics(combinedSPD);
     return {
         cct: Math.round(cct),
         ra: quality.ra,
@@ -850,8 +882,9 @@ function calculateMetrics(combinedSPD) {
         rg: quality.rg,
         melanopicDER,
         melanopicEDI,
-        cs: CS,
-        cla: CLA
+        cla: circadian.cla,
+        cs: circadian.cs,
+        blueYellowState: circadian.blueYellowState
     };
 }
 
@@ -889,21 +922,6 @@ function estimateCRI(spd) {
 
     let cri = uniformity * 50 + coverage * 30 + midBandPresence * 20;
     return Math.max(0, Math.min(100, Math.round(cri)));
-}
-
-// Compute CS from arbitrary channel values (for optimizer)
-function computeCSFromValues(channels, values) {
-    let melSum = 0, vSum = 0;
-    for (let i = 0; i < NUM_POINTS; i++) {
-        let total = 0;
-        for (let c = 0; c < channels.length; c++) {
-            total += (values[c] / 100) * getChannelSPDValue(channels[c], wavelengths[i]);
-        }
-        melSum += total * preMel[i] * LAMBDA_STEP;
-        vSum += total * preV[i] * LAMBDA_STEP;
-    }
-    const melanopicDER = melanopicDERFromSums(melSum, vSum);
-    return simplifiedCSFromDER(melanopicDER).CS;
 }
 
 // ═══════════════════════════════════════════════
@@ -1402,7 +1420,32 @@ function renderSPD() {
 // METRICS DISPLAY
 // ═══════════════════════════════════════════════
 
-let prevMetrics = { cct: 0, ra: 0, r9: 0, rf: 0, rg: 0, melanopicDER: 0, melanopicEDI: 0, cs: 0 };
+let prevMetrics = { cct: 0, ra: 0, r9: 0, rf: 0, rg: 0, melanopicDER: 0, melanopicEDI: 0, cs: 0, cla: 0 };
+
+function updateCircadianConditionLabels() {
+    if (exposureDurationVal) exposureDurationVal.textContent = `${exposureDurationHours.toFixed(1)} h`;
+    if (cardCS) {
+        const fieldLabel = VISUAL_FIELD_LABELS[visualFieldFactor] || VISUAL_FIELD_LABELS[1];
+        cardCS.title = `Rea CLA 2.0 / CS · ${exposureDurationHours.toFixed(1)} h · ${fieldLabel}`;
+    }
+}
+
+function renderCircadianMetric(metrics) {
+    updateMetricCard('cs', valCS, barCS, metrics.cs, prevMetrics.cs, {
+        format: value => value > 0 ? value.toFixed(3) : '--',
+        barFill: (metrics.cs / 0.7) * 100,
+        barColor: metrics.cs > 0.3 ? '#a6e96b' : metrics.cs > 0.1 ? '#e4b85b' : '#ff6b25'
+    });
+    valCLA2.textContent = `CLA 2.0 ${metrics.cla > 0 ? Math.round(metrics.cla).toLocaleString() : '--'}`;
+    updateCircadianConditionLabels();
+}
+
+function refreshCircadianMetricOnly() {
+    const circadian = calculateCircadianMetrics(getCombinedSPD());
+    renderCircadianMetric(circadian);
+    prevMetrics.cs = circadian.cs;
+    prevMetrics.cla = circadian.cla;
+}
 
 function updateMetrics() {
     const combined = getCombinedSPD();
@@ -1444,24 +1487,7 @@ function updateMetrics() {
         barColor: '#e4b85b'
     });
 
-    // CS
-    updateMetricCard('cs', valCS, barCS, m.cs, prevMetrics.cs, {
-        format: v => v > 0 ? v.toFixed(3) : '--',
-        barFill: (m.cs / 0.7) * 100,
-        barColor: m.cs > 0.3 ? '#a6e96b' : m.cs > 0.1 ? '#e4b85b' : '#ff6b25'
-    });
-
-    // CS status badge
-    if (m.cs > 0.3) {
-        csStatus.textContent = '唤醒';
-        csStatus.className = 'cs-status alerting';
-    } else if (m.cs > 0.1) {
-        csStatus.textContent = '过渡';
-        csStatus.className = 'cs-status moderate';
-    } else {
-        csStatus.textContent = '助眠';
-        csStatus.className = 'cs-status sleep';
-    }
+    renderCircadianMetric(m);
 
     // CIE S 026 melanopic equivalent daylight illuminance
     updateMetricCard('medi', valMedi, barMedi, m.melanopicEDI, prevMetrics.melanopicEDI, {
@@ -1481,7 +1507,7 @@ function updateMetrics() {
     updateMetricDelta(valRf, m.rf, comparisonBaseline?.metrics.rf);
     updateMetricDelta(valRg, m.rg, comparisonBaseline?.metrics.rg);
 
-    prevMetrics = { cct: m.cct, ra: m.ra, r9: m.r9, rf: m.rf, melanopicDER: m.melanopicDER, melanopicEDI: m.melanopicEDI, cs: m.cs, rg: m.rg };
+    prevMetrics = { cct: m.cct, ra: m.ra, r9: m.r9, rf: m.rf, melanopicDER: m.melanopicDER, melanopicEDI: m.melanopicEDI, cs: m.cs, cla: m.cla, rg: m.rg };
 }
 
 function updateMetricCard(id, valueEl, barEl, newVal, oldVal, opts) {
@@ -1757,10 +1783,18 @@ function exportCurrentRecipe() {
             ra: metrics.ra,
             r9: metrics.r9,
             rf: metrics.rf,
-            rg: metrics.rg,
-            melanopicDer: metrics.melanopicDER,
-            melanopicEdiLux: metrics.melanopicEDI,
-            circadianStimulus: metrics.cs,
+            rg: metrics.rg
+        },
+        circadian: {
+            cla2: metrics.cla,
+            cs: metrics.cs,
+            exposureDurationHours,
+            visualFieldFactor,
+            blueYellowState: metrics.blueYellowState
+        },
+        melanopic: {
+            der: metrics.melanopicDER,
+            ediLux: metrics.melanopicEDI
         },
         channels: channels.map(channel => ({
             id: channel.id,
@@ -2160,8 +2194,6 @@ function optimizeValuesForScene(channels, targetCCT, targetDuv) {
 
     let bestValues = seeds[0].slice();
     let bestLoss = Infinity;
-    let bestCS = 0;
-
     for (const seed of seeds) {
         const values = seed.slice(0, n).map(value => Math.max(0, Math.min(100, value)));
         let currentLoss = loss(values);
@@ -2200,7 +2232,6 @@ function optimizeValuesForScene(channels, targetCCT, targetDuv) {
         if (currentLoss < bestLoss) {
             bestLoss = currentLoss;
             bestValues = values.slice();
-            bestCS = computeCSFromValues(channels, values);
         }
     }
 
@@ -2318,6 +2349,7 @@ function init() {
         eyeIlluminanceSlider.value = eyeIlluminance;
         if (eyeIlluminanceVal) eyeIlluminanceVal.textContent = `${eyeIlluminance} lux`;
     }
+    updateCircadianConditionLabels();
 
     document.querySelectorAll('.target-row input[type="range"]').forEach(syncTargetSliderFill);
 
@@ -2369,6 +2401,24 @@ if (eyeIlluminanceSlider) {
         eyeIlluminance = parseInt(eyeIlluminanceSlider.value, 10);
         eyeIlluminanceVal.textContent = `${eyeIlluminance} lux`;
         scheduleUpdate();
+    });
+}
+
+if (exposureDurationSlider) {
+    exposureDurationSlider.addEventListener('input', () => {
+        exposureDurationHours = Math.min(3, Math.max(0.5, Number(exposureDurationSlider.value) || 1));
+        syncTargetSliderFill(exposureDurationSlider);
+        updateCircadianConditionLabels();
+        refreshCircadianMetricOnly();
+    });
+}
+
+if (visualFieldSelect) {
+    visualFieldSelect.addEventListener('change', () => {
+        const nextFieldFactor = Number(visualFieldSelect.value);
+        visualFieldFactor = [0.5, 1, 2].includes(nextFieldFactor) ? nextFieldFactor : 1;
+        updateCircadianConditionLabels();
+        refreshCircadianMetricOnly();
     });
 }
 

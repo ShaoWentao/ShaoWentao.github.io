@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20260717-realtime1">
+    <link rel="stylesheet" href="styles.css?v=20260717-cla2">
 </head>
 <body>
     <div class="bg-grid" aria-hidden="true"></div>
@@ -178,17 +178,17 @@
                     <div class="metric-bar" id="bar-mel"></div>
                 </div>
 
-                <div class="metric-card glass-card" id="card-cs">
+                <div class="metric-card glass-card" id="card-cs" title="Rea CLA 2.0 / CS · 1.0 h · 中央视野 Central">
                     <div class="metric-icon">CS</div>
                     <div class="metric-info">
-                        <span class="metric-label">CS 工程近似</span>
+                        <span class="metric-label">昼夜节律刺激 CS</span>
                         <div class="metric-value-row">
                             <span class="metric-value" id="val-cs">--</span>
                             <span class="metric-unit">/0.7</span>
                         </div>
                     </div>
                     <div class="metric-bar" id="bar-cs"></div>
-                    <div class="cs-status" id="cs-status">--</div>
+                    <div class="metric-secondary" id="val-cla2">CLA 2.0 --</div>
                 </div>
 
                 <div class="metric-card glass-card" id="card-medi">
@@ -239,6 +239,18 @@
                     <label for="eye-illuminance">眼部照度 Eye illuminance: <span id="eye-illuminance-val">300 lux</span></label>
                     <input type="range" id="eye-illuminance" min="10" max="1000" step="10" value="300">
                 </div>
+                <div class="target-row circadian-condition-row">
+                    <label for="exposure-duration">时长 Duration: <span id="exposure-duration-val">1.0 h</span></label>
+                    <input type="range" id="exposure-duration" min="0.5" max="3" step="0.5" value="1">
+                </div>
+                <div class="target-row circadian-condition-row">
+                    <label for="visual-field-factor">视野范围 Visual field</label>
+                    <select id="visual-field-factor">
+                        <option value="0.5">上方 · Superior (0.5)</option>
+                        <option value="1" selected>中央 · Central (1)</option>
+                        <option value="2">全视野 · Full field (2)</option>
+                    </select>
+                </div>
                 <div class="metamer-controls" id="metamer-controls">
                     <label class="metamer-mode-toggle" for="metamer-mode-checkbox">
                         <input type="checkbox" id="metamer-mode-checkbox">
@@ -286,7 +298,7 @@
 
     <footer id="app-footer">
         <p>Official CIE spectral data | CIE 13.3 Ra / R9 | ANSI/IES TM-30 Rf / Rg | Human-Centric Lighting Research</p>
-        <p class="footer-cn">显色指标使用 14 个 CIE TCS 与 99 个 CES 计算；CS 仍为基于眼部照度与 melanopic DER 的工程近似值。</p>
+        <p class="footer-cn">显色指标使用 14 个 CIE TCS 与 99 个 CES 计算；CLA 2.0 / CS 使用 Rea 模型，melanopic 指标遵循 CIE S 026。</p>
     </footer>
 
     <script src="spectral-data.js?v=20260717-rg2"></script>
@@ -294,6 +306,8 @@
     <script src="colour-quality-data.js?v=20260717-rg2"></script>
     <script src="colour-quality.js?v=20260717-rg2"></script>
     <script src="metamer-optimizer.js?v=20260717-rg2"></script>
-    <script src="app.js?v=20260717-realtime1"></script>
+    <script src="circadian-data.js?v=20260717-cla2"></script>
+    <script src="circadian-math.js?v=20260717-cla2"></script>
+    <script src="app.js?v=20260717-cla2"></script>
 </body>
 </html>
