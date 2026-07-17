@@ -2,7 +2,8 @@ const assert = require('node:assert/strict');
 const {
     estimateCctAndDuvFromXy,
     targetXyFromCctDuv,
-    normalizeImportedChannels
+    normalizeImportedChannels,
+    xyzToDisplaySrgb
 } = require('./spectral-math.js');
 
 function close(actual, expected, tolerance, label) {
@@ -33,5 +34,20 @@ close(preserved[0][1][1] / preserved[1][1][1], 5, 1e-12, 'relative channel power
 const shapes = normalizeImportedChannels(samples, false);
 close(shapes[0][1][1], 1, 1e-12, 'shape channel 1 peak');
 close(shapes[1][1][1], 1, 1e-12, 'shape channel 2 peak');
+
+assert.equal(typeof xyzToDisplaySrgb, 'function', 'XYZ to sRGB converter is exported');
+const black = xyzToDisplaySrgb(0, 0, 0);
+assert.deepEqual(black, { r: 0, g: 0, b: 0, css: 'rgb(0, 0, 0)' });
+
+const d65White = xyzToDisplaySrgb(0.95047, 1, 1.08883);
+close(d65White.r, 255, 1, 'D65 white red');
+close(d65White.g, 255, 1, 'D65 white green');
+close(d65White.b, 255, 1, 'D65 white blue');
+
+const clipped = xyzToDisplaySrgb(2.5, 0.2, 0.01);
+for (const component of ['r', 'g', 'b']) {
+    assert.ok(Number.isInteger(clipped[component]), `${component} is an integer`);
+    assert.ok(clipped[component] >= 0 && clipped[component] <= 255, `${component} is display-gamut clipped`);
+}
 
 console.log('spectral-math tests passed');

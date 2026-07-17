@@ -108,5 +108,36 @@
         });
     }
 
-    return { xyToUv, planckianXy, estimateCctAndDuvFromXy, targetXyFromCctDuv, normalizeImportedChannels };
+    function xyzToDisplaySrgb(X, Y, Z) {
+        if (!(Y > 0) || !Number.isFinite(X) || !Number.isFinite(Y) || !Number.isFinite(Z)) {
+            return { r: 0, g: 0, b: 0, css: 'rgb(0, 0, 0)' };
+        }
+
+        const x = X / Y;
+        const y = 1;
+        const z = Z / Y;
+        const linear = [
+            3.2404542 * x - 1.5371385 * y - 0.4985314 * z,
+            -0.9692660 * x + 1.8760108 * y + 0.0415560 * z,
+            0.0556434 * x - 0.2040259 * y + 1.0572252 * z
+        ];
+        const encode = value => {
+            const clipped = Math.max(0, value);
+            const encoded = clipped <= 0.0031308
+                ? 12.92 * clipped
+                : 1.055 * Math.pow(clipped, 1 / 2.4) - 0.055;
+            return Math.round(Math.max(0, Math.min(1, encoded)) * 255);
+        };
+        const [r, g, b] = linear.map(encode);
+        return { r, g, b, css: `rgb(${r}, ${g}, ${b})` };
+    }
+
+    return {
+        xyToUv,
+        planckianXy,
+        estimateCctAndDuvFromXy,
+        targetXyFromCctDuv,
+        normalizeImportedChannels,
+        xyzToDisplaySrgb
+    };
 });

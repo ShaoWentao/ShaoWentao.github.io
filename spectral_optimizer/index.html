@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20260717-rg3">
+    <link rel="stylesheet" href="styles.css?v=20260717-export2">
 </head>
 <body>
     <div class="bg-grid" aria-hidden="true"></div>
@@ -81,6 +81,18 @@
                     <button class="preset-btn compact reset" data-preset="reset" title="Reset all sliders to 0%">重置</button>
                 </div>
             </div>
+
+            <section class="emitter-preview" id="emitter-preview" aria-labelledby="emitter-preview-title">
+                <div class="emitter-preview-heading">
+                    <h3 id="emitter-preview-title">当前光色 <span>Live Colour</span></h3>
+                    <span class="emitter-preview-status" id="emitter-preview-status">实时</span>
+                </div>
+                <div class="emitter-disc" id="emitter-disc" role="img" aria-label="当前混合光色预览"></div>
+                <div class="emitter-preview-values">
+                    <strong id="emitter-preview-cct">-- K</strong>
+                    <span id="emitter-preview-xy">x -- · y --</span>
+                </div>
+            </section>
         </section>
 
         <section class="visualization-area">
@@ -259,10 +271,16 @@
                     <button class="opt-preset-btn" data-cct="2700" data-duv="-0.0010" title="Evening Relax (2700K, Duv -0.0010)">夜间舒缓</button>
                     <button class="opt-preset-btn" data-cct="2200" data-duv="-0.0020" title="Night Low-CS (2200K, Duv -0.0020)">夜间低刺激</button>
                 </div>
-                <button class="run-optimize-btn" id="run-optimize-btn">
-                    <span>开始智能光谱优化</span>
-                    <small>Optimize Now</small>
-                </button>
+                <div class="optimizer-action-stack">
+                    <button class="run-optimize-btn" id="run-optimize-btn">
+                        <span>开始智能光谱优化</span>
+                        <small>Optimize Now</small>
+                    </button>
+                    <button class="export-recipe-btn" id="export-recipe-btn" type="button">
+                        <span>导出配方</span>
+                        <small>Export Recipe</small>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -299,10 +317,10 @@
     </footer>
 
     <script src="spectral-data.js?v=20260717-rg2"></script>
-    <script src="spectral-math.js?v=20260717-rg2"></script>
+    <script src="spectral-math.js?v=20260717-emitter1"></script>
     <script src="colour-quality-data.js?v=20260717-rg2"></script>
     <script src="colour-quality.js?v=20260717-rg2"></script>
     <script src="metamer-optimizer.js?v=20260717-rg2"></script>
-    <script src="app.js?v=20260717-rg2"></script>
+    <script src="app.js?v=20260717-emitter1"></script>
 </body>
 </html>

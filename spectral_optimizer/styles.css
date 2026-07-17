@@ -1565,28 +1565,123 @@ footer {
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
-    height: 4px;
-    border-radius: 2px;
-    background: rgba(255, 255, 255, 0.1);
+    height: 7px;
+    border: 1px solid rgba(201, 148, 45, 0.24);
+    border-radius: 999px;
+    background: linear-gradient(
+        90deg,
+        var(--gold) 0%,
+        var(--gold) var(--target-fill, 50%),
+        rgba(34, 30, 24, 0.14) var(--target-fill, 50%),
+        rgba(34, 30, 24, 0.14) 100%
+    );
     outline: none;
     cursor: pointer;
+}
+
+.emitter-preview {
+    display: grid;
+    justify-items: center;
+    gap: 5px;
+    min-height: 0;
+    padding-top: 7px;
+    border-top: 1px solid rgba(34, 30, 24, 0.1);
+}
+
+.emitter-preview-heading {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.emitter-preview-heading h3 {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 650;
+}
+
+.emitter-preview-heading h3 span {
+    margin-left: 4px;
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+.emitter-preview-status {
+    color: var(--gold);
+    font-size: 0.58rem;
+    font-weight: 700;
+}
+
+.emitter-disc {
+    width: clamp(74px, 10vh, 112px);
+    aspect-ratio: 1;
+    border: 1px solid rgba(84, 67, 42, 0.22);
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 42% 36%, rgba(255, 255, 255, 0.72), transparent 34%),
+        var(--emitter-colour, #d8d5ce);
+    box-shadow:
+        inset 0 0 16px rgba(255, 255, 255, 0.78),
+        inset 0 -8px 15px rgba(63, 47, 25, 0.1),
+        0 3px 10px rgba(54, 42, 25, 0.13);
+    transition: background-color 120ms ease, box-shadow 120ms ease;
+}
+
+.emitter-preview.is-off .emitter-disc {
+    background: #d8d5ce;
+    box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.56);
+}
+
+.emitter-preview.is-off .emitter-preview-status {
+    color: var(--text-muted);
+}
+
+.emitter-preview-values {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    font: 0.58rem/1.2 'JetBrains Mono', monospace;
+}
+
+.emitter-preview-values strong {
+    color: var(--text-primary);
+    font-size: 0.66rem;
 }
 
 .target-row input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 14px;
-    height: 14px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
     background: var(--gold);
-    box-shadow: 0 0 8px var(--gold);
+    box-shadow: 0 2px 7px rgba(91, 61, 14, 0.34), 0 0 0 3px rgba(255, 255, 255, 0.88);
     cursor: pointer;
-    border: 1.5px solid #ffffff;
-    transition: transform var(--transition-fast);
+    border: 2px solid #ffffff;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .target-row input[type="range"]::-webkit-slider-thumb:hover {
-    transform: scale(1.15);
+    transform: scale(1.12);
+    box-shadow: 0 3px 9px rgba(91, 61, 14, 0.4), 0 0 0 4px rgba(201, 148, 45, 0.2);
+}
+
+.target-row input[type="range"]:focus-visible::-webkit-slider-thumb {
+    box-shadow: 0 3px 9px rgba(91, 61, 14, 0.4), 0 0 0 5px rgba(201, 148, 45, 0.26);
+}
+
+.target-row input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    background: var(--gold);
+    box-shadow: 0 2px 7px rgba(91, 61, 14, 0.34);
+    cursor: pointer;
 }
 
 .metamer-controls {
@@ -1763,6 +1858,36 @@ footer {
     font-size: 0.66rem;
     color: var(--text-secondary);
     margin-top: 1px;
+}
+
+.optimizer-action-stack {
+    display: grid;
+    gap: 6px;
+}
+
+.export-recipe-btn {
+    min-height: 34px;
+    padding: 6px 10px;
+    border: 1px solid rgba(201, 148, 45, 0.32);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.6);
+    color: var(--text-primary);
+    font: 600 0.7rem/1.15 inherit;
+    cursor: pointer;
+    transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.export-recipe-btn:hover {
+    border-color: rgba(201, 148, 45, 0.68);
+    background: rgba(255, 249, 236, 0.92);
+}
+
+.export-recipe-btn small {
+    display: block;
+    margin-top: 1px;
+    color: var(--text-secondary);
+    font-size: 0.58rem;
+    font-weight: 400;
 }
 
 @media (max-width: 1100px) {
@@ -2135,6 +2260,16 @@ footer {
 
     .run-optimize-btn {
         padding: 7px;
+    }
+
+    .optimizer-action-stack {
+        grid-template-rows: minmax(0, 1fr) auto;
+    }
+
+    .export-recipe-btn {
+        min-height: 28px;
+        padding: 4px 6px;
+        font-size: 0.62rem;
     }
 
     .optimizer-progress {

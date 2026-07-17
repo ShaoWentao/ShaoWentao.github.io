@@ -68,6 +68,7 @@ const IMPORT_COLOR_RGB = [[255,59,59], [45,255,110], [59,125,255], [54,214,231],
 
 let currentMode = 4;
 let importedChannels = null;
+let importedSourceName = '';
 let channelValues = {};   // id -> 0..100
 let showD65 = false;
 let isOptimizing = false;
@@ -95,6 +96,11 @@ const spdImportStatus = document.getElementById('spd-import-status');
 const preserveChannelPower = document.getElementById('preserve-channel-power');
 const d65Toggle = document.getElementById('d65-toggle');
 const optimizerProgress = document.getElementById('optimizer-progress');
+const emitterPreview = document.getElementById('emitter-preview');
+const emitterDisc = document.getElementById('emitter-disc');
+const emitterPreviewStatus = document.getElementById('emitter-preview-status');
+const emitterPreviewCct = document.getElementById('emitter-preview-cct');
+const emitterPreviewXy = document.getElementById('emitter-preview-xy');
 
 // Metric elements
 const valCCT = document.getElementById('val-cct');
@@ -138,6 +144,7 @@ const targetDuvVal = document.getElementById('target-duv-val');
 const eyeIlluminanceSlider = document.getElementById('eye-illuminance');
 const eyeIlluminanceVal = document.getElementById('eye-illuminance-val');
 const runOptimizeBtn = document.getElementById('run-optimize-btn');
+const exportRecipeBtn = document.getElementById('export-recipe-btn');
 const metamerModeCheckbox = document.getElementById('metamer-mode-checkbox');
 const metamerDependentControls = document.getElementById('metamer-dependent-controls');
 const targetRgSlider = document.getElementById('target-rg-slider');
@@ -1410,6 +1417,7 @@ let prevMetrics = { cct: 0, ra: 0, r9: 0, rf: 0, rg: 0, melanopicEDI: 0, cs: 0, 
 function updateMetrics() {
     const combined = getCombinedSPD();
     const m = calculateMetrics(combined);
+    updateEmitterPreview(combined, m);
     if (metamerModeEnabled) syncMetamerControls(m);
     updateMetamerColourDelta(combined);
 
@@ -1676,6 +1684,7 @@ function parseSPDText(text, fileName = 'Imported SPD') {
 function loadImportedChannels(channels, fileName) {
     clearBaseline('Baseline cleared: imported channel set changed.');
     importedChannels = channels;
+    importedSourceName = fileName;
     currentMode = channels.length;
     channelValues = {};
     for (const ch of importedChannels) channelValues[ch.id] = 100;
@@ -1684,6 +1693,100 @@ function loadImportedChannels(channels, fileName) {
     const calibration = !preserveChannelPower || preserveChannelPower.checked ? '保留相对功率' : '各通道峰值归一化';
     setImportStatus(`已导入 ${channels.length} 通道：${fileName}（${calibration}）`);
     scheduleUpdate();
+}
+
+function updateEmitterPreview(combined, metrics) {
+    if (!emitterPreview || !emitterDisc) return;
+    const xyz = xyzFromSPD(combined);
+    const total = xyz.X + xyz.Y + xyz.Z;
+    if (!(total > 1e-10)) {
+        emitterPreview.classList.add('is-off');
+        emitterDisc.style.removeProperty('--emitter-colour');
+        emitterDisc.setAttribute('aria-label', '当前没有光谱输出');
+        if (emitterPreviewStatus) emitterPreviewStatus.textContent = '无输出';
+        if (emitterPreviewCct) emitterPreviewCct.textContent = '-- K';
+        if (emitterPreviewXy) emitterPreviewXy.textContent = 'x -- · y --';
+        return;
+    }
+
+    const x = xyz.X / total;
+    const y = xyz.Y / total;
+    const display = SPECTRAL_MATH.xyzToDisplaySrgb
+        ? SPECTRAL_MATH.xyzToDisplaySrgb(xyz.X, xyz.Y, xyz.Z)
+        : { css: '#f4ead6' };
+    emitterPreview.classList.remove('is-off');
+    emitterDisc.style.setProperty('--emitter-colour', display.css);
+    emitterDisc.setAttribute('aria-label', `当前混合光色，${Math.round(metrics.cct)} K`);
+    if (emitterPreviewStatus) emitterPreviewStatus.textContent = '实时';
+    if (emitterPreviewCct) emitterPreviewCct.textContent = `${Math.round(metrics.cct).toLocaleString()} K`;
+    if (emitterPreviewXy) emitterPreviewXy.textContent = `x ${x.toFixed(4)} · y ${y.toFixed(4)}`;
+}
+
+function downloadJsonFile(fileName, data) {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+function exportCurrentRecipe() {
+    const channels = getActiveChannels();
+    const combined = getCombinedSPD();
+    const metrics = calculateMetrics(combined);
+    const xy = xyFromSPD(combined);
+    const cctDuv = SPECTRAL_MATH.estimateCctAndDuvFromXy
+        ? SPECTRAL_MATH.estimateCctAndDuvFromXy(xy.x, xy.y)
+        : { cct: metrics.cct, duv: null };
+    const maxPower = Math.max(...combined, 0);
+    const timestamp = new Date();
+    const stamp = timestamp.toISOString().replace(/[:.]/g, '-');
+    const normalizedSpd = Array.from(combined, value => maxPower > 0 ? value / maxPower : 0);
+
+    const recipe = {
+        format: 'spectral-optimizer-recipe',
+        version: 1,
+        exportedAt: timestamp.toISOString(),
+        source: importedSourceName || `${channels.length}-channel built-in model`,
+        targets: {
+            cctK: targetCCT,
+            duv: targetDuv,
+            eyeIlluminanceLux: eyeIlluminance,
+            sameColourPointMode: metamerModeEnabled,
+            targetRg: metamerModeEnabled ? targetRg : null
+        },
+        result: {
+            cctK: Math.round(cctDuv.cct || metrics.cct),
+            duv: Number.isFinite(cctDuv.duv) ? cctDuv.duv : null,
+            x: xy.x,
+            y: xy.y,
+            ra: metrics.ra,
+            r9: metrics.r9,
+            rf: metrics.rf,
+            rg: metrics.rg,
+            melanopicDer: metrics.melanopicEDI,
+            circadianStimulus: metrics.cs,
+            caf: metrics.caf
+        },
+        channels: channels.map(channel => ({
+            id: channel.id,
+            name: channel.name,
+            nominalWavelength: channel.waveLabel || null,
+            drivePercent: channelValues[channel.id] || 0
+        })),
+        spd: {
+            wavelengthUnit: 'nm',
+            powerUnit: 'relative',
+            normalization: 'peak=1',
+            samples: Array.from(wavelengths, (wavelength, index) => [wavelength, normalizedSpd[index]])
+        }
+    };
+
+    downloadJsonFile(`spectral-recipe-${stamp}.json`, recipe);
 }
 
 async function handleSPDImport(file) {
@@ -2275,6 +2378,8 @@ function init() {
         if (eyeIlluminanceVal) eyeIlluminanceVal.textContent = `${eyeIlluminance} lux`;
     }
 
+    document.querySelectorAll('.target-row input[type="range"]').forEach(syncTargetSliderFill);
+
     scheduleUpdate();
 
     // Handle resize
@@ -2473,6 +2578,23 @@ if (runOptimizeBtn) {
         if (metamerModeEnabled) runMetamerOptimization();
         else runOptimizer(targetCCT, targetDuv);
     });
+}
+
+function syncTargetSliderFill(slider) {
+    if (!slider) return;
+    const min = Number(slider.min);
+    const max = Number(slider.max);
+    const value = Number(slider.value);
+    const fill = max > min ? ((value - min) / (max - min)) * 100 : 0;
+    slider.style.setProperty('--target-fill', `${Math.max(0, Math.min(100, fill))}%`);
+}
+
+document.querySelectorAll('.target-row input[type="range"]').forEach(slider => {
+    slider.addEventListener('input', () => syncTargetSliderFill(slider));
+});
+
+if (exportRecipeBtn) {
+    exportRecipeBtn.addEventListener('click', exportCurrentRecipe);
 }
 
 // Start
