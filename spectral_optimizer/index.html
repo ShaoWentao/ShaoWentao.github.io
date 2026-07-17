@@ -61,22 +61,16 @@
             <div class="presets-section">
                 <h3>快速预设 <span>Presets</span></h3>
                 <div class="preset-buttons">
-                    <button class="preset-btn compact" data-preset="cct-1700" title="Planckian reference 1700K">1700K</button>
-                    <button class="preset-btn compact" data-preset="cct-2000" title="Planckian Locus 2000K">2000K</button>
-                    <button class="preset-btn compact" data-preset="cct-2500" title="Planckian Locus 2500K">2500K</button>
-                    <button class="preset-btn compact" data-preset="cct-3000" title="Planckian Locus 3000K">3000K</button>
-                    <button class="preset-btn compact" data-preset="cct-3500" title="Planckian Locus 3500K">3500K</button>
-                    <button class="preset-btn compact" data-preset="cct-4000" title="Planckian Locus 4000K">4000K</button>
-                    <button class="preset-btn compact" data-preset="cct-4500" title="Planckian Locus 4500K">4500K</button>
-                    <button class="preset-btn compact" data-preset="d50" title="Daylight Phase D50 (5003K)">D50</button>
-                    <button class="preset-btn compact" data-preset="d55" title="Daylight Phase D55 (5503K)">D55</button>
-                    <button class="preset-btn compact" data-preset="daylight" title="Daylight Phase D65 (6504K)">D65</button>
-                    <button class="preset-btn compact" data-preset="d75" title="Daylight Phase D75 (7504K)">D75</button>
-                    <button class="preset-btn compact" data-preset="cct-8000" title="Planckian reference 8000K">8000K</button>
-                    <button class="preset-btn compact" data-preset="cct-8500" title="Planckian reference 8500K">8500K</button>
-                    <button class="preset-btn compact" data-preset="cct-9000" title="Planckian reference 9000K">9000K</button>
-                    <button class="preset-btn compact" data-preset="cct-9500" title="Planckian reference 9500K">9500K</button>
-                    <button class="preset-btn compact" data-preset="cct-10000" title="Planckian reference 10000K">10000K</button>
+                    <button class="preset-btn compact" data-preset="cct-1800" title="Planckian reference 1800K">1800K</button>
+                    <button class="preset-btn compact" data-preset="cct-2200" title="Planckian reference 2200K">2200K</button>
+                    <button class="preset-btn compact" data-preset="cct-2700" title="Planckian reference 2700K">2700K</button>
+                    <button class="preset-btn compact" data-preset="cct-3000" title="Planckian reference 3000K">3000K</button>
+                    <button class="preset-btn compact" data-preset="cct-3500" title="Planckian reference 3500K">3500K</button>
+                    <button class="preset-btn compact" data-preset="cct-4000" title="Planckian reference 4000K">4000K</button>
+                    <button class="preset-btn compact" data-preset="cct-5000" title="Planckian reference 5000K">5000K</button>
+                    <button class="preset-btn compact" data-preset="cct-5500" title="Planckian reference 5500K">5500K</button>
+                    <button class="preset-btn compact" data-preset="cct-6000" title="Planckian reference 6000K">6000K</button>
+                    <button class="preset-btn compact" data-preset="cct-6500" title="Planckian reference 6500K">6500K</button>
                     <button class="preset-btn compact" data-preset="cct-12000" title="Planckian reference 12000K">12000K</button>
                     <button class="preset-btn compact reset" data-preset="reset" title="Reset all sliders to 0%">重置</button>
                 </div>
@@ -227,7 +221,6 @@
         </div>
 
         <div class="optimizer-grid">
-            <!-- Left: Target Sliders -->
             <div class="target-controls">
                 <div class="target-row">
                     <label for="target-cct-slider">目标色温 Target CCT: <span id="target-cct-val">4000 K</span></label>
@@ -276,7 +269,6 @@
                 </div>
             </div>
 
-            <!-- Right: Presets & Export -->
             <div class="preset-action-container">
                 <div class="optimizer-presets-grid">
                     <button class="opt-preset-btn" data-scene="morning-transition" data-cct="3500" data-duv="0" data-lux="250" type="button" title="Morning Transition · 3500 K · 250 lux"><span>晨间过渡</span><small>Morning Transition</small></button>
@@ -288,12 +280,8 @@
                 </div>
                 <div class="optimizer-action-stack">
                     <div class="journey-controls" role="group" aria-label="CCT journey controls">
-                        <button class="journey-icon-btn" id="cct-journey-play" type="button" aria-label="Play CCT journey" title="Play CCT journey">
-                            <span aria-hidden="true">&#9654;</span>
-                        </button>
-                        <button class="journey-icon-btn" id="cct-journey-stop" type="button" aria-label="Stop CCT journey" title="Stop CCT journey" disabled>
-                            <span aria-hidden="true">&#9632;</span>
-                        </button>
+                        <button class="journey-icon-btn" id="cct-journey-play" type="button" aria-label="Play CCT journey" title="Play CCT journey"><span aria-hidden="true">&#9654;</span></button>
+                        <button class="journey-icon-btn" id="cct-journey-stop" type="button" aria-label="Stop CCT journey" title="Stop CCT journey" disabled><span aria-hidden="true">&#9632;</span></button>
                         <span class="journey-status" id="cct-journey-status" role="status" aria-live="polite">1600 K</span>
                     </div>
                     <button class="export-recipe-btn" id="export-recipe-btn" type="button">
@@ -320,8 +308,8 @@
     <script src="metamer-optimizer.js?v=20260717-rg2"></script>
     <script src="circadian-data.js?v=20260717-cla2"></script>
     <script src="circadian-math.js?v=20260717-cla2"></script>
-    <script src="cct-journey.js?v=20260717-scenes1"></script>
+    <script src="cct-journey.js?v=20260717-presets3"></script>
     <script src="default-rgbw-data.js?v=20260717-rgbw1"></script>
-    <script src="app.js?v=20260717-rgbw1"></script>
+    <script src="app.js?v=20260717-presets3"></script>
 </body>
 </html>
