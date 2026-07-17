@@ -50,8 +50,14 @@ function emptyResult(durationHours, fieldFactor) {
   };
 }
 
+function isNumericArray(values) {
+  return Array.isArray(values) || (ArrayBuffer.isView(values)
+    && typeof values.length === 'number'
+    && (values.length === 0 || typeof values[0] === 'number'));
+}
+
 function isValidSpectrum(wavelengths, values) {
-  if (!Array.isArray(wavelengths) || !Array.isArray(values)
+  if (!isNumericArray(wavelengths) || !isNumericArray(values)
     || wavelengths.length < 2 || wavelengths.length !== values.length) {
     return false;
   }
@@ -140,7 +146,7 @@ function calculateCLA2(options = {}) {
   }
 
   const blueYellow = sConeMacular - CLA2_CONSTANTS.k * photopicMacular;
-  const blueYellowActive = blueYellow > 0;
+  const blueYellowActive = blueYellow >= 0;
   const rodSaturation = 1 - Math.exp(-scotopic / CLA2_CONSTANTS.rodSat);
   const melRodSuppression = CLA2_CONSTANTS.rodMel
     * (scotopic / melDenominator) * rodSaturation;

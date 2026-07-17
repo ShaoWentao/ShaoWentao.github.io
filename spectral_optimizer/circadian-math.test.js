@@ -1,4 +1,6 @@
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
 const { CLA2_DATA } = require('./circadian-data.js');
 const { calculateCLA2, claToCS } = require('./circadian-math.js');
 
@@ -66,6 +68,15 @@ const a1000 = calculateCLA2({
 assert.ok(Math.abs(a1000.cla - 813) <= 2, `Illuminant A CLA was ${a1000.cla}`);
 assert.equal(a1000.blueYellowState, 'inactive');
 
+const typedA1000 = calculateCLA2({
+  wavelengths: Float64Array.from(referenceA.wavelengths),
+  values: Float64Array.from(referenceA.values),
+  illuminanceLux: 1000,
+  durationHours: 1,
+  fieldFactor: 1
+});
+assert.deepEqual(typedA1000, a1000);
+
 const equivalentCondition = calculateCLA2({
   wavelengths: referenceA.wavelengths,
   values: referenceA.values,
@@ -99,6 +110,38 @@ const cool = calculateCLA2({
 assert.equal(warm.blueYellowState, 'inactive');
 assert.equal(cool.blueYellowState, 'active');
 assert.ok(cool.cla > warm.cla);
+
+// Independent reference: corrected Rea et al. Equation 3 was evaluated in a
+// separate one-off calculation using the official Calculator 2.0 literals
+// A2=1.60 and g2=0.16. The fixture's integrated inputs were Vc=1.0510124554023887,
+// Sc=1.3955638716236969, V'=1.419552758996979, and Mc=1.6402267936371542.
+assert.ok(
+  Math.abs(cool.cla - 1959.5505837269009) < 1e-9,
+  `Blue-active reference CLA was ${cool.cla}`
+);
+
+const isolatedContext = {
+  window: {
+    CLA2_DATA: {
+      wavelengths: [400, 500],
+      photopic: [1, 0],
+      scotopic: [0, 0],
+      melanopsin: [1, 0],
+      sConeMacular: [0.2616, 0],
+      photopicMacular: [1, 0]
+    }
+  }
+};
+vm.runInNewContext(
+  fs.readFileSync(require.resolve('./circadian-math.js'), 'utf8'),
+  isolatedContext
+);
+const exactBoundary = isolatedContext.window.calculateCLA2({
+  wavelengths: [400, 500],
+  values: [1, 0],
+  illuminanceLux: 683
+});
+assert.equal(exactBoundary.blueYellowState, 'active');
 
 const clippedFarRed = calculateCLA2({
   wavelengths: [380, 709, 710, 711, 730],
