@@ -10,7 +10,7 @@
 
         function mount() {
             const container = document.querySelector('.presets-section .preset-buttons');
-            if (!container) return;
+            if (!container) return false;
 
             const temperatures = [1800, 2200, 2700, 3000, 3500, 4000, 5000, 5500, 6000, 6500, 12000];
             const buttons = temperatures.map(function (cct) {
@@ -18,12 +18,11 @@
             });
             buttons.push('<button class="preset-btn compact reset" data-preset="reset" title="Reset all sliders to 0%">重置</button>');
             container.innerHTML = buttons.join('');
+            return true;
         }
 
-        if (document.readyState === 'loading') {
+        if (!mount() && document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', mount, { once: true });
-        } else {
-            mount();
         }
     }
 
