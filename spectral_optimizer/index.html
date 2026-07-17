@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spectral Optimizer | Digital Lighting Workspace</title>
+    <meta name="description" content="Interactive spectral power distribution optimizer for human-centric lighting research. Uses official CIE spectral data with simplified relative-channel modelling.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="bg-grid" aria-hidden="true"></div>
+
+    <section class="page-hero">
+        <div class="kicker">Spectral Tool</div>
+        <h1>
+            <span class="title-main">光谱优化器</span>
+            <span class="title-sub">Spectral Optimizer</span>
+        </h1>
+        <p>Build channel mixes, inspect spectral power distribution, and estimate CCT, melanopic DER and circadian response with official CIE spectral data.</p>
+    </section>
+
+    <main id="app-main">
+        <section class="controls-panel glass-card" id="controls-panel">
+            <div class="panel-header">
+                <h2>LED 通道控制 <span>Channel Control</span></h2>
+            </div>
+
+            <div class="mode-toggle-container">
+                <span class="mode-label" id="mode-label-4ch">4-Channel</span>
+                <label class="toggle-switch" id="mode-toggle">
+                    <input type="checkbox" id="mode-checkbox" aria-label="Toggle between 4-channel and 6-channel mode">
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="mode-label" id="mode-label-6ch">6-Ch RGBCLA</span>
+            </div>
+
+            <div class="data-note">
+                <strong>通道数据说明</strong>
+                <span>内置通道为峰值波长 + 光谱宽度的模拟数据；如需对应实际芯片，请在下方导入各通道实测 SPD。</span>
+            </div>
+
+            <div class="spd-import">
+                <input type="file" id="spd-import-input" accept=".csv,.txt,.tsv" hidden>
+                <button class="import-btn" id="spd-import-btn" type="button">
+                    <span>导入通道 SPD</span>
+                    <small>CSV / TXT · 3-6 channels</small>
+                </button>
+                <span class="import-status" id="spd-import-status">第一列为波长 nm，后面 3-6 列为通道功率；也可直接拖入页面。</span>
+                <label class="d65-toggle" title="关闭后，各通道会分别归一化，仅用于比较光谱形状">
+                    <input type="checkbox" id="preserve-channel-power" checked>
+                    <span class="toggle-indicator"></span>
+                    <span class="toggle-text">保留通道相对功率</span>
+                </label>
+            </div>
+
+            <div class="channels-container" id="channels-container"></div>
+
+            <div class="presets-section">
+                <h3>快速预设 <span>Presets</span></h3>
+                <div class="preset-buttons">
+                    <button class="preset-btn compact" data-preset="cct-1700" title="Planckian reference 1700K">1700K</button>
+                    <button class="preset-btn compact" data-preset="cct-2000" title="Planckian Locus 2000K">2000K</button>
+                    <button class="preset-btn compact" data-preset="cct-2500" title="Planckian Locus 2500K">2500K</button>
+                    <button class="preset-btn compact" data-preset="cct-3000" title="Planckian Locus 3000K">3000K</button>
+                    <button class="preset-btn compact" data-preset="cct-3500" title="Planckian Locus 3500K">3500K</button>
+                    <button class="preset-btn compact" data-preset="cct-4000" title="Planckian Locus 4000K">4000K</button>
+                    <button class="preset-btn compact" data-preset="cct-4500" title="Planckian Locus 4500K">4500K</button>
+                    <button class="preset-btn compact" data-preset="d50" title="Daylight Phase D50 (5003K)">D50</button>
+                    <button class="preset-btn compact" data-preset="d55" title="Daylight Phase D55 (5503K)">D55</button>
+                    <button class="preset-btn compact" data-preset="daylight" title="Daylight Phase D65 (6504K)">D65</button>
+                    <button class="preset-btn compact" data-preset="d75" title="Daylight Phase D75 (7504K)">D75</button>
+                    <button class="preset-btn compact" data-preset="cct-8000" title="Planckian reference 8000K">8000K</button>
+                    <button class="preset-btn compact" data-preset="cct-8500" title="Planckian reference 8500K">8500K</button>
+                    <button class="preset-btn compact" data-preset="cct-9000" title="Planckian reference 9000K">9000K</button>
+                    <button class="preset-btn compact" data-preset="cct-9500" title="Planckian reference 9500K">9500K</button>
+                    <button class="preset-btn compact" data-preset="cct-10000" title="Planckian reference 10000K">10000K</button>
+                    <button class="preset-btn compact" data-preset="cct-12000" title="Planckian reference 12000K">12000K</button>
+                    <button class="preset-btn compact reset" data-preset="reset" title="Reset all sliders to 0%">重置</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="visualization-area">
+            <div class="charts-row">
+                <div class="spd-panel glass-card" id="spd-panel">
+                    <div class="spd-header">
+                        <h2>光谱功率分布 <span>SPD</span></h2>
+                        <div class="spd-controls">
+                            <label class="d65-toggle" id="d65-toggle-label">
+                                <input type="checkbox" id="d65-toggle" aria-label="Toggle D65 reference curve">
+                                <span class="toggle-indicator"></span>
+                                <span class="toggle-text">D65 参考 Reference</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="canvas-wrapper" id="canvas-wrapper">
+                        <canvas id="spd-canvas"></canvas>
+                    </div>
+                </div>
+
+                <div class="cie-panel glass-card" id="cie-panel">
+                    <div class="cie-header">
+                        <h2>CIE 1931 色度图 <span>Chromaticity Diagram</span></h2>
+                    </div>
+                    <div class="canvas-wrapper" id="cie-canvas-wrapper">
+                        <canvas id="cie-canvas"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="metrics-dashboard" id="metrics-dashboard">
+                <div class="metric-card glass-card" id="card-cct">
+                    <div class="metric-icon">CCT</div>
+                    <div class="metric-info">
+                        <span class="metric-label">CCT 色温</span>
+                        <div class="metric-value-row">
+                            <span class="metric-value" id="val-cct">--</span>
+                            <span class="metric-unit">K</span>
+                        </div>
+                    </div>
+                    <div class="metric-bar" id="bar-cct"></div>
+                </div>
+
+                <div class="metric-card glass-card" id="card-cri">
+                    <div class="metric-icon">Ra</div>
+                    <div class="metric-info">
+                        <span class="metric-label">CIE 一般显色指数</span>
+                        <div class="metric-value-row">
+                            <span class="metric-value" id="val-cri">--</span>
+                            <span class="metric-unit">CIE 13.3</span>
+                        </div>
+                    </div>
+                    <div class="metric-bar" id="bar-cri"></div>
+                </div>
+
+                <div class="metric-card glass-card" id="card-r9">
+                    <div class="metric-icon">R9</div>
+                    <div class="metric-info">
+                        <span class="metric-label">特殊显色指数 红色</span>
+                        <div class="metric-value-row"><span class="metric-value" id="val-r9">--</span><span class="metric-unit">CIE 13.3</span></div>
+                    </div>
+                    <div class="metric-bar" id="bar-r9"></div>
+                </div>
+
+                <div class="metric-card glass-card" id="card-rf">
+                    <div class="metric-icon">Rf</div>
+                    <div class="metric-info">
+                        <span class="metric-label">TM-30 色彩保真度</span>
+                        <div class="metric-value-row"><span class="metric-value" id="val-rf">--</span><span class="metric-unit">TM-30</span></div>
+                    </div>
+                    <div class="metric-bar" id="bar-rf"></div>
+                </div>
+
+                <div class="metric-card glass-card" id="card-mel">
+                    <div class="metric-icon">MEL</div>
+                    <div class="metric-info">
+                        <span class="metric-label">Melanopic DER</span>
+                        <div class="metric-value-row">
+                            <span class="metric-value" id="val-mel">--</span>
+                            <span class="metric-unit">ratio</span>
+                        </div>
+                    </div>
+                    <div class="metric-bar" id="bar-mel"></div>
+                </div>
+
+                <div class="metric-card glass-card" id="card-cs">
+                    <div class="metric-icon">CS</div>
+                    <div class="metric-info">
+                        <span class="metric-label">CS 近似值</span>
+                        <div class="metric-value-row">
+                            <span class="metric-value" id="val-cs">--</span>
+                            <span class="metric-unit">/0.7</span>
+                        </div>
+                    </div>
+                    <div class="metric-bar" id="bar-cs"></div>
+                    <div class="cs-status" id="cs-status">--</div>
+                </div>
+
+                <div class="metric-card glass-card" id="card-caf">
+                    <div class="metric-icon">CAF</div>
+                    <div class="metric-info">
+                        <span class="metric-label">CAF 昼夜因子</span>
+                        <div class="metric-value-row">
+                            <span class="metric-value" id="val-caf">--</span>
+                            <span class="metric-unit">ratio</span>
+                        </div>
+                    </div>
+                    <div class="metric-bar" id="bar-caf"></div>
+                </div>
+
+                <div class="metric-card glass-card" id="card-rg">
+                    <div class="metric-icon">Rg</div>
+                    <div class="metric-info">
+                        <span class="metric-label">TM-30 色域指数</span>
+                        <div class="metric-value-row">
+                            <span class="metric-value" id="val-rg">--</span>
+                            <span class="metric-unit">TM-30</span>
+                        </div>
+                    </div>
+                    <div class="metric-bar" id="bar-rg"></div>
+                </div>
+            </div>
+    <section class="optimizer-section glass-card" id="optimizer-section">
+        <div class="optimizer-header">
+            <h2>
+                <span class="ai-badge">ALG</span>
+                光谱智能优化 <span>Spectral Optimizer</span>
+            </h2>
+            <p class="optimizer-desc">使用确定性通道权重算法，逼近目标色温与 Duv。</p>
+        </div>
+
+        <div class="optimizer-grid">
+            <!-- Left: Target Sliders -->
+            <div class="target-controls">
+                <div class="target-row">
+                    <label for="target-cct-slider">目标色温 Target CCT: <span id="target-cct-val">4000 K</span></label>
+                    <input type="range" id="target-cct-slider" min="1700" max="12000" step="100" value="4000">
+                </div>
+                <div class="target-row">
+                    <label for="target-duv-slider">目标 Duv 偏差: <span id="target-duv-val">+0.0000</span></label>
+                    <input type="range" id="target-duv-slider" min="-0.015" max="0.015" step="0.0005" value="0">
+                </div>
+                <div class="target-row">
+                    <label for="eye-illuminance">眼部照度 Eye illuminance: <span id="eye-illuminance-val">300 lux</span></label>
+                    <input type="range" id="eye-illuminance" min="10" max="1000" step="10" value="300">
+                </div>
+                <div class="metamer-controls" id="metamer-controls">
+                    <label class="metamer-mode-toggle" for="metamer-mode-checkbox">
+                        <input type="checkbox" id="metamer-mode-checkbox">
+                        <span>Same colour point</span>
+                    </label>
+                    <div class="metamer-dependent-controls" id="metamer-dependent-controls" hidden>
+                        <label class="metamer-target-control" for="target-rg-slider">
+                            <span>Target Rg: <strong id="target-rg-val">100</strong></span>
+                            <input type="range" id="target-rg-slider" min="80" max="130" step="1" value="100">
+                        </label>
+                        <button class="set-baseline-btn" id="set-baseline-btn" type="button">Set baseline</button>
+                        <label class="compare-spectrum-control" for="compare-spectrum-checkbox">
+                            <input type="checkbox" id="compare-spectrum-checkbox" disabled>
+                            <span>Compare spectrum</span>
+                        </label>
+                        <div class="metamer-readout">
+                            <span class="metamer-status" id="metamer-status" role="status" aria-live="polite"></span>
+                            <span class="metamer-colour-delta" id="metamer-colour-delta"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Presets & Action Button -->
+            <div class="preset-action-container">
+                <div class="optimizer-presets-grid">
+                    <button class="opt-preset-btn" data-cct="4000" data-duv="0.0010" title="Morning Alert (4000K, Duv +0.0010)">晨间唤醒</button>
+                    <button class="opt-preset-btn" data-cct="5000" data-duv="0.0020" title="Daytime Focus (5000K, Duv +0.0020)">工作专注</button>
+                    <button class="opt-preset-btn" data-cct="3500" data-duv="0.0000" title="Balanced Meeting (3500K, Duv 0.0000)">会议舒适</button>
+                    <button class="opt-preset-btn" data-cct="2700" data-duv="-0.0010" title="Evening Relax (2700K, Duv -0.0010)">夜间舒缓</button>
+                    <button class="opt-preset-btn" data-cct="2200" data-duv="-0.0020" title="Night Low-CS (2200K, Duv -0.0020)">夜间低刺激</button>
+                </div>
+                <button class="run-optimize-btn" id="run-optimize-btn">
+                    <span>开始智能光谱优化</span>
+                    <small>Optimize Now</small>
+                </button>
+            </div>
+        </div>
+
+        <div class="optimizer-progress" id="optimizer-progress" style="display: none;">
+            <div class="progress-header">
+                <span class="progress-label">优化中 Optimizing...</span>
+                <span class="progress-iter" id="progress-iter">0 / 200</span>
+            </div>
+            <div class="progress-bar-track">
+                <div class="progress-bar-fill" id="progress-bar-fill"></div>
+            </div>
+            <div class="progress-metrics">
+                <div class="progress-metric">
+                    <span>当前 CS</span>
+                    <span class="progress-value" id="progress-cs">0.00</span>
+                </div>
+                <div class="progress-metric">
+                    <span>目标 CCT / Duv</span>
+                    <span class="progress-value" id="progress-target">0.00</span>
+                </div>
+                <div class="progress-metric">
+                    <span>误差 Error</span>
+                    <span class="progress-value" id="progress-error">0.00</span>
+                </div>
+            </div>
+        </div>
+    </section>
+        </section>
+    </main>
+
+    <footer id="app-footer">
+        <p>Official CIE spectral data | CIE 13.3 Ra / R9 | ANSI/IES TM-30 Rf / Rg | Human-Centric Lighting Research</p>
+        <p class="footer-cn">显色指标使用 14 个 CIE TCS 与 99 个 CES 计算；CS 仍为基于眼部照度与 melanopic DER 的工程近似值。</p>
+    </footer>
+
+    <script src="spectral-data.js"></script>
+    <script src="spectral-math.js"></script>
+    <script src="colour-quality-data.js"></script>
+    <script src="colour-quality.js"></script>
+    <script src="metamer-optimizer.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

@@ -32,7 +32,7 @@ The optimizer uses a deterministic multi-objective loss:
 3. Rf receives a configurable floor penalty to prevent extreme saturation with unacceptable fidelity.
 4. A small distance penalty from the baseline/current solution stabilizes channel values and avoids unnecessary jumps.
 
-The result is accepted only when its chromaticity remains within the defined tolerance. If the requested Rg is unreachable with the loaded channels, the optimizer returns the closest feasible result and the UI labels it as `Nearest achievable Rg` rather than implying an exact match.
+The result is accepted only when its chromaticity remains within the defined tolerance. If the requested Rg is not reached with the loaded channels, the optimizer returns the best feasible result found by its deterministic bounded search and labels it as `Closest Rg found in current search` rather than implying a mathematically proven global optimum.
 
 Suggested initial constraints:
 
@@ -56,7 +56,7 @@ These values should be constants so they can be calibrated against real channel 
 
 - Disable comparison until a baseline exists.
 - If TM-30 cannot be calculated, disable target Rg and explain that valid spectral data is required.
-- If fewer independent channels make the requested Rg infeasible, preserve the best valid same-colour-point result and show the achieved value.
+- If fewer independent channels make the requested Rg infeasible, preserve the best valid same-colour-point result found by the bounded search and show the achieved value.
 - Never silently relax the chromaticity tolerance.
 
 ## Verification

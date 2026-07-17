@@ -15,7 +15,7 @@
 - Rf floor is 80.
 - Accepted chromaticity error is Delta u'v' <= 0.002.
 - Default single-spectrum behavior and the desktop 1366 x 768 no-scroll layout must remain intact.
-- Unreachable targets must report the nearest achievable Rg and must never silently relax chromaticity tolerance.
+- Unreached targets must report the closest Rg found in the deterministic bounded search and must never claim mathematical global optimality or silently relax chromaticity tolerance.
 
 ---
 
@@ -28,11 +28,11 @@
 
 **Interfaces:**
 - Consumes: channel objects `{ id, spd }`, baseline percentages, `targetXy`, `targetRg`, and callbacks `evaluateSpd(spd)` and `xyToUv(x, y)`.
-- Produces: `optimizeMetamer(options) -> { values, achievedRg, achievedRf, deltaUv, exact }`.
+- Produces: `optimizeMetamer(options) -> { values, achievedRg, achievedRf, deltaUv, exact, feasible }`.
 
 - [ ] **Step 1: Write failing deterministic optimizer tests**
 
-Test that identical inputs return identical outputs, accepted results satisfy `deltaUv <= 0.002`, Rf never falls below 80, and an unreachable target returns `exact: false` with the closest feasible result.
+Test that identical inputs return identical outputs, accepted results satisfy `deltaUv <= 0.002`, Rf never falls below 80, and an unreached target returns `exact: false` with the best feasible result discovered by the bounded search.
 
 - [ ] **Step 2: Run the test and verify failure**
 
@@ -41,12 +41,12 @@ Expected: FAIL because `metamer-optimizer.js` does not exist.
 
 - [ ] **Step 3: Implement bounded deterministic coordinate search**
 
-Use fixed seeds and fixed step sizes `[24, 12, 6, 3, 1, 0.5]`. Rank candidates lexicographically: reject chromaticity outside tolerance, then minimize Rg error, then penalize Rf below 80, then minimize distance from baseline. Export through CommonJS for Node and `window.METAMER_OPTIMIZER` for the browser.
+Use deterministic baseline, corner, and interior seeds with fixed step sizes `[24, 12, 6, 3, 1, 0.5]`. Rank candidates lexicographically: reject chromaticity outside tolerance, then minimize Rg error, reject Rf below 80, then minimize distance from baseline. Export through CommonJS for Node and `window.METAMER_OPTIMIZER` for the browser.
 
 - [ ] **Step 4: Run tests**
 
 Run: `node spectral_optimizer/metamer-optimizer.test.js`
-Expected: PASS for determinism, chromaticity, Rf floor, and nearest-achievable behavior.
+Expected: PASS for determinism, chromaticity, Rf floor, and bounded-search fallback behavior.
 
 - [ ] **Step 5: Load the module before `app.js`**
 
@@ -77,7 +77,7 @@ Store copies of channel percentages, normalized SPD, xy, u'v', and metrics. Clea
 
 - [ ] **Step 3: Connect target Rg optimization**
 
-Call `optimizeMetamer` with the active target CCT/Duv colour point. Apply returned channel percentages through `applyValuesImmediate`. Show either `Target achieved` or `Nearest achievable Rg: N` based on `exact`.
+Call `optimizeMetamer` with the active target CCT/Duv colour point. Apply returned channel percentages through `applyValuesImmediate`. Show either `Target achieved` or `Closest Rg found in current search: N` based on `exact`.
 
 - [ ] **Step 4: Preserve normal operation**
 
@@ -142,7 +142,7 @@ At 4000 K / Duv 0, capture a baseline, request a higher achievable Rg, and asser
 
 - [ ] **Step 3: Verify failure messaging**
 
-Request Rg 130 with the four-channel set. Confirm the UI reports the nearest achievable value when exact attainment is impossible.
+Request Rg 130 with the four-channel set. Confirm the UI reports the closest value found by the bounded search when exact attainment is impossible.
 
 - [ ] **Step 4: Perform visual QA**
 
