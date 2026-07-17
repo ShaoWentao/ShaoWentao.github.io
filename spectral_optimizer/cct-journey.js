@@ -26,7 +26,35 @@
         }
     }
 
+    function setupPresetOptimizerSync() {
+        if (typeof document === 'undefined') return;
+
+        document.addEventListener('click', function (event) {
+            const target = event.target;
+            const button = target && target.closest
+                ? target.closest('.presets-section .preset-btn[data-preset^="cct-"]')
+                : null;
+            if (!button) return;
+
+            const cct = parseInt(button.dataset.preset.replace('cct-', ''), 10);
+            if (!Number.isFinite(cct)) return;
+
+            const cctSlider = document.getElementById('target-cct-slider');
+            const duvSlider = document.getElementById('target-duv-slider');
+
+            if (cctSlider) {
+                cctSlider.value = String(cct);
+                cctSlider.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            if (duvSlider) {
+                duvSlider.value = '0';
+                duvSlider.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        });
+    }
+
     setupPresetTemperatures();
+    setupPresetOptimizerSync();
 
     function freezeScene(scene) {
         return Object.freeze(scene);
