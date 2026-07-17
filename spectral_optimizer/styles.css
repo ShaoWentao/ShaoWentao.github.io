@@ -2324,7 +2324,7 @@ footer {
 
 @media (min-width: 1101px) and (max-width: 1499px) {
     .visualization-area {
-        grid-template-rows: minmax(280px, 1fr) 88px 176px;
+        grid-template-rows: minmax(280px, 1fr) 104px 176px;
     }
 
     .optimizer-section {
