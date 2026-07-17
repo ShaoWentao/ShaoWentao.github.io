@@ -157,8 +157,8 @@
                     const lowerCandidate = candidates.get(lower.map(clampPercentage).join(','));
                     const upperCandidate = candidates.get(upper.map(clampPercentage).join(','));
                     const currentCandidate = candidates.get(current.map(clampPercentage).join(','));
-                    const isAllowed = candidate => !requireRfFloor ||
-                        (candidate && candidate.achievedRf >= RF_FLOOR);
+                    const isAllowed = candidate => candidate &&
+                        (!requireRfFloor || candidate.achievedRf >= RF_FLOOR);
                     let bestMove = isAllowed(currentCandidate) ? currentCandidate : null;
                     if (isAllowed(lowerCandidate) && isBetter(lowerCandidate, bestMove)) bestMove = lowerCandidate;
                     if (isAllowed(upperCandidate) && isBetter(upperCandidate, bestMove)) bestMove = upperCandidate;

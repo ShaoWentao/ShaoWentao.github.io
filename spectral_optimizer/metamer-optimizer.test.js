@@ -113,4 +113,25 @@ assert.equal(separatedResult.achievedRf, 85,
 assert.equal(separatedResult.exact, true,
     'the separated interior channel combination reaches the target');
 
+const invalidNeighborResult = optimizeMetamer({
+    channels,
+    baselineValues,
+    targetXy,
+    targetRg: 100,
+    evaluateSpd(spd) {
+        const isBaseline = spd.every(value => Math.abs(value - 0.5) < 1e-12);
+        return {
+            x: isBaseline ? targetXy.x : 0.45,
+            y: isBaseline ? targetXy.y : 0.2,
+            rg: 100,
+            rf: 90
+        };
+    },
+    xyToUv
+});
+assert.equal(invalidNeighborResult.feasible, true,
+    'a valid seed remains usable when its neighboring candidates are chromatically invalid');
+assert.deepEqual(invalidNeighborResult.values, baselineValues,
+    'chromatically invalid neighbors are not ranked as search candidates');
+
 console.log('metamer-optimizer tests passed');
