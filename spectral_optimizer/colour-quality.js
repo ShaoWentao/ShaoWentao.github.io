@@ -181,6 +181,7 @@
         const bins = Array.from({ length: 16 }, () => ({ test: [], ref: [] }));
         for (let i = 0; i < refPoints.length; i++) {
             let angle = Math.atan2(refPoints[i][2], refPoints[i][1]) * 180 / Math.PI;
+            if (!Number.isFinite(angle)) return { rf: 0, rg: 0 };
             if (angle < 0) angle += 360;
             const bin = Math.min(15, Math.floor(angle / 22.5));
             bins[bin].test.push([testPoints[i][1], testPoints[i][2]]);
@@ -190,6 +191,7 @@
             points.reduce((sum, point) => sum + point[0], 0) / points.length,
             points.reduce((sum, point) => sum + point[1], 0) / points.length
         ];
+        if (bins.some(bin => bin.test.length === 0 || bin.ref.length === 0)) return { rf: 0, rg: 0 };
         const testPolygon = bins.map(bin => average(bin.test));
         const refPolygon = bins.map(bin => average(bin.ref));
         const meanDelta = deltas.reduce((sum, value) => sum + value, 0) / deltas.length;
@@ -201,7 +203,11 @@
 
     function calculateColourQuality(spd) {
         if (!DATA || !SpectralMath || !spd || spd.length !== 81) return { ra: 0, r9: 0, rf: 0, rg: 0 };
+        if (!spd.some(value => Number.isFinite(value) && value > 1e-12)) {
+            return { ra: 0, r9: 0, rf: 0, rg: 0, cct: 0 };
+        }
         const cct = cctFromSpd(spd);
+        if (!Number.isFinite(cct) || cct <= 0) return { ra: 0, r9: 0, rf: 0, rg: 0, cct: 0 };
         const cri = calculateCri(spd, cct);
         const tm30 = calculateTm30(spd, cct);
         return { ...cri, ...tm30, cct };

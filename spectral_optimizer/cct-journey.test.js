@@ -46,7 +46,7 @@ assert.ok(HUMAN_CENTRED_SCENES.every((scene) => scene.duv === 0), 'all scenes mu
 const vitality = sceneById('colour-vitality');
 assert.deepStrictEqual(vitality.optimization, {
     mode: 'gamut',
-    targetRg: 115,
+    targetRg: 110,
     secondaryMetric: 'ra'
 }, 'colour vitality must use the Rg-first profile');
 assert.ok(Object.isFrozen(vitality.optimization), 'scene profile must be immutable');
@@ -56,15 +56,15 @@ const baseOptions = {
     evaluateSpd() { return { rg: 114, ra: 92, rf: 90 }; }
 };
 const prepared = prepareOptimizerOptions(baseOptions, vitality.optimization);
-assert.strictEqual(prepared.targetRg, 115, 'scene profile must override the legacy target');
+assert.strictEqual(prepared.targetRg, 110, 'scene profile must use the attainable six-channel target');
 
 const highCriScore = prepareOptimizerOptions({
-    evaluateSpd() { return { rg: 115, ra: 95, rf: 90 }; }
+    evaluateSpd() { return { rg: 110, ra: 95, rf: 90 }; }
 }, vitality.optimization).evaluateSpd([]).rg;
 const lowCriScore = prepareOptimizerOptions({
-    evaluateSpd() { return { rg: 115, ra: 85, rf: 90 }; }
+    evaluateSpd() { return { rg: 110, ra: 85, rf: 90 }; }
 }, vitality.optimization).evaluateSpd([]).rg;
-assert.ok(Math.abs(115 - highCriScore) < Math.abs(115 - lowCriScore),
+assert.ok(Math.abs(110 - highCriScore) < Math.abs(110 - lowCriScore),
     'equal Rg candidates must prefer higher CRI/Ra');
 assert.strictEqual(prepareOptimizerOptions(baseOptions, null), baseOptions,
     'ordinary optimizer calls must remain unchanged');

@@ -141,7 +141,7 @@
             emphasis: 'high-fidelity-and-rg-105-115',
             optimization: {
                 mode: 'gamut',
-                targetRg: 115,
+                targetRg: 110,
                 secondaryMetric: 'ra'
             }
         }),

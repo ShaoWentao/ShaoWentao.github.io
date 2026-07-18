@@ -202,6 +202,29 @@
                     if (isAllowed(upperCandidate) && isBetter(upperCandidate, bestMove)) bestMove = upperCandidate;
                     if (bestMove) current = bestMove.values.slice();
                 }
+
+                // Fixed-colour solutions often require two channels to move
+                // together. Single-channel moves can leave the chromaticity
+                // tolerance even when the paired endpoint is valid.
+                for (let first = 0; first < current.length - 1; first++) {
+                    for (let second = first + 1; second < current.length; second++) {
+                        const currentCandidate = candidates.get(current.map(clampPercentage).join(','));
+                        const isAllowed = candidate => candidate &&
+                            (!requireRfFloor || candidate.achievedRf >= RF_FLOOR);
+                        let bestMove = isAllowed(currentCandidate) ? currentCandidate : null;
+
+                        for (const firstDirection of [-1, 1]) {
+                            for (const secondDirection of [-1, 1]) {
+                                const paired = current.slice();
+                                paired[first] += firstDirection * step;
+                                paired[second] += secondDirection * step;
+                                const candidate = addCandidate(paired);
+                                if (isAllowed(candidate) && isBetter(candidate, bestMove)) bestMove = candidate;
+                            }
+                        }
+                        if (bestMove) current = bestMove.values.slice();
+                    }
+                }
             }
         }
 

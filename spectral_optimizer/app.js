@@ -2265,37 +2265,54 @@ function optimizerSeedForTarget(channels, targetCS, targetCCT = 4000) {
 }
 
 function prioritizeColourVitality(channels, solution) {
-    if (channels.length < 4 || typeof METAMER_OPTIMIZER.optimizeMetamer !== 'function') return solution;
+    if (channels.length < 4) return solution;
 
     const baselineSpd = combinedSPDFromValues(channels, solution.values);
     const baselineXy = xyFromSPD(baselineSpd);
-    const baselineMetrics = calculateMetrics(baselineSpd);
-    if (!hasValidMetamerMetrics(baselineMetrics)) return solution;
+    const baselineUv = xyToUv(baselineXy.x, baselineXy.y);
+    const targetRg = 110;
+    const primes = [2, 3, 5, 7, 11, 13];
 
-    try {
-        const result = METAMER_OPTIMIZER.optimizeMetamer({
-            channels: metamerOptimizerChannels(channels),
-            baselineValues: solution.values.slice(),
-            targetXy: baselineXy,
-            targetRg: 110,
-            evaluateSpd(spd) {
-                return { ...calculateMetrics(spd), xy: xyFromSPD(spd) };
-            },
-            xyToUv
-        });
-        if (!result.feasible || !result.values) return solution;
-
-        const finalSpd = combinedSPDFromValues(channels, result.values);
-        const finalXy = xyFromSPD(finalSpd);
-        return {
-            values: result.values.slice(),
-            cct: computeCCTFromValues(channels, result.values),
-            error: Math.hypot(finalXy.x - baselineXy.x, finalXy.y - baselineXy.y)
-        };
-    } catch (error) {
-        console.warn('Colour Vitality Rg preference was not feasible:', error);
-        return solution;
+    function radicalInverse(index, base) {
+        let fraction = 1;
+        let value = 0;
+        while (index > 0) {
+            fraction /= base;
+            value += fraction * (index % base);
+            index = Math.floor(index / base);
+        }
+        return value;
     }
+
+    let best = null;
+    function consider(values) {
+        const spd = combinedSPDFromValues(channels, values);
+        const xy = xyFromSPD(spd);
+        const uv = xyToUv(xy.x, xy.y);
+        const deltaUv = Math.hypot(uv.u - baselineUv.u, uv.v - baselineUv.v);
+        if (!Number.isFinite(deltaUv) || deltaUv > METAMER_CHROMATICITY_TOLERANCE) return;
+
+        const metrics = calculateMetrics(spd);
+        if (!Number.isFinite(metrics.rg) || !Number.isFinite(metrics.rf) || metrics.rf < 80) return;
+        const rgError = Math.abs(metrics.rg - targetRg);
+        const secondary = Number.isFinite(metrics.ra) ? metrics.ra : metrics.rf;
+        if (!best || rgError < best.rgError - 1e-9 ||
+            (Math.abs(rgError - best.rgError) <= 1e-9 && secondary > best.secondary)) {
+            best = { values: values.slice(), rgError, secondary, xy };
+        }
+    }
+
+    consider(solution.values);
+    for (let sample = 1; sample <= 8192; sample++) {
+        consider(channels.map((channel, index) => radicalInverse(sample, primes[index]) * 100));
+    }
+    if (!best) return solution;
+
+    return {
+        values: best.values,
+        cct: computeCCTFromValues(channels, best.values),
+        error: Math.hypot(best.xy.x - baselineXy.x, best.xy.y - baselineXy.y)
+    };
 }
 
 function optimizeValuesForScene(channels, targetCCT, targetDuv, emphasis = '') {

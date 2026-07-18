@@ -24,4 +24,8 @@ close(reference.ra, 100, 0.1, 'D65 Ra');
 close(reference.rf, 100, 0.1, 'D65 Rf');
 close(reference.rg, 100, 0.1, 'D65 Rg');
 
+assert.deepEqual(calculateColourQuality(Array(81).fill(0)),
+    { ra: 0, r9: 0, rf: 0, rg: 0, cct: 0 },
+    'zero-output optimizer candidates must be rejected without throwing');
+
 console.log('colour-quality tests passed');

@@ -140,6 +140,27 @@ assert.equal(invalidNeighborResult.feasible, true,
 assert.deepEqual(invalidNeighborResult.values, baselineValues,
     'chromatically invalid neighbors are not ranked as search candidates');
 
+const coordinatedResult = optimizeMetamer({
+    channels: separatedChannels,
+    baselineValues: [50, 50],
+    targetXy,
+    targetRg: 102.4,
+    evaluateSpd(spd) {
+        const imbalance = spd[0] - spd[1];
+        return {
+            x: targetXy.x + imbalance * 0.02,
+            y: targetXy.y,
+            rg: 100 + (spd[0] + spd[1] - 1) * 10,
+            rf: 90
+        };
+    },
+    xyToUv(x, y) { return { u: x, v: y }; }
+});
+assert.equal(coordinatedResult.exact, true,
+    'coordinated channel changes can improve Rg while preserving chromaticity');
+assert.deepEqual(coordinatedResult.values, [62, 62],
+    'paired channel search reaches the colour-preserving solution');
+
 const lockedBaseline = Object.freeze({
     channelIds: Object.freeze(['red', 'green', 'blue']),
     xy: Object.freeze({ x: targetXy.x, y: targetXy.y }),
