@@ -1,8 +1,8 @@
 (function (root, factory) {
-    const api = factory();
+    const api = factory(root);
     if (typeof module === 'object' && module.exports) module.exports = api;
     root.CctJourney = api;
-})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+})(typeof globalThis !== 'undefined' ? globalThis : this, function (root) {
     'use strict';
 
     function setupPresetTemperatures() {
@@ -96,12 +96,10 @@
         document.head.appendChild(script);
     }
 
-    setupPresetTemperatures();
-    setupPresetOptimizerSync();
-    setupPresetsToggle();
-    loadVisitorCounter();
-
     function freezeScene(scene) {
+        if (scene.optimization && typeof scene.optimization === 'object') {
+            Object.freeze(scene.optimization);
+        }
         return Object.freeze(scene);
     }
 
@@ -140,7 +138,12 @@
             cctK: 3500,
             duv: 0,
             illuminanceLux: 300,
-            emphasis: 'high-fidelity-and-rg-105-115'
+            emphasis: 'high-fidelity-and-rg-105-115',
+            optimization: {
+                mode: 'gamut',
+                targetRg: 115,
+                secondaryMetric: 'ra'
+            }
         }),
         freezeScene({
             id: 'evening-wind-down',
@@ -175,9 +178,76 @@
         }) || null;
     }
 
+    function prepareOptimizerOptions(options, profile) {
+        if (!profile || profile.mode !== 'gamut' || !Number.isFinite(profile.targetRg) ||
+            !options || typeof options.evaluateSpd !== 'function') return options;
+
+        const targetRg = profile.targetRg;
+        const originalEvaluateSpd = options.evaluateSpd;
+        return Object.assign({}, options, {
+            targetRg,
+            evaluateSpd: function (spd) {
+                const metrics = originalEvaluateSpd(spd);
+                if (!metrics || !Number.isFinite(metrics.rg)) return metrics;
+
+                const secondaryValue = Number.isFinite(metrics.ra)
+                    ? metrics.ra
+                    : (Number.isFinite(metrics.rf) ? metrics.rf : 0);
+                const primaryError = Math.abs(metrics.rg - targetRg);
+                const secondaryPenalty = Math.max(0, 100 - secondaryValue);
+
+                return Object.assign({}, metrics, {
+                    rg: targetRg - (primaryError * 1000 + secondaryPenalty * 0.001)
+                });
+            }
+        });
+    }
+
+    function setupSceneOptimizationAdapter() {
+        if (!root || !root.METAMER_OPTIMIZER ||
+            typeof root.METAMER_OPTIMIZER.optimizeMetamer !== 'function') return;
+
+        const originalOptimizeMetamer = root.METAMER_OPTIMIZER.optimizeMetamer;
+        if (!originalOptimizeMetamer.__sceneProfileAware) {
+            const wrappedOptimizeMetamer = function (options) {
+                return originalOptimizeMetamer(prepareOptimizerOptions(
+                    options,
+                    root.__spectralSceneOptimizationProfile
+                ));
+            };
+            wrappedOptimizeMetamer.__sceneProfileAware = true;
+            root.METAMER_OPTIMIZER.optimizeMetamer = wrappedOptimizeMetamer;
+        }
+
+        if (typeof document === 'undefined') return;
+        document.addEventListener('click', function (event) {
+            const target = event.target;
+            const button = target && target.closest
+                ? target.closest('.opt-preset-btn[data-scene]')
+                : null;
+            if (!button) return;
+
+            const scene = sceneById(button.dataset.scene);
+            const profile = scene && scene.optimization ? scene.optimization : null;
+            root.__spectralSceneOptimizationProfile = profile;
+            setTimeout(function () {
+                if (root.__spectralSceneOptimizationProfile === profile) {
+                    root.__spectralSceneOptimizationProfile = null;
+                }
+            }, 0);
+        }, true);
+    }
+
+    setupPresetTemperatures();
+    setupPresetOptimizerSync();
+    setupPresetsToggle();
+    loadVisitorCounter();
+    setupSceneOptimizationAdapter();
+
     return {
         buildCctJourney,
         HUMAN_CENTRED_SCENES,
-        sceneById
+        sceneById,
+        prepareOptimizerOptions
     };
 });
