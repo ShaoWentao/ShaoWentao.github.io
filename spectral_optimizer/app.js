@@ -2293,11 +2293,13 @@ function prioritizeColourFidelity(channels, solution, targetCCT, targetDuv) {
         if (!Number.isFinite(deltaUv) || deltaUv > METAMER_CHROMATICITY_TOLERANCE) return;
 
         const metrics = calculateMetrics(spd);
-        if (!Number.isFinite(metrics.ra) || !Number.isFinite(metrics.rf) || metrics.rf < 80) return;
-        if (!best || metrics.ra > best.ra + 1e-9 ||
-            (Math.abs(metrics.ra - best.ra) <= 1e-9 && metrics.rf > best.rf)) {
-            best = { values: values.slice(), ra: metrics.ra, rf: metrics.rf, xy };
-        }
+        if (!Number.isFinite(metrics.ra) || !Number.isFinite(metrics.r9) ||
+            !Number.isFinite(metrics.rf) || metrics.rf < 80) return;
+        const candidate = {
+            values: values.slice(), ra: metrics.ra, r9: metrics.r9, rf: metrics.rf, xy
+        };
+        if (METAMER_OPTIMIZER.isBetterColourCandidate(candidate, best,
+            { mode: 'fidelity', r9Floor: 50 })) best = candidate;
     }
 
     consider(solution.values);
@@ -2336,13 +2338,14 @@ function prioritizeColourVitality(channels, solution) {
         if (!Number.isFinite(deltaUv) || deltaUv > METAMER_CHROMATICITY_TOLERANCE) return;
 
         const metrics = calculateMetrics(spd);
-        if (!Number.isFinite(metrics.rg) || !Number.isFinite(metrics.rf) || metrics.rf < 80) return;
+        if (!Number.isFinite(metrics.rg) || !Number.isFinite(metrics.ra) ||
+            !Number.isFinite(metrics.r9) || !Number.isFinite(metrics.rf) || metrics.rf < 80) return;
         const rgError = Math.abs(metrics.rg - targetRg);
-        const secondary = Number.isFinite(metrics.ra) ? metrics.ra : metrics.rf;
-        if (!best || rgError < best.rgError - 1e-9 ||
-            (Math.abs(rgError - best.rgError) <= 1e-9 && secondary > best.secondary)) {
-            best = { values: values.slice(), rgError, secondary, xy };
-        }
+        const candidate = {
+            values: values.slice(), rgError, ra: metrics.ra, r9: metrics.r9, rf: metrics.rf, xy
+        };
+        if (METAMER_OPTIMIZER.isBetterColourCandidate(candidate, best,
+            { mode: 'vitality', r9Floor: 40 })) best = candidate;
     }
 
     consider(solution.values);

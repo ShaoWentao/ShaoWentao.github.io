@@ -4,7 +4,8 @@ const {
     resolveComparisonBaseline,
     getBaselineTargetXy,
     deltaUvBetween,
-    formatRoundedMetricDelta
+    formatRoundedMetricDelta,
+    isBetterColourCandidate
 } = require('./metamer-optimizer.js');
 
 const targetXy = { x: 0.3127, y: 0.3290 };
@@ -202,5 +203,26 @@ assert.equal(formatRoundedMetricDelta(100.4, 100), '(0)', 'zero delta has no plu
 assert.equal(formatRoundedMetricDelta(102, 100), '(+2)', 'positive delta has a plus sign');
 assert.equal(formatRoundedMetricDelta(98, 100), '(-2)', 'negative delta has a minus sign');
 assert.equal(formatRoundedMetricDelta(NaN, 100), '', 'invalid metric delta is omitted');
+
+assert.equal(isBetterColourCandidate(
+    { ra: 93, r9: 55, rf: 88 },
+    { ra: 96, r9: 20, rf: 92 },
+    { mode: 'fidelity', r9Floor: 50 }
+), true, 'standard optimisation prefers an R9-valid candidate over higher Ra');
+assert.equal(isBetterColourCandidate(
+    { ra: 94, r9: 52, rf: 87 },
+    { ra: 93, r9: 70, rf: 90 },
+    { mode: 'fidelity', r9Floor: 50 }
+), true, 'standard optimisation maximises Ra after both candidates satisfy R9');
+assert.equal(isBetterColourCandidate(
+    { ra: 90, r9: 42, rf: 87 },
+    { ra: 95, r9: 30, rf: 92 },
+    { mode: 'fidelity', r9Floor: 50 }
+), true, 'standard optimisation maximises reachable R9 when neither candidate reaches the floor');
+assert.equal(isBetterColourCandidate(
+    { rgError: 2, ra: 88, r9: 45, rf: 84 },
+    { rgError: 0, ra: 91, r9: 20, rf: 90 },
+    { mode: 'vitality', r9Floor: 40 }
+), true, 'colour vitality keeps R9 acceptable before pursuing the exact Rg target');
 
 console.log('metamer-optimizer tests passed');

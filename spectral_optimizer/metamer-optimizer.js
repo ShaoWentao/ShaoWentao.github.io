@@ -107,6 +107,26 @@
         return compareValues(candidate.values, current.values) < 0;
     }
 
+    function isBetterColourCandidate(candidate, current, options) {
+        if (!current) return true;
+        const mode = options && options.mode === 'vitality' ? 'vitality' : 'fidelity';
+        const r9Floor = Number.isFinite(options && options.r9Floor) ? options.r9Floor : 50;
+        const candidateMeetsR9 = Number.isFinite(candidate.r9) && candidate.r9 >= r9Floor;
+        const currentMeetsR9 = Number.isFinite(current.r9) && current.r9 >= r9Floor;
+        if (candidateMeetsR9 !== currentMeetsR9) return candidateMeetsR9;
+
+        if (!candidateMeetsR9 && Math.abs(candidate.r9 - current.r9) > EPSILON) {
+            return candidate.r9 > current.r9;
+        }
+        if (mode === 'vitality' && Math.abs(candidate.rgError - current.rgError) > EPSILON) {
+            return candidate.rgError < current.rgError;
+        }
+        if (Math.abs(candidate.ra - current.ra) > EPSILON) return candidate.ra > current.ra;
+        if (Math.abs(candidate.r9 - current.r9) > EPSILON) return candidate.r9 > current.r9;
+        if (Math.abs(candidate.rf - current.rf) > EPSILON) return candidate.rf > current.rf;
+        return false;
+    }
+
     function buildSeeds(baselineValues) {
         const seeds = [baselineValues];
         const variedChannels = Math.min(baselineValues.length, Math.log2(MAX_CORNER_SEEDS));
@@ -274,6 +294,7 @@
         resolveComparisonBaseline,
         getBaselineTargetXy,
         deltaUvBetween,
-        formatRoundedMetricDelta
+        formatRoundedMetricDelta,
+        isBetterColourCandidate
     };
 });
