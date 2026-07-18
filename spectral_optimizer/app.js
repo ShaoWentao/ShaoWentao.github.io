@@ -2050,9 +2050,10 @@ document.querySelectorAll('.preset-btn').forEach(btn => {
         if (presetKey.startsWith('cct-')) {
             const cct = parseInt(presetKey.replace('cct-', ''));
             if (Number.isFinite(cct)) {
-                const refSpd = getPlanckianSPD(cct);
-                const fitted = fitChannelsToReference(refSpd);
-                animateToValues(fitted, 600);
+                runRealtimeOptimizerDebounced.cancel();
+                const channels = getActiveChannels();
+                const solution = optimizeValuesForScene(channels, cct, 0);
+                applyValuesImmediate(solutionValuesById(channels, solution));
                 return;
             }
         }
@@ -2264,6 +2265,59 @@ function optimizerSeedForTarget(channels, targetCS, targetCCT = 4000) {
     });
 }
 
+function radicalInverse(index, base) {
+    let fraction = 1;
+    let value = 0;
+    while (index > 0) {
+        fraction /= base;
+        value += fraction * (index % base);
+        index = Math.floor(index / base);
+    }
+    return value;
+}
+
+function prioritizeColourFidelity(channels, solution, targetCCT, targetDuv) {
+    if (channels.length < 3) return solution;
+    if (channels.length <= 4) return solution;
+
+    const targetXy = getTargetXY(targetCCT, targetDuv);
+    const targetUv = xyToUv(targetXy.x, targetXy.y);
+    const primes = [2, 3, 5, 7, 11, 13];
+    let best = null;
+
+    function consider(values) {
+        const spd = combinedSPDFromValues(channels, values);
+        const xy = xyFromSPD(spd);
+        const uv = xyToUv(xy.x, xy.y);
+        const deltaUv = Math.hypot(uv.u - targetUv.u, uv.v - targetUv.v);
+        if (!Number.isFinite(deltaUv) || deltaUv > METAMER_CHROMATICITY_TOLERANCE) return;
+
+        const metrics = calculateMetrics(spd);
+        if (!Number.isFinite(metrics.ra) || !Number.isFinite(metrics.rf) || metrics.rf < 80) return;
+        if (!best || metrics.ra > best.ra + 1e-9 ||
+            (Math.abs(metrics.ra - best.ra) <= 1e-9 && metrics.rf > best.rf)) {
+            best = { values: values.slice(), ra: metrics.ra, rf: metrics.rf, xy };
+        }
+    }
+
+    consider(solution.values);
+    for (let sample = 1; sample <= 8192; sample++) {
+        const globalValues = channels.map((channel, index) => radicalInverse(sample, primes[index]) * 100);
+        consider(globalValues);
+
+        const localValues = channels.map((channel, index) => Math.max(0, Math.min(100,
+            solution.values[index] + (radicalInverse(sample, primes[index]) - 0.5) * 120)));
+        consider(localValues);
+    }
+
+    if (!best) return solution;
+    return {
+        values: best.values,
+        cct: computeCCTFromValues(channels, best.values),
+        error: Math.hypot(best.xy.x - targetXy.x, best.xy.y - targetXy.y)
+    };
+}
+
 function prioritizeColourVitality(channels, solution) {
     if (channels.length < 4) return solution;
 
@@ -2272,17 +2326,6 @@ function prioritizeColourVitality(channels, solution) {
     const baselineUv = xyToUv(baselineXy.x, baselineXy.y);
     const targetRg = 110;
     const primes = [2, 3, 5, 7, 11, 13];
-
-    function radicalInverse(index, base) {
-        let fraction = 1;
-        let value = 0;
-        while (index > 0) {
-            fraction /= base;
-            value += fraction * (index % base);
-            index = Math.floor(index / base);
-        }
-        return value;
-    }
 
     let best = null;
     function consider(values) {
@@ -2334,7 +2377,7 @@ function optimizeValuesForScene(channels, targetCCT, targetDuv, emphasis = '') {
         };
         return emphasis === 'high-fidelity-and-rg-105-115'
             ? prioritizeColourVitality(channels, solution)
-            : solution;
+            : prioritizeColourFidelity(channels, solution, targetCCT, targetDuv);
     }
 
     const seeds = [
