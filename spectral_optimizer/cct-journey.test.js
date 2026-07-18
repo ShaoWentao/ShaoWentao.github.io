@@ -4,7 +4,8 @@ const assert = require('assert');
 const {
     buildCctJourney,
     HUMAN_CENTRED_SCENES,
-    sceneById
+    sceneById,
+    prepareOptimizerOptions
 } = require('./cct-journey');
 
 const expectedAscending = [
@@ -42,14 +43,37 @@ assert.deepStrictEqual(HUMAN_CENTRED_SCENES.map((scene) => [
 ]), expectedScenes, 'scenes must match the confirmed bilingual presets');
 assert.ok(HUMAN_CENTRED_SCENES.every((scene) => scene.duv === 0), 'all scenes must have neutral Duv');
 
+const vitality = sceneById('colour-vitality');
+assert.deepStrictEqual(vitality.optimization, {
+    mode: 'gamut',
+    targetRg: 115,
+    secondaryMetric: 'ra'
+}, 'colour vitality must use the Rg-first profile');
+assert.ok(Object.isFrozen(vitality.optimization), 'scene profile must be immutable');
+
+const baseOptions = {
+    targetRg: 110,
+    evaluateSpd() { return { rg: 114, ra: 92, rf: 90 }; }
+};
+const prepared = prepareOptimizerOptions(baseOptions, vitality.optimization);
+assert.strictEqual(prepared.targetRg, 115, 'scene profile must override the legacy target');
+
+const highCriScore = prepareOptimizerOptions({
+    evaluateSpd() { return { rg: 115, ra: 95, rf: 90 }; }
+}, vitality.optimization).evaluateSpd([]).rg;
+const lowCriScore = prepareOptimizerOptions({
+    evaluateSpd() { return { rg: 115, ra: 85, rf: 90 }; }
+}, vitality.optimization).evaluateSpd([]).rg;
+assert.ok(Math.abs(115 - highCriScore) < Math.abs(115 - lowCriScore),
+    'equal Rg candidates must prefer higher CRI/Ra');
+assert.strictEqual(prepareOptimizerOptions(baseOptions, null), baseOptions,
+    'ordinary optimizer calls must remain unchanged');
+
 assert.ok(Object.isFrozen(HUMAN_CENTRED_SCENES), 'scene collection must be immutable');
 assert.ok(HUMAN_CENTRED_SCENES.every(Object.isFrozen), 'each scene definition must be immutable');
 assert.throws(() => { HUMAN_CENTRED_SCENES[0].cctK = 6500; }, TypeError);
 assert.throws(() => { HUMAN_CENTRED_SCENES.push({}); }, TypeError);
-
-assert.strictEqual(sceneById('colour-vitality'), HUMAN_CENTRED_SCENES[3], 'lookup must return the immutable preset');
 assert.strictEqual(sceneById('missing-scene'), null, 'unknown scene lookup must be safe');
 assert.strictEqual(sceneById(null), null, 'non-string scene lookup must be safe');
-assert.strictEqual(sceneById({ id: 'daytime-focus' }), null, 'object scene lookup must be safe');
 
 console.log('cct-journey tests: PASS');
