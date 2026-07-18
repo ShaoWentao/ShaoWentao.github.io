@@ -49,7 +49,7 @@ assert.strictEqual(Array.prototype.slice, originalArraySlice,
 
 const appSource = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
 assert.match(appSource,
-    /Array\.isArray\(window\.DEFAULT_RGBCLA_CHANNELS\)[\s\S]*?window\.DEFAULT_RGBCLA_CHANNELS/,
-    'app.js must select the RGBCLA spectral dataset directly');
+    /Array\.isArray\(window\.DEFAULT_RGBCLA_CHANNELS\)[\s\S]*?window\.DEFAULT_RGBCLA_CHANNELS\.map\(/,
+    'app.js must create mutable runtime channels from the immutable RGBCLA dataset');
 
 console.log('default RGBCLA data tests: PASS');

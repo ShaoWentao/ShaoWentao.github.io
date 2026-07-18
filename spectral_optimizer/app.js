@@ -68,7 +68,7 @@ const FALLBACK_CHANNELS_6CH = [
 ];
 
 const CHANNELS_6CH = Array.isArray(window.DEFAULT_RGBCLA_CHANNELS)
-    ? window.DEFAULT_RGBCLA_CHANNELS
+    ? window.DEFAULT_RGBCLA_CHANNELS.map(channel => ({ ...channel }))
     : FALLBACK_CHANNELS_6CH;
 
 const CHANNEL_SETS = {
