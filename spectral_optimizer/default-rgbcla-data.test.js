@@ -1,6 +1,8 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const originalArraySlice = Array.prototype.slice;
 const channels = require('./default-rgbcla-data.js');
 
@@ -42,15 +44,12 @@ assert.ok(halfMaximumWidth(byId.amber) > halfMaximumWidth(byId.red) * 2,
 assert.ok(byId.lime.spd[451 - 380] > 0.05,
     'PC Lime must retain the blue-pump shoulder');
 
-const legacySixChannelLiteral = [
-    { id: 'red' }, { id: 'green' }, { id: 'blue' },
-    { id: 'cyan' }, { id: 'lime' }, { id: 'amber' }
-];
-legacySixChannelLiteral.slice(0, 3);
-assert.ok(Array.isArray(legacySixChannelLiteral[4].spd),
-    'legacy app channel literals must receive direct-index SPD arrays before use');
-assert.equal(legacySixChannelLiteral[4].name, 'PC Lime');
 assert.strictEqual(Array.prototype.slice, originalArraySlice,
-    'compatibility injection must restore Array.prototype.slice immediately');
+    'loading spectral data must never patch Array.prototype.slice');
+
+const appSource = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+assert.match(appSource,
+    /Array\.isArray\(window\.DEFAULT_RGBCLA_CHANNELS\)[\s\S]*?window\.DEFAULT_RGBCLA_CHANNELS/,
+    'app.js must select the RGBCLA spectral dataset directly');
 
 console.log('default RGBCLA data tests: PASS');

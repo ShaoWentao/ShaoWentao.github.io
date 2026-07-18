@@ -58,7 +58,7 @@ const CHANNELS_4CH = Array.isArray(window.DEFAULT_RGBW_CHANNELS)
     ? window.DEFAULT_RGBW_CHANNELS
     : FALLBACK_CHANNELS_4CH;
 
-const CHANNELS_6CH = [
+const FALLBACK_CHANNELS_6CH = [
     { id: 'red',   name: 'Red',   nameCN: '红',   peak: 625, sigma: 15, color: '#ff3b3b', colorRGB: [255,59,59],   waveLabel: '625 nm' },
     { id: 'green', name: 'Green', nameCN: '绿',   peak: 525, sigma: 20, color: '#2dff6e', colorRGB: [45,255,110],  waveLabel: '525 nm' },
     { id: 'blue',  name: 'Blue',  nameCN: '蓝',   peak: 460, sigma: 15, color: '#3b7dff', colorRGB: [59,125,255],  waveLabel: '460 nm' },
@@ -66,6 +66,10 @@ const CHANNELS_6CH = [
     { id: 'lime',  name: 'Lime',  nameCN: '黄绿', peak: 550, sigma: 18, color: '#aaff33', colorRGB: [170,255,51],  waveLabel: '550 nm' },
     { id: 'amber', name: 'Amber', nameCN: '琥珀', peak: 590, sigma: 15, color: '#ff9f33', colorRGB: [255,159,51],  waveLabel: '590 nm' }
 ];
+
+const CHANNELS_6CH = Array.isArray(window.DEFAULT_RGBCLA_CHANNELS)
+    ? window.DEFAULT_RGBCLA_CHANNELS
+    : FALLBACK_CHANNELS_6CH;
 
 const CHANNEL_SETS = {
     3: CHANNELS_6CH.slice(0, 3),

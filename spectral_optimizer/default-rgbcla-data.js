@@ -63,48 +63,6 @@
         });
     }
 
-    function installLegacyChannelInjection(defaultChannels) {
-        const originalSlice = Array.prototype.slice;
-        if (originalSlice.__rgbclaCompatibilityHook) return;
-
-        const expectedIds = ['red', 'green', 'blue', 'cyan', 'lime', 'amber'];
-        function isLegacyRgbclaArray(value) {
-            return Array.isArray(value) && value.length === expectedIds.length &&
-                expectedIds.every(function (id, index) {
-                    return value[index] && value[index].id === id && !value[index].spd;
-                });
-        }
-
-        function restore() {
-            if (Array.prototype.slice === patchedSlice) Array.prototype.slice = originalSlice;
-        }
-
-        function patchedSlice() {
-            if (isLegacyRgbclaArray(this)) {
-                for (let index = 0; index < defaultChannels.length; index++) {
-                    const source = defaultChannels[index];
-                    Object.assign(this[index], {
-                        name: source.name,
-                        nameCN: source.nameCN,
-                        peak: source.peak,
-                        sigma: source.sigma,
-                        waveLabel: source.waveLabel,
-                        spd: source.spd,
-                        sourceName: source.sourceName,
-                        sourceUrl: source.sourceUrl,
-                        dataQualification: source.dataQualification
-                    });
-                }
-                restore();
-            }
-            return originalSlice.apply(this, arguments);
-        }
-
-        patchedSlice.__rgbclaCompatibilityHook = true;
-        Array.prototype.slice = patchedSlice;
-        if (typeof setTimeout === 'function') setTimeout(restore, 0);
-    }
-
     const channels = Object.freeze([
         channel({
             id: 'red', name: 'Red', nameCN: '红', peak: 623,
@@ -146,6 +104,5 @@
         })
     ]);
 
-    installLegacyChannelInjection(channels);
     return channels;
 });
