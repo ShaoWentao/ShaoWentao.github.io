@@ -29,7 +29,7 @@
         return Math.exp(-0.5 * offset * offset);
     }
 
-    function buildSamples(components) {
+    function buildSpd(components) {
         const values = [];
         let peak = 0;
         for (let wavelength = 380; wavelength <= 780; wavelength++) {
@@ -37,11 +37,11 @@
             for (const component of components) {
                 power += component.amplitude * gaussian(wavelength, component.centre, component.sigma);
             }
-            values.push([wavelength, power]);
+            values.push(power);
             if (power > peak) peak = power;
         }
-        return Object.freeze(values.map(function (sample) {
-            return Object.freeze([sample[0], Number((sample[1] / peak).toFixed(8))]);
+        return Object.freeze(values.map(function (value) {
+            return Number((value / peak).toFixed(8));
         }));
     }
 
@@ -55,7 +55,7 @@
             color: definition.color,
             colorRGB: Object.freeze(definition.colorRGB.slice()),
             waveLabel: definition.waveLabel,
-            spdSamples: buildSamples(definition.components),
+            spd: buildSpd(definition.components),
             isWhiteChannel: false,
             sourceName: SOURCE_NAME,
             sourceUrl: SOURCE_URL,
@@ -71,7 +71,7 @@
         function isLegacyRgbclaArray(value) {
             return Array.isArray(value) && value.length === expectedIds.length &&
                 expectedIds.every(function (id, index) {
-                    return value[index] && value[index].id === id && !value[index].spdSamples;
+                    return value[index] && value[index].id === id && !value[index].spd;
                 });
         }
 
@@ -89,7 +89,7 @@
                         peak: source.peak,
                         sigma: source.sigma,
                         waveLabel: source.waveLabel,
-                        spdSamples: source.spdSamples,
+                        spd: source.spd,
                         sourceName: source.sourceName,
                         sourceUrl: source.sourceUrl,
                         dataQualification: source.dataQualification
