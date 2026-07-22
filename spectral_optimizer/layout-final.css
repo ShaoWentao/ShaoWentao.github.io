@@ -1,3 +1,16 @@
+@media (min-width: 1500px) {
+    .page-hero,
+    #app-main,
+    #app-footer {
+        width: calc(100% - clamp(40px, 3vw, 80px));
+        max-width: none;
+    }
+
+    #app-main {
+        grid-template-columns: clamp(340px, 19vw, 400px) minmax(0, 1fr);
+    }
+}
+
 .charts-row {
     display: grid;
     grid-template-columns: minmax(0, 1.55fr) minmax(340px, 1fr);
@@ -169,5 +182,94 @@
     .charts-row > .emitter-preview .health-condition-grid,
     .charts-row > .emitter-preview .schedule-stage-list {
         grid-template-columns: 1fr;
+    }
+}
+
+/* Tablet layout: preserve the dashboard composition on iPad-sized screens. */
+@media (min-width: 1001px) and (max-width: 1499px) {
+    .page-hero,
+    #app-main,
+    #app-footer {
+        width: calc(100% - 28px);
+        max-width: none;
+    }
+
+    #app-main {
+        grid-template-columns: minmax(285px, 31vw) minmax(0, 1fr);
+    }
+
+    .charts-row {
+        grid-template-columns: minmax(0, 1.45fr) minmax(250px, 0.9fr);
+    }
+}
+
+@media (min-width: 721px) and (max-width: 1000px) {
+    .page-hero,
+    #app-main,
+    #app-footer {
+        width: calc(100% - 24px);
+        max-width: none;
+    }
+
+    #app-main {
+        grid-template-columns: 1fr;
+    }
+
+    .left-column {
+        display: grid;
+        grid-template-columns: minmax(280px, 0.82fr) minmax(0, 1.18fr);
+        gap: 12px;
+        align-items: start;
+    }
+
+    .charts-row {
+        grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.85fr);
+        grid-template-areas:
+            "spd cie"
+            "combo combo";
+    }
+
+    .charts-row > .spd-panel,
+    .charts-row > .cie-panel {
+        height: 310px;
+    }
+
+    .charts-row > .spd-panel .canvas-wrapper {
+        height: 242px;
+        aspect-ratio: auto;
+    }
+
+    .charts-row > .cie-panel .canvas-wrapper,
+    .charts-row > .cie-panel #cie-canvas-wrapper {
+        width: min(100%, 242px);
+        height: 242px;
+        aspect-ratio: 1;
+    }
+
+    .charts-row > .emitter-preview {
+        grid-template-columns: minmax(220px, 0.7fr) minmax(0, 1.6fr);
+    }
+
+    .charts-row > .emitter-preview > .emitter-preview-heading,
+    .charts-row > .emitter-preview > .emitter-preview-stage,
+    .charts-row > .emitter-preview > .emitter-metamer-controls {
+        grid-column: 1;
+    }
+
+    .charts-row > .emitter-preview > .tuning-group-health {
+        grid-column: 2;
+        grid-row: 1 / 4;
+        margin-top: 0;
+        padding: 0 0 0 14px;
+        border-top: 0;
+        border-left: 1px solid var(--divider);
+    }
+
+    .charts-row > .emitter-preview .health-condition-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .charts-row > .emitter-preview .schedule-stage-list {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
     }
 }
