@@ -4,13 +4,14 @@
     if (root) root.METAMER_OPTIMIZER = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function() {
     const CHROMATICITY_TOLERANCE = 0.002;
+    const SATURATION_CHROMATICITY_TOLERANCE = 0.0005;
     const RF_FLOOR = 80;
     const TARGET_RG_MIN = 80;
     const TARGET_RG_MAX = 130;
     const MAX_CORNER_SEEDS = 64;
     const INTERIOR_LEVELS = [25, 75];
     const MAX_REFINEMENT_SEEDS = 16;
-    const STEP_SIZES = [24, 12, 6, 3, 1, 0.5];
+    const STEP_SIZES = [48, 24, 12, 6, 3, 1, 0.5];
     const EPSILON = 1e-10;
 
     function clampPercentage(value) {
@@ -156,6 +157,9 @@
             evaluateSpd,
             xyToUv
         } = options;
+        const objective = options.objective === 'fidelity' || options.objective === 'saturation'
+            ? options.objective
+            : 'target';
         const suppliedBaseline = options.baselineValues || options.baselinePercentages;
 
         if (!Array.isArray(channels) || channels.length === 0 ||
@@ -184,13 +188,19 @@
             const xy = readXy(metrics || {});
             const uv = xyToUv(xy.x, xy.y);
             const deltaUv = Math.hypot(uv.u - targetUv.u, uv.v - targetUv.v);
+            const chromaticityTolerance = objective === 'saturation'
+                ? SATURATION_CHROMATICITY_TOLERANCE
+                : CHROMATICITY_TOLERANCE;
             if (!Number.isFinite(deltaUv) || !Number.isFinite(metrics.rg) || !Number.isFinite(metrics.rf) ||
-                deltaUv > CHROMATICITY_TOLERANCE) return null;
+                deltaUv > chromaticityTolerance) return null;
+            if (objective === 'saturation' && metrics.rg > targetRg + EPSILON) return null;
 
             const candidate = {
                 values: boundedValues,
                 achievedRg: metrics.rg,
                 achievedRf: metrics.rf,
+                achievedRa: Number.isFinite(metrics.ra) ? metrics.ra : 0,
+                achievedR9: Number.isFinite(metrics.r9) ? metrics.r9 : 0,
                 deltaUv,
                 rgError: Math.abs(metrics.rg - targetRg),
                 rfPenalty: Math.max(0, RF_FLOOR - metrics.rf),
@@ -198,6 +208,32 @@
             };
             candidates.set(key, candidate);
             return candidate;
+        }
+
+        function isBetterForObjective(candidate, current) {
+            if (!current) return true;
+            if (objective === 'fidelity') {
+                if (Math.abs(candidate.achievedRf - current.achievedRf) > EPSILON) {
+                    return candidate.achievedRf > current.achievedRf;
+                }
+                if (Math.abs(candidate.achievedRa - current.achievedRa) > EPSILON) {
+                    return candidate.achievedRa > current.achievedRa;
+                }
+                if (Math.abs(candidate.achievedR9 - current.achievedR9) > EPSILON) {
+                    return candidate.achievedR9 > current.achievedR9;
+                }
+            } else if (objective === 'saturation' && Math.abs(candidate.achievedRg - current.achievedRg) > EPSILON) {
+                return candidate.achievedRg > current.achievedRg;
+            } else if (objective === 'target') {
+                return isBetter(candidate, current);
+            }
+            if (Math.abs(candidate.deltaUv - current.deltaUv) > EPSILON) {
+                return candidate.deltaUv < current.deltaUv;
+            }
+            if (Math.abs(candidate.distance - current.distance) > EPSILON) {
+                return candidate.distance < current.distance;
+            }
+            return compareValues(candidate.values, current.values) < 0;
         }
 
         function exploreSeed(seed, requireRfFloor) {
@@ -216,10 +252,10 @@
                     const upperCandidate = candidates.get(upper.map(clampPercentage).join(','));
                     const currentCandidate = candidates.get(current.map(clampPercentage).join(','));
                     const isAllowed = candidate => candidate &&
-                        (!requireRfFloor || candidate.achievedRf >= RF_FLOOR);
+                        (objective === 'saturation' || !requireRfFloor || candidate.achievedRf >= RF_FLOOR);
                     let bestMove = isAllowed(currentCandidate) ? currentCandidate : null;
-                    if (isAllowed(lowerCandidate) && isBetter(lowerCandidate, bestMove)) bestMove = lowerCandidate;
-                    if (isAllowed(upperCandidate) && isBetter(upperCandidate, bestMove)) bestMove = upperCandidate;
+                    if (isAllowed(lowerCandidate) && isBetterForObjective(lowerCandidate, bestMove)) bestMove = lowerCandidate;
+                    if (isAllowed(upperCandidate) && isBetterForObjective(upperCandidate, bestMove)) bestMove = upperCandidate;
                     if (bestMove) current = bestMove.values.slice();
                 }
 
@@ -230,20 +266,77 @@
                     for (let second = first + 1; second < current.length; second++) {
                         const currentCandidate = candidates.get(current.map(clampPercentage).join(','));
                         const isAllowed = candidate => candidate &&
-                            (!requireRfFloor || candidate.achievedRf >= RF_FLOOR);
+                            (objective === 'saturation' || !requireRfFloor || candidate.achievedRf >= RF_FLOOR);
                         let bestMove = isAllowed(currentCandidate) ? currentCandidate : null;
 
+                        const compensationRatios = objective === 'saturation'
+                            ? [0.25, 0.5, 0.75, 1, 1.5, 2, 3, 4]
+                            : [1];
                         for (const firstDirection of [-1, 1]) {
                             for (const secondDirection of [-1, 1]) {
+                                for (const compensationRatio of compensationRatios) {
                                 const paired = current.slice();
                                 paired[first] += firstDirection * step;
-                                paired[second] += secondDirection * step;
+                                paired[second] += secondDirection * step * compensationRatio;
                                 const candidate = addCandidate(paired);
-                                if (isAllowed(candidate) && isBetter(candidate, bestMove)) bestMove = candidate;
+                                if (isAllowed(candidate) && isBetterForObjective(candidate, bestMove)) bestMove = candidate;
+                                }
                             }
                         }
                         if (bestMove) current = bestMove.values.slice();
                     }
+                }
+
+                // Fixed chromaticity imposes two constraints, so a useful
+                // high-saturation move commonly needs three channels to move
+                // together. Solve the two compensating moves from the local
+                // u'v' Jacobian instead of relying on equal paired steps.
+                if (objective === 'saturation' && current.length >= 3) {
+                    const probe = 0.25;
+                    const baseMetrics = evaluateSpd(combineSpd(channels, current));
+                    const baseXy = readXy(baseMetrics || {});
+                    const baseUv = xyToUv(baseXy.x, baseXy.y);
+                    const derivatives = current.map((_, channelIndex) => {
+                        const sampled = current.slice();
+                        sampled[channelIndex] = clampPercentage(sampled[channelIndex] + probe);
+                        if (Math.abs(sampled[channelIndex] - current[channelIndex]) <= EPSILON) {
+                            sampled[channelIndex] = clampPercentage(current[channelIndex] - probe);
+                        }
+                        const signedProbe = sampled[channelIndex] - current[channelIndex];
+                        if (Math.abs(signedProbe) <= EPSILON) return { u: 0, v: 0 };
+                        const metrics = evaluateSpd(combineSpd(channels, sampled));
+                        const xy = readXy(metrics || {});
+                        const uv = xyToUv(xy.x, xy.y);
+                        return { u: (uv.u - baseUv.u) / signedProbe, v: (uv.v - baseUv.v) / signedProbe };
+                    });
+
+                    let bestTriple = candidates.get(current.map(clampPercentage).join(',')) || null;
+                    for (let primary = 0; primary < current.length; primary++) {
+                        for (let second = 0; second < current.length - 1; second++) {
+                            if (second === primary) continue;
+                            for (let third = second + 1; third < current.length; third++) {
+                                if (third === primary) continue;
+                                const determinant = derivatives[second].u * derivatives[third].v -
+                                    derivatives[third].u * derivatives[second].v;
+                                if (Math.abs(determinant) < EPSILON) continue;
+                                for (const direction of [-1, 1]) {
+                                    const primaryDelta = direction * step;
+                                    const targetU = -derivatives[primary].u * primaryDelta;
+                                    const targetV = -derivatives[primary].v * primaryDelta;
+                                    const secondDelta = (targetU * derivatives[third].v - derivatives[third].u * targetV) / determinant;
+                                    const thirdDelta = (derivatives[second].u * targetV - targetU * derivatives[second].v) / determinant;
+                                    if (Math.abs(secondDelta) > 100 || Math.abs(thirdDelta) > 100) continue;
+                                    const triple = current.slice();
+                                    triple[primary] += primaryDelta;
+                                    triple[second] += secondDelta;
+                                    triple[third] += thirdDelta;
+                                    const candidate = addCandidate(triple);
+                                    if (candidate && isBetterForObjective(candidate, bestTriple)) bestTriple = candidate;
+                                }
+                            }
+                        }
+                    }
+                    if (bestTriple) current = bestTriple.values.slice();
                 }
             }
         }
@@ -251,21 +344,24 @@
         const promisingSeeds = [];
         for (const seed of buildSeeds(baselineValues)) {
             const candidate = addCandidate(seed);
-            if (candidate && candidate.achievedRf >= RF_FLOOR) promisingSeeds.push(candidate);
+            if (candidate && (objective === 'saturation' || candidate.achievedRf >= RF_FLOOR)) promisingSeeds.push(candidate);
         }
         promisingSeeds.sort((left, right) => {
-            if (isBetter(left, right)) return -1;
-            if (isBetter(right, left)) return 1;
+            if (isBetterForObjective(left, right)) return -1;
+            if (isBetterForObjective(right, left)) return 1;
             return 0;
         });
-        for (const candidate of promisingSeeds.slice(0, MAX_REFINEMENT_SEEDS)) {
+        if (objective === 'saturation') exploreSeed(baselineValues, false);
+        const refinementSeedLimit = objective === 'saturation' ? 4 : MAX_REFINEMENT_SEEDS;
+        for (const candidate of promisingSeeds.slice(0, refinementSeedLimit)) {
             exploreSeed(candidate.values, false);
             exploreSeed(candidate.values, true);
         }
 
         let best = null;
         for (const candidate of candidates.values()) {
-            if (candidate.achievedRf >= RF_FLOOR && isBetter(candidate, best)) best = candidate;
+            if ((objective === 'saturation' || candidate.achievedRf >= RF_FLOOR) &&
+                isBetterForObjective(candidate, best)) best = candidate;
         }
 
         if (!best) {
@@ -283,6 +379,8 @@
             values: best.values,
             achievedRg: best.achievedRg,
             achievedRf: best.achievedRf,
+            achievedRa: best.achievedRa,
+            achievedR9: best.achievedR9,
             deltaUv: best.deltaUv,
             exact: best.rgError <= EPSILON,
             feasible: true

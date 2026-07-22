@@ -92,6 +92,8 @@ let channelValues = {};   // id -> 0..100
 let showD65 = false;
 let animFrameId = null;
 let metamerModeEnabled = false;
+let metamerProfile = 'fidelity';
+let pendingMetamerOptimization = false;
 let targetRg = 100;
 let baselineSnapshot = null;
 let compareSpectrumEnabled = false;
@@ -183,7 +185,9 @@ const cctJourneyStatus = document.getElementById('cct-journey-status');
 
 // Metric card elements for Rg
 const valRg = document.getElementById('val-rg');
+const valDeltaUv = document.getElementById('val-delta-uv');
 const barRg = document.getElementById('bar-rg');
+const barDeltaUv = document.getElementById('bar-delta-uv');
 
 // Target parameters state
 let targetCCT = 4000;
@@ -193,9 +197,9 @@ let exposureDurationHours = 1;
 let visualFieldFactor = 1;
 
 const VISUAL_FIELD_LABELS = Object.freeze({
-    0.5: '上方视野 Superior',
-    1: '中央视野 Central',
-    2: '全视野 Full field'
+    0.5: '上方视野',
+    1: '中央视野',
+    2: '全视野'
 });
 
 let isLightTheme = false;
@@ -661,7 +665,7 @@ function renderCIE() {
     cieCtx.setLineDash([]);
     cieCtx.fillStyle = textColor;
     cieCtx.font = 'bold 8px "JetBrains Mono", monospace';
-    cieCtx.fillText(`Target ${targetCCT}K`, targetPt.x + 8, targetPt.y - 7);
+    cieCtx.fillText(`目标 ${targetCCT} K`, targetPt.x + 8, targetPt.y - 7);
     cieCtx.restore();
     
     // Outer blinking halo
@@ -690,7 +694,7 @@ function renderCIE() {
     const cctVal = achievedEstimate && Number.isFinite(achievedEstimate.cct)
         ? Math.round(achievedEstimate.cct)
         : 0;
-    cieCtx.fillText(`Actual ${cctVal}K (${currentX.toFixed(3)}, ${currentY.toFixed(3)})`, mPt.x + 10, mPt.y + 3);
+    cieCtx.fillText(`当前 ${cctVal} K (${currentX.toFixed(3)}, ${currentY.toFixed(3)})`, mPt.x + 10, mPt.y + 3);
 }
 
 // ═══════════════════════════════════════════════
@@ -955,6 +959,7 @@ function calculateMetrics(combinedSPD) {
         currentY = 0.3290;
         return {
             cct: 0,
+            duv: null,
             ra: 0,
             r9: 0,
             rf: 0,
@@ -972,6 +977,9 @@ function calculateMetrics(combinedSPD) {
     currentY = sum > 0 ? Y / sum : 0.3290;
 
     const cct = estimateCCTFromXYZ(X, Y, Z);
+    const cctDuv = SPECTRAL_MATH.estimateCctAndDuvFromXy
+        ? SPECTRAL_MATH.estimateCctAndDuvFromXy(currentX, currentY)
+        : null;
     const qualitySpd = [];
     for (let i = 0; i < NUM_POINTS; i += 5) qualitySpd.push(combinedSPD[i]);
     const quality = COLOUR_QUALITY.calculateColourQuality
@@ -982,6 +990,7 @@ function calculateMetrics(combinedSPD) {
     const circadian = calculateCircadianMetrics(combinedSPD);
     return {
         cct: Math.round(cct),
+        duv: Number.isFinite(cctDuv?.duv) ? cctDuv.duv : null,
         ra: quality.ra,
         r9: quality.r9,
         rf: quality.rf,
@@ -1178,7 +1187,7 @@ function updateMetamerColourDelta(combined) {
         return;
     }
 
-    metamerColourDelta.textContent = `Baseline/current Delta u'v': ${deltaUv.toFixed(6)}`;
+    metamerColourDelta.textContent = `基准/当前 Δu'v：${deltaUv.toFixed(6)}`;
     metamerColourDelta.dataset.deltaUv = deltaUv.toFixed(9);
     metamerColourDelta.classList.toggle('outside-tolerance', deltaUv > METAMER_CHROMATICITY_TOLERANCE);
 }
@@ -1204,7 +1213,7 @@ function captureBaseline() {
     });
 
     syncMetamerControls(metrics);
-    setMetamerStatus(`Baseline set: Rg ${Math.round(baselineSnapshot.metrics.rg)}.`);
+    setMetamerStatus(`已设置基准：Rg ${Math.round(baselineSnapshot.metrics.rg)}`);
     scheduleUpdate();
 }
 
@@ -1226,7 +1235,11 @@ function metamerOptimizerChannels(channels) {
 }
 
 async function runMetamerOptimization() {
-    if (!metamerModeEnabled || isMetamerOptimizing) return;
+    if (!metamerModeEnabled) return;
+    if (isMetamerOptimizing) {
+        pendingMetamerOptimization = true;
+        return;
+    }
     if (typeof METAMER_OPTIMIZER.optimizeMetamer !== 'function') {
         setMetamerStatus('Metamer optimizer is unavailable.');
         return;
@@ -1254,8 +1267,11 @@ async function runMetamerOptimization() {
         const result = METAMER_OPTIMIZER.optimizeMetamer({
             channels: metamerOptimizerChannels(channels),
             baselineValues: lockedBaseline.values.slice(),
-            targetXy: METAMER_OPTIMIZER.getBaselineTargetXy(lockedBaseline),
+            targetXy: metamerProfile === 'saturation'
+                ? getTargetXY(targetCCT, 0)
+                : METAMER_OPTIMIZER.getBaselineTargetXy(lockedBaseline),
             targetRg,
+            objective: metamerProfile,
             evaluateSpd(spd) {
                 const xy = xyFromSPD(spd);
                 return { ...calculateMetrics(spd), xy };
@@ -1274,9 +1290,9 @@ async function runMetamerOptimization() {
             valuesById[channels[index].id] = result.values[index];
         }
         applyValuesImmediate(valuesById);
-        setMetamerStatus(result.exact
-            ? `Target achieved: ${Math.round(result.achievedRg)}`
-            : `Closest Rg found in current search: ${Math.round(result.achievedRg)}`);
+        setMetamerStatus(metamerProfile === 'fidelity'
+            ? `高显色完成 · Rf ${Math.round(result.achievedRf)} · Ra ${Math.round(result.achievedRa)} · R9 ${Math.round(result.achievedR9)}`
+            : `高饱和完成 · Rg ${Math.round(result.achievedRg)} · Rf ${Math.round(result.achievedRf)}`);
     } catch (error) {
         console.error('Metamer optimization failed:', error);
         setMetamerStatus('Metamer optimization failed.');
@@ -1284,6 +1300,10 @@ async function runMetamerOptimization() {
         isMetamerOptimizing = false;
         if (metamerDependentControls) metamerDependentControls.removeAttribute('aria-busy');
         syncMetamerControls(calculateMetrics(getCombinedSPD()));
+        if (pendingMetamerOptimization) {
+            pendingMetamerOptimization = false;
+            queueMicrotask(runMetamerOptimization);
+        }
     }
 }
 
@@ -1379,12 +1399,12 @@ function renderSPD() {
     ctx.fillStyle = 'rgba(42, 37, 30, 0.78)';
     ctx.font = '12px "Inter", sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('Wavelength λ (nm) | 波长', plotX + plotW / 2, H - 4);
+    ctx.fillText('波长 λ (nm)', plotX + plotW / 2, H - 4);
 
     ctx.save();
     ctx.translate(12, plotY + plotH / 2);
     ctx.rotate(-Math.PI / 2);
-    ctx.fillText('Relative Power | 相对功率', 0, 0);
+    ctx.fillText('相对功率', 0, 0);
     ctx.restore();
 
     // ── D65 Reference ──
@@ -1533,7 +1553,7 @@ function updateCircadianConditionLabels() {
     if (exposureDurationVal) exposureDurationVal.textContent = `${exposureDurationHours.toFixed(1)} h`;
     if (cla2Conditions) {
         const fieldLabel = VISUAL_FIELD_LABELS[visualFieldFactor] || VISUAL_FIELD_LABELS[1];
-        const conditionText = `Rea CLA 2.0 model with a ${exposureDurationHours.toFixed(1)} hour duration and ${fieldLabel} visual field.`;
+        const conditionText = `Rea CLA 2.0 模型，暴露时长 ${exposureDurationHours.toFixed(1)} h，${fieldLabel}。`;
         if (cla2Conditions.textContent !== conditionText) cla2Conditions.textContent = conditionText;
     }
 }
@@ -1543,7 +1563,7 @@ function announceCircadianConditionUpdate(metrics) {
     const fieldLabel = VISUAL_FIELD_LABELS[visualFieldFactor] || VISUAL_FIELD_LABELS[1];
     const cs = metrics.cs > 0 ? metrics.cs.toFixed(3) : '0';
     const cla = metrics.cla > 0 ? Math.round(metrics.cla).toLocaleString() : '0';
-    circadianStatus.textContent = `Rea CLA 2.0 conditions: ${exposureDurationHours.toFixed(1)} hours, ${fieldLabel}. CS ${cs}; CLA ${cla}.`;
+    circadianStatus.textContent = `Rea CLA 2.0 条件：${exposureDurationHours.toFixed(1)} h，${fieldLabel}。CS ${cs}；CLA ${cla}。`;
 }
 
 function renderCircadianMetric(metrics) {
@@ -1570,6 +1590,7 @@ function updateMetrics() {
     const combined = getCombinedSPD();
     const m = calculateMetrics(combined);
     updateEmitterPreview(combined, m);
+    updateColorSamples(combined);
     if (metamerModeEnabled) syncMetamerControls(m);
     updateMetamerColourDelta(combined);
 
@@ -1578,6 +1599,12 @@ function updateMetrics() {
         format: v => v > 0 ? Math.round(v).toLocaleString() : '--',
         barFill: Math.min(100, (m.cct / 10000) * 100),
         barColor: m.cct < 3500 ? '#ffb347' : m.cct < 5000 ? '#e4b85b' : '#f6f1e8'
+    });
+
+    updateMetricCard('delta-uv', valDeltaUv, barDeltaUv, m.duv, prevMetrics.duv, {
+        format: value => Number.isFinite(value) ? `${value >= 0 ? '+' : ''}${value.toFixed(4)}` : '--',
+        barFill: Number.isFinite(m.duv) ? Math.min(100, Math.abs(m.duv) / 0.01 * 100) : 0,
+        barColor: Number.isFinite(m.duv) && Math.abs(m.duv) <= 0.003 ? '#34c759' : '#e4b85b'
     });
 
     // CIE general colour rendering index
@@ -1626,21 +1653,14 @@ function updateMetrics() {
     updateMetricDelta(valRf, m.rf, comparisonBaseline?.metrics.rf);
     updateMetricDelta(valRg, m.rg, comparisonBaseline?.metrics.rg);
 
-    prevMetrics = { cct: m.cct, ra: m.ra, r9: m.r9, rf: m.rf, melanopicDER: m.melanopicDER, melanopicEDI: m.melanopicEDI, cs: m.cs, cla: m.cla, rg: m.rg };
+    prevMetrics = { cct: m.cct, duv: m.duv, ra: m.ra, r9: m.r9, rf: m.rf, melanopicDER: m.melanopicDER, melanopicEDI: m.melanopicEDI, cs: m.cs, cla: m.cla, rg: m.rg };
 }
 
 function updateMetricCard(id, valueEl, barEl, newVal, oldVal, opts) {
     valueEl.textContent = opts.format(newVal);
-    barEl.style.setProperty('--bar-fill', `${opts.barFill}%`);
+    const barScale = Math.max(0, Math.min(1, Number(opts.barFill) / 100));
+    barEl.style.setProperty('--bar-scale', barScale.toFixed(4));
     barEl.style.setProperty('--bar-color', opts.barColor);
-
-    // Pulse on change
-    if (Math.abs(newVal - oldVal) > 0.001) {
-        const card = document.getElementById(`card-${id}`);
-        card.classList.remove('pulse');
-        void card.offsetWidth; // trigger reflow
-        card.classList.add('pulse');
-    }
 }
 
 function updateMetricDelta(valueEl, value, baselineValue) {
@@ -1674,13 +1694,13 @@ function buildChannelSliders() {
         const row = document.createElement('div');
         const value = channelValues[ch.id];
         const uiValue = metamerModeEnabled ? value : Math.round(value);
-        row.className = 'channel-row fade-in';
+        row.className = 'channel-row';
         row.id = `ch-row-${ch.id}`;
         row.innerHTML = `
             <div class="channel-header">
                 <span class="channel-label">
                     <span class="channel-dot" style="color: ${ch.color}; background: ${ch.color};"></span>
-                    <span>${ch.nameCN} ${ch.name}</span>
+                    <span>${ch.nameCN || ch.name}</span>
                     <span class="channel-wavelength">${ch.waveLabel}</span>
                 </span>
                 <span class="channel-value" id="ch-val-${ch.id}" style="color: ${ch.color};">${channelDisplayValue(value)}%</span>
@@ -1688,7 +1708,7 @@ function buildChannelSliders() {
             <input type="range" class="channel-slider" id="ch-slider-${ch.id}"
                    min="0" max="100" step="${metamerModeEnabled ? '0.5' : '1'}" value="${uiValue}"
                    style="--ch-color: ${ch.color}; --slider-fill: ${uiValue}%;"
-                   aria-label="${ch.name} channel duty cycle">
+                   aria-label="${ch.nameCN || ch.name}通道输出">
         `;
         channelsContainer.appendChild(row);
 
@@ -1706,14 +1726,14 @@ function buildChannelSliders() {
 
 function updateModeLabels() {
     if (importedChannels) {
-        modeLabel4.textContent = `${importedChannels.length}-Channel SPD`;
-        modeLabel6.textContent = 'Imported';
+        modeLabel4.textContent = `${importedChannels.length} 通道 SPD`;
+        modeLabel6.textContent = '已导入';
         modeLabel4.classList.add('active');
         modeLabel6.classList.remove('active');
         return;
     }
-    modeLabel4.textContent = '4-Channel';
-    modeLabel6.textContent = '6-Ch RGBCLA';
+    modeLabel4.textContent = '4 通道';
+    modeLabel6.textContent = '6 通道 RGBCLA';
     modeLabel4.classList.toggle('active', currentMode === 4);
     modeLabel6.classList.toggle('active', currentMode === 6);
 }
@@ -1736,7 +1756,7 @@ function parseNumberCell(value) {
     return Number(String(value).trim().replace('%', '').replace(',', '.'));
 }
 
-function parseSPDText(text, fileName = 'Imported SPD') {
+function parseSPDText(text, fileName = '导入的 SPD') {
     const rawLines = text.split(/\r?\n/)
         .map(line => line.trim())
         .filter(line => line && !line.startsWith('#') && !line.startsWith('//'));
@@ -1819,7 +1839,7 @@ function parseSPDText(text, fileName = 'Imported SPD') {
 }
 
 function loadImportedChannels(channels, fileName) {
-    clearBaseline('Baseline cleared: imported channel set changed.');
+    clearBaseline('通道数据已变化，同色点对比基准已清除。');
     importedChannels = channels;
     importedSourceName = fileName;
     currentMode = channels.length;
@@ -1894,6 +1914,7 @@ function exportCurrentRecipe() {
             duv: targetDuv,
             eyeIlluminanceLux: eyeIlluminance,
             sameColourPointMode: metamerModeEnabled,
+            metamerProfile: metamerModeEnabled ? metamerProfile : null,
             targetRg: metamerModeEnabled ? targetRg : null
         },
         result: {
@@ -1974,7 +1995,7 @@ window.addEventListener('drop', event => {
 // ═══════════════════════════════════════════════
 
 modeCheckbox.addEventListener('change', () => {
-    clearBaseline('Baseline cleared: channel mode changed.');
+    clearBaseline('通道模式已变化，同色点对比基准已清除。');
     importedChannels = null;
     setImportStatus('已切换回内置模拟通道');
     currentMode = modeCheckbox.checked ? 6 : 4;
@@ -2042,7 +2063,7 @@ document.querySelectorAll('.preset-btn').forEach(btn => {
             const values = {};
             const channels = getActiveChannels();
             for (const ch of channels) values[ch.id] = 0;
-            animateToValues(values, 500);
+            animateToValues(values);
             return;
         }
 
@@ -2050,10 +2071,10 @@ document.querySelectorAll('.preset-btn').forEach(btn => {
         if (presetKey.startsWith('cct-')) {
             const cct = parseInt(presetKey.replace('cct-', ''));
             if (Number.isFinite(cct)) {
-                runRealtimeOptimizerDebounced.cancel();
-                const channels = getActiveChannels();
-                const solution = optimizeValuesForScene(channels, cct, 0);
-                applyValuesImmediate(solutionValuesById(channels, solution));
+                targetCCT = cct;
+                targetDuv = 0;
+                syncCctAndDuvControls();
+                applyTargetOptimization();
                 return;
             }
         }
@@ -2063,11 +2084,11 @@ document.querySelectorAll('.preset-btn').forEach(btn => {
         if (!preset) return;
         if (preset.reference) {
             const fitted = fitChannelsToReference(CIE_DATA[preset.reference]);
-            animateToValues(fitted, 600);
+            animateToValues(fitted);
             return;
         }
         const values = (preset.valuesByMode ? (preset.valuesByMode[currentMode] || preset.valuesByMode[4]) : preset.values) || {};
-        animateToValues(values, 500);
+        animateToValues(values);
     });
 });
 
@@ -2180,10 +2201,14 @@ function fitChannelsToReference(referenceSPD) {
     return result;
 }
 
-function animateToValues(targetValues, duration = 500) {
+function animateToValues(targetValues, duration = 220) {
     if (animFrameId !== null) {
         cancelAnimationFrame(animFrameId);
         animFrameId = null;
+    }
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches || duration <= 0) {
+        applyValuesImmediate(targetValues);
+        return;
     }
     const channels = getActiveChannels();
     const startValues = {};
@@ -2195,11 +2220,12 @@ function animateToValues(targetValues, duration = 500) {
 
     function animate(now) {
         const t = Math.min((now - startTime) / duration, 1);
-        const eased = easeInOutCubic(t);
+        const eased = easeInOutValue(t);
 
         for (const ch of channels) {
             const target = targetValues[ch.id] !== undefined ? targetValues[ch.id] : channelValues[ch.id];
-            const val = Math.round(startValues[ch.id] + (target - startValues[ch.id]) * eased);
+            const interpolated = startValues[ch.id] + (target - startValues[ch.id]) * eased;
+            const val = t === 1 ? target : Math.round(interpolated);
             channelValues[ch.id] = val;
 
             const slider = document.getElementById(`ch-slider-${ch.id}`);
@@ -2217,14 +2243,26 @@ function animateToValues(targetValues, duration = 500) {
             animFrameId = requestAnimationFrame(animate);
         } else {
             animFrameId = null;
+            applyValuesImmediate(targetValues);
         }
     }
 
     animFrameId = requestAnimationFrame(animate);
 }
 
-function easeInOutCubic(t) {
-    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+function easeInOutValue(progress) {
+    const x1 = 0.77;
+    const x2 = 0.175;
+    const sample = (t, a1, a2) => 3 * (1 - t) * (1 - t) * t * a1 + 3 * (1 - t) * t * t * a2 + t * t * t;
+    const slope = (t, a1, a2) => 3 * (1 - t) * (1 - t) * a1 + 6 * (1 - t) * t * (a2 - a1) + 3 * t * t * (1 - a2);
+    let t = progress;
+    for (let iteration = 0; iteration < 5; iteration++) {
+        const currentSlope = slope(t, x1, x2);
+        if (Math.abs(currentSlope) < 1e-6) break;
+        t -= (sample(t, x1, x2) - progress) / currentSlope;
+        t = Math.max(0, Math.min(1, t));
+    }
+    return sample(t, 0, 1);
 }
 
 // ═══════════════════════════════════════════════
@@ -2547,10 +2585,11 @@ function setInvalidatingControlsLocked(locked) {
         '#preserve-channel-power',
         '#target-cct-slider',
         '#target-duv-slider',
-        '#metamer-mode-checkbox',
+        'input[name="metamer-profile"]',
         '#target-rg-slider',
         '#set-baseline-btn',
         '#compare-spectrum-checkbox',
+        '.metamer-profile-button',
         '.channel-slider',
         '.preset-btn',
         '.opt-preset-btn'
@@ -2582,6 +2621,277 @@ function updateCctJourneyControls() {
     if (cctJourneyStopBtn) cctJourneyStopBtn.disabled = cctAnimation.status === 'stopped';
 }
 
+function rgbCss(rgb) {
+    return `rgb(${rgb.join(', ')})`;
+}
+
+function createSampleChip(sample) {
+    const chip = document.createElement('article');
+    chip.className = 'color-sample-swatch';
+    chip.setAttribute('aria-label', `${sample.id}: reference and current spectrum comparison`);
+
+    const colors = [
+        ['color-sample-ref', sample.refRGB, '参考'],
+        ['color-sample-test', sample.testRGB, '当前']
+    ];
+    for (const [className, rgb, label] of colors) {
+        const color = document.createElement('div');
+        color.className = className;
+        if (rgb) {
+            color.style.backgroundColor = rgbCss(rgb);
+            color.title = `${label}: ${rgbCss(rgb)}`;
+        } else {
+            color.classList.add('is-unavailable');
+            color.title = '当前光谱不可用';
+        }
+        chip.appendChild(color);
+    }
+
+    const label = document.createElement('span');
+    label.className = 'color-sample-label';
+    label.textContent = sample.id;
+    chip.appendChild(label);
+    return chip;
+}
+
+function createTcsChart(quality) {
+    const chart = document.createElement('div');
+    chart.className = 'tcs-bars';
+    const values = Array.isArray(quality?.ri) ? quality.ri : [];
+    const heading = document.createElement('p');
+    heading.className = 'tcs-ra-summary';
+    heading.textContent = Number.isFinite(quality?.ra) ? `Ra = ${quality.ra.toFixed(1)}` : 'Ra = --';
+    chart.appendChild(heading);
+    const barColors = ['#e8a39a','#e39a68','#c6bd48','#4fa7a0','#3daeb8','#58c7c7','#9994ce','#887fbc','#e53d37','#d6d333','#4ca567','#5065b3','#d8d2cc','#3b9a66'];
+    for (let index = 0; index < 14; index++) {
+        const value = Number.isFinite(values[index]) ? values[index] : null;
+        const row = document.createElement('div');
+        row.className = 'tcs-bar-row';
+        const name = document.createElement('span');
+        name.className = 'tcs-bar-name';
+        name.textContent = `R${index + 1}`;
+        const track = document.createElement('span');
+        track.className = 'tcs-bar-track';
+        const fill = document.createElement('span');
+        fill.className = 'tcs-bar-fill';
+        fill.style.width = `${value === null ? 0 : Math.max(0, Math.min(100, value))}%`;
+        fill.style.backgroundColor = barColors[index];
+        fill.classList.toggle('is-low', value !== null && value < 80);
+        track.appendChild(fill);
+        const number = document.createElement('strong');
+        number.className = 'tcs-bar-value';
+        number.textContent = value === null ? '--' : Math.round(value).toString();
+        row.append(name, track, number);
+        chart.appendChild(row);
+    }
+    const axis = document.createElement('div');
+    axis.className = 'tcs-axis';
+    for (let value = 0; value <= 100; value += 10) {
+        const tick = document.createElement('span');
+        tick.textContent = value;
+        axis.appendChild(tick);
+    }
+    chart.appendChild(axis);
+    return chart;
+}
+
+function svgElement(name, attributes = {}) {
+    const element = document.createElementNS('http://www.w3.org/2000/svg', name);
+    Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, value));
+    return element;
+}
+
+function createCesVectorGraphic(quality) {
+    const wrap = document.createElement('div');
+    wrap.className = 'ces-vector-wrap';
+    const graphic = document.createElement('div');
+    graphic.className = 'ces-vector-graphic';
+    const svg = svgElement('svg', { viewBox: '-132 -132 264 264', role: 'img', 'aria-label': 'TM-30 colour vector graphic' });
+    const hueColors = ['#ef5350','#f06d3b','#e99b32','#d6b735','#a7bd3f','#70b653','#38ab78','#26a69a','#2aa8bd','#4285c5','#5b72c5','#745bb8','#9554ae','#b64f9c','#d44f7d','#e65363'];
+    for (let index = 0; index < 16; index++) {
+        const start = (index * 22.5 - 90) * Math.PI / 180;
+        const end = ((index + 1) * 22.5 - 90) * Math.PI / 180;
+        const x1 = 118 * Math.cos(start), y1 = 118 * Math.sin(start);
+        const x2 = 118 * Math.cos(end), y2 = 118 * Math.sin(end);
+        svg.appendChild(svgElement('path', {
+            d: `M 0 0 L ${x1} ${y1} A 118 118 0 0 1 ${x2} ${y2} Z`,
+            fill: hueColors[index], opacity: '0.045'
+        }));
+    }
+    [25, 50, 75, 100].forEach(radius => svg.appendChild(svgElement('circle', {
+        cx: 0, cy: 0, r: radius, fill: 'none', stroke: '#b9b2a8', 'stroke-width': radius === 100 ? 1.4 : 0.7
+    })));
+    for (let index = 0; index < 16; index++) {
+        const angle = (index + 0.5) * Math.PI / 8;
+        svg.appendChild(svgElement('line', {
+            x1: 0, y1: 0, x2: 112 * Math.cos(angle), y2: -112 * Math.sin(angle),
+            stroke: '#c8c1b7', 'stroke-width': 0.65
+        }));
+        const label = svgElement('text', {
+            x: 122 * Math.cos(angle), y: -122 * Math.sin(angle),
+            fill: '#7d766d', 'font-size': 8, 'text-anchor': 'middle', 'dominant-baseline': 'middle'
+        });
+        label.textContent = index + 1;
+        svg.appendChild(label);
+    }
+    const referencePoints = Array.from({ length: 16 }, (_, index) => {
+        const angle = (index + 0.5) * Math.PI / 8;
+        return `${100 * Math.cos(angle)},${-100 * Math.sin(angle)}`;
+    }).join(' ');
+    svg.appendChild(svgElement('polygon', {
+        points: referencePoints, fill: 'none', stroke: '#7f786f', 'stroke-width': 1.5, 'stroke-dasharray': '4 3'
+    }));
+    if (Array.isArray(quality?.vector)) {
+        const testPoints = quality.vector.map(point => `${Math.max(-125, Math.min(125, point.x))},${Math.max(-125, Math.min(125, -point.y))}`).join(' ');
+        svg.appendChild(svgElement('polygon', {
+            points: testPoints, fill: 'rgba(220,65,49,0.08)', stroke: '#dc4131', 'stroke-width': 2.6, 'stroke-linejoin': 'round'
+        }));
+        quality.vector.forEach((point, index) => svg.appendChild(svgElement('circle', {
+            cx: Math.max(-125, Math.min(125, point.x)),
+            cy: Math.max(-125, Math.min(125, -point.y)),
+            r: 2.5, fill: hueColors[index], stroke: '#fff', 'stroke-width': 0.7
+        })));
+    }
+    graphic.appendChild(svg);
+    const metricItems = [
+        ['ces-rf', Number.isFinite(quality?.rf) ? Math.round(quality.rf) : '--', 'Rf'],
+        ['ces-rg', Number.isFinite(quality?.rg) ? Math.round(quality.rg) : '--', 'Rg'],
+        ['ces-cct', Number.isFinite(quality?.cct) && quality.cct > 0 ? `${Math.round(quality.cct)} K` : '--', 'CCT'],
+        ['ces-duv', Number.isFinite(quality?.duv) ? quality.duv.toFixed(4) : '--', 'Duv']
+    ];
+    metricItems.forEach(([className, value, label]) => {
+        const metric = document.createElement('div');
+        metric.className = `ces-corner-metric ${className}`;
+        const strong = document.createElement('strong');
+        strong.textContent = value;
+        const span = document.createElement('span');
+        span.textContent = label;
+        metric.append(strong, span);
+        graphic.appendChild(metric);
+    });
+    wrap.appendChild(graphic);
+    const summary = document.createElement('p');
+    summary.className = 'ces-vector-summary';
+    summary.textContent = quality?.vector
+        ? '虚线为参考圆，红色轮廓为当前光谱；向外表示该色相饱和度增强，向内表示降低。'
+        : '尚无有效光谱 · 虚线为参考圆';
+    wrap.appendChild(summary);
+    return wrap;
+}
+
+function optimizeChannelsToXy(targetXy) {
+    const channels = getActiveChannels();
+    if (!channels.length) return null;
+    const targetUv = xyToUv(targetXy.x, targetXy.y);
+    const current = channels.map(channel => channelValues[channel.id] || 0);
+    const seeds = [
+        current,
+        channels.map(() => 50),
+        channels.map(() => 100),
+        channels.map(channel => (channel.chromaticity?.x || 0.33) > targetXy.x ? 65 : 25),
+        channels.map(channel => (channel.chromaticity?.y || 0.33) > targetXy.y ? 65 : 25)
+    ];
+
+    const evaluate = values => {
+        const xy = xyFromSPD(combinedSPDFromValues(channels, values));
+        const uv = xyToUv(xy.x, xy.y);
+        return { xy, error: Math.hypot(uv.u - targetUv.u, uv.v - targetUv.v) };
+    };
+
+    let best = null;
+    for (const seed of seeds) {
+        const values = seed.slice();
+        let result = evaluate(values);
+        for (const step of [32, 16, 8, 4, 2, 1, 0.5]) {
+            let improved = true;
+            let passes = 0;
+            while (improved && passes++ < 3) {
+                improved = false;
+                for (let index = 0; index < values.length; index++) {
+                    const original = values[index];
+                    let localBest = result;
+                    let localValue = original;
+                    for (const candidate of [Math.max(0, original - step), Math.min(100, original + step)]) {
+                        values[index] = candidate;
+                        const tested = evaluate(values);
+                        if (tested.error + 1e-10 < localBest.error) {
+                            localBest = tested;
+                            localValue = candidate;
+                        }
+                    }
+                    values[index] = localValue;
+                    if (localBest !== result) {
+                        result = localBest;
+                        improved = true;
+                    }
+                }
+            }
+        }
+        if (!best || result.error < best.error) best = { values: values.slice(), ...result };
+    }
+
+    const maxValue = Math.max(...best.values);
+    if (maxValue > 0) best.values = best.values.map(value => Math.min(100, value * 100 / maxValue));
+    best.actualXy = xyFromSPD(combinedSPDFromValues(channels, best.values));
+    return best;
+}
+
+function applyPastelTarget(sample, button) {
+    const result = optimizeChannelsToXy(sample.xy);
+    const status = document.getElementById('pastel-fit-status');
+    if (!result) return;
+    const values = {};
+    getActiveChannels().forEach((channel, index) => { values[channel.id] = result.values[index]; });
+    document.querySelectorAll('.pastel-color-card.is-selected').forEach(card => card.classList.remove('is-selected'));
+    button.classList.add('is-selected');
+    animateToValues(values);
+    if (status) {
+        const accuracy = result.error <= 0.003 ? '精确拟合' : result.error <= 0.01 ? '近似拟合' : '超出当前通道色域';
+        status.textContent = `${sample.id} ${sample.name} · ${accuracy} · Δu'v' ${result.error.toFixed(4)}`;
+        status.classList.toggle('is-warning', result.error > 0.01);
+    }
+}
+
+function createPastelCard(sample) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'pastel-color-card';
+    button.style.backgroundColor = rgbCss(sample.rgb);
+    button.setAttribute('aria-label', `${sample.id} ${sample.name}`);
+    const id = document.createElement('strong');
+    id.textContent = sample.id;
+    const name = document.createElement('span');
+    name.textContent = sample.name;
+    button.append(id, name);
+    button.addEventListener('click', () => applyPastelTarget(sample, button));
+    return button;
+}
+
+function updateColorSamples(spd) {
+    const grid = document.getElementById('color-samples-grid');
+    const pastelGrid = document.getElementById('pastel-palette-grid');
+    if (!grid) return;
+    grid.replaceChildren();
+
+    if (pastelGrid && !pastelGrid.childElementCount) {
+        const fragment = document.createDocumentFragment();
+        PASTEL_PALETTE.samples.forEach(sample => fragment.appendChild(createPastelCard(sample)));
+        pastelGrid.appendChild(fragment);
+    }
+    const qualitySpd = [];
+    for (let index = 0; index < spd.length; index += 5) qualitySpd.push(spd[index]);
+    const quality = typeof COLOUR_QUALITY.calculateColourQuality === 'function'
+        ? COLOUR_QUALITY.calculateColourQuality(qualitySpd)
+        : null;
+    if (quality && quality.cct > 0 && SPECTRAL_MATH.estimateCctAndDuvFromXy) {
+        const xy = xyFromSPD(spd);
+        const estimate = SPECTRAL_MATH.estimateCctAndDuvFromXy(xy.x, xy.y);
+        quality.duv = estimate.duv;
+    }
+    grid.appendChild(createTcsChart(quality));
+    grid.appendChild(createCesVectorGraphic(quality));
+}
+
 function stopCctJourney() {
     if (cctAnimation.timer !== null) {
         clearInterval(cctAnimation.timer);
@@ -2602,7 +2912,7 @@ function pauseCctJourney() {
     }
     cctAnimation.status = 'paused';
     updateCctJourneyControls();
-    if (cctJourneyStatus) cctJourneyStatus.textContent = `Paused · ${targetCCT} K`;
+    if (cctJourneyStatus) cctJourneyStatus.textContent = `已暂停 · ${targetCCT} K`;
 }
 
 function advanceCctJourney() {
@@ -2650,9 +2960,185 @@ function applyHumanCentredScene(scene) {
         syncTargetSliderFill(eyeIlluminanceSlider);
     }
 
-    const channels = getActiveChannels();
-    const solution = optimizeValuesForScene(channels, targetCCT, 0, scene.emphasis);
-    applyValuesImmediate(solutionValuesById(channels, solution));
+    applyTargetOptimization(scene.emphasis);
+}
+
+let scheduleTimer = null;
+let lastScheduleKey = '';
+let scheduleSimulationMinute = null;
+const SCHEDULE_SIMULATION_STEP_MINUTES = 15;
+const SCHEDULE_SIMULATION_INTERVAL_MS = 250;
+
+function scheduleStagesFromUi() {
+    return CIRCADIAN_SCHEDULE.DEFAULT_STAGES.map(stage => {
+        const input = document.querySelector(`.schedule-stage-time[data-stage-id="${stage.id}"]`);
+        return { ...stage, time: input?.value || stage.time };
+    });
+}
+
+function setScheduleActiveRow(stageId) {
+    document.querySelectorAll('.schedule-stage-row').forEach(row => {
+        row.classList.toggle('is-active', row.dataset.stageId === stageId);
+    });
+}
+
+function applyScheduledTarget(target) {
+    stopCctJourney();
+    runRealtimeOptimizerDebounced.cancel();
+    targetCCT = Math.round(target.cctK / 100) * 100;
+    targetDuv = target.duv || 0;
+    eyeIlluminance = Math.round(target.illuminanceLux);
+    syncCctAndDuvControls();
+    if (eyeIlluminanceSlider) {
+        eyeIlluminanceSlider.value = eyeIlluminance;
+        eyeIlluminanceVal.textContent = `${eyeIlluminance} lux`;
+        syncTargetSliderFill(eyeIlluminanceSlider);
+    }
+    applyTargetOptimization(target.emphasis);
+}
+
+function scheduleSimulationRange() {
+    const ordered = CIRCADIAN_SCHEDULE.normalizeStages(scheduleStagesFromUi());
+    if (!ordered.length) return { start: 0, end: 0 };
+    return {
+        start: ordered[0].minute,
+        end: Math.min(1440, ordered[ordered.length - 1].minute + 30)
+    };
+}
+
+function updateScheduleSimulationNote() {
+    const note = document.getElementById('schedule-note');
+    if (!note) return;
+    const range = scheduleSimulationRange();
+    note.textContent = `快速模拟 ${CIRCADIAN_SCHEDULE.formatMinuteOfDay(range.start)}–${CIRCADIAN_SCHEDULE.formatMinuteOfDay(range.end)}；各阶段前 30 分钟平滑过渡。`;
+}
+
+function scheduleTick(force = false, applyTarget = true, simulatedMinute = null) {
+    const now = new Date();
+    const usesSimulationClock = Number.isFinite(simulatedMinute);
+    const minuteOfDay = usesSimulationClock
+        ? simulatedMinute
+        : now.getHours() * 60 + now.getMinutes();
+    const state = CIRCADIAN_SCHEDULE.stateAt(scheduleStagesFromUi(), minuteOfDay, 30);
+    const clock = document.getElementById('schedule-clock');
+    const status = document.getElementById('schedule-current-stage');
+    if (clock) clock.textContent = usesSimulationClock
+        ? CIRCADIAN_SCHEDULE.formatMinuteOfDay(minuteOfDay)
+        : now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+    if (!state) return;
+    setScheduleActiveRow(state.active.id);
+    const activeScene = CCT_JOURNEY.sceneById(state.active.sceneId);
+    const previousScene = CCT_JOURNEY.sceneById(state.previous.sceneId);
+    if (!activeScene || !previousScene) return;
+    const transition = state.progress < 1;
+    if (status) status.textContent = transition
+        ? `${state.previous.labelZh} → ${state.active.labelZh} · ${Math.round(state.progress * 100)}%`
+        : `${state.active.labelZh} · ${activeScene.cctK} K · ${activeScene.illuminanceLux} lux`;
+    const key = `${state.active.id}:${minuteOfDay}:${Math.round(state.progress * 100)}`;
+    if (!applyTarget || (!force && key === lastScheduleKey)) return;
+    lastScheduleKey = key;
+    applyScheduledTarget(CIRCADIAN_SCHEDULE.blendScenes(previousScene, activeScene, state.progress));
+}
+
+function stopSchedule() {
+    if (scheduleTimer !== null) clearInterval(scheduleTimer);
+    scheduleTimer = null;
+    scheduleSimulationMinute = null;
+    lastScheduleKey = '';
+}
+
+function startSchedule() {
+    stopSchedule();
+    const range = scheduleSimulationRange();
+    scheduleSimulationMinute = range.start;
+    scheduleTick(true, true, scheduleSimulationMinute);
+    scheduleTimer = setInterval(() => {
+        scheduleSimulationMinute = CIRCADIAN_SCHEDULE.advanceSimulationMinute(
+            scheduleSimulationMinute,
+            SCHEDULE_SIMULATION_STEP_MINUTES
+        );
+        if (scheduleSimulationMinute >= range.end) {
+            scheduleSimulationMinute = range.end;
+            scheduleTick(true, true, scheduleSimulationMinute);
+            const clock = document.getElementById('schedule-clock');
+            const status = document.getElementById('schedule-current-stage');
+            const toggle = document.getElementById('schedule-auto-toggle');
+            if (clock) clock.textContent = CIRCADIAN_SCHEDULE.formatMinuteOfDay(range.end);
+            if (status) status.textContent = '场景时段模拟完成';
+            if (toggle) toggle.checked = false;
+            stopSchedule();
+            return;
+        }
+        scheduleTick(false, true, scheduleSimulationMinute);
+    }, SCHEDULE_SIMULATION_INTERVAL_MS);
+}
+
+function renderScheduleStages() {
+    const list = document.getElementById('schedule-stage-list');
+    if (!list || !window.CIRCADIAN_SCHEDULE) return;
+    list.replaceChildren();
+    CIRCADIAN_SCHEDULE.DEFAULT_STAGES.forEach(stage => {
+        const scene = CCT_JOURNEY.sceneById(stage.sceneId);
+        const row = document.createElement('div');
+        row.className = 'schedule-stage-row';
+        row.dataset.stageId = stage.id;
+        const time = document.createElement('input');
+        time.type = 'time';
+        time.value = stage.time;
+        time.className = 'schedule-stage-time';
+        time.dataset.stageId = stage.id;
+        time.setAttribute('aria-label', `${stage.labelZh}开始时间`);
+        time.addEventListener('change', () => {
+            lastScheduleKey = '';
+            updateScheduleSimulationNote();
+            if (document.getElementById('schedule-auto-toggle')?.checked) {
+                scheduleTick(true, true, scheduleSimulationMinute ?? 0);
+            } else scheduleTick(false, false, 0);
+        });
+        const label = document.createElement('span');
+        label.className = 'schedule-stage-label';
+        const name = document.createElement('strong');
+        name.textContent = stage.labelZh;
+        const detail = document.createElement('small');
+        detail.textContent = `${scene?.cctK || '--'} K · ${scene?.illuminanceLux || '--'} lux`;
+        label.append(name, detail);
+        const preview = document.createElement('button');
+        preview.type = 'button';
+        preview.className = 'schedule-preview-btn';
+        preview.textContent = '▶';
+        preview.title = `预览${stage.labelZh}`;
+        preview.setAttribute('aria-label', `预览${stage.labelZh}`);
+        preview.addEventListener('click', () => {
+            const toggle = document.getElementById('schedule-auto-toggle');
+            if (toggle) toggle.checked = false;
+            stopSchedule();
+            setScheduleActiveRow(stage.id);
+            applyHumanCentredScene(scene);
+            const status = document.getElementById('schedule-current-stage');
+            if (status) status.textContent = `手动预览 · ${stage.labelZh}`;
+        });
+        row.append(time, label, preview);
+        list.appendChild(row);
+    });
+    scheduleTick(false, false, 0);
+}
+
+function setOptimizerMode(mode) {
+    const isSchedule = mode === 'schedule';
+    const sceneTab = document.getElementById('scene-tab');
+    const scheduleTab = document.getElementById('schedule-tab');
+    const scenePanel = document.getElementById('scene-mode-panel');
+    const schedulePanel = document.getElementById('schedule-mode-panel');
+    sceneTab?.setAttribute('aria-selected', String(!isSchedule));
+    scheduleTab?.setAttribute('aria-selected', String(isSchedule));
+    const enteringPanel = isSchedule ? schedulePanel : scenePanel;
+    const leavingPanel = isSchedule ? scenePanel : schedulePanel;
+    if (leavingPanel) leavingPanel.hidden = true;
+    if (enteringPanel) {
+        enteringPanel.classList.add('is-entering');
+        enteringPanel.hidden = false;
+        requestAnimationFrame(() => enteringPanel.classList.remove('is-entering'));
+    }
 }
 
 function sleep(ms) {
@@ -2704,6 +3190,12 @@ function debounce(fn, delay) {
 // ═══════════════════════════════════════════════
 
 function init() {
+    const healthTuning = document.querySelector('.tuning-group-health');
+    const emitterPreview = document.querySelector('.emitter-preview');
+    if (healthTuning && emitterPreview) {
+        emitterPreview.appendChild(healthTuning);
+    }
+
     updateThemeState();
     
     // Watch for theme mutations to avoid querying computed styles during frame rendering
@@ -2758,6 +3250,7 @@ function init() {
             scheduleUpdate();
         }, 100);
     });
+    updateScheduleSimulationNote();
 }
 
 function runRealtimeOptimizer() {
@@ -2773,12 +3266,43 @@ function runRealtimeOptimizer() {
 
 const runRealtimeOptimizerDebounced = debounce(runRealtimeOptimizer, 90);
 
+async function applyTargetOptimization(emphasis = '') {
+    runRealtimeOptimizerDebounced.cancel();
+    if (metamerProfile === 'saturation' && metamerModeEnabled) {
+        targetDuv = 0;
+        syncCctAndDuvControls();
+    }
+
+    const channels = getActiveChannels();
+    if (!channels.length) return;
+    const solved = optimizeValuesForScene(channels, targetCCT, targetDuv, emphasis);
+    applyValuesImmediate(solutionValuesById(channels, solved));
+
+    if (!metamerModeEnabled) return;
+    captureBaseline();
+    compareSpectrumEnabled = true;
+    updateTargetRgControl(metamerProfile === 'saturation' ? 120 : 100);
+    await runMetamerOptimization();
+}
+
+const applyTargetOptimizationDebounced = debounce(() => {
+    applyTargetOptimization();
+}, 140);
+
+function syncMetamerTargetPolicy() {
+    if (!targetDuvSlider) return;
+    const locksToPlanckian = metamerModeEnabled && metamerProfile === 'saturation';
+    targetDuvSlider.disabled = locksToPlanckian;
+    targetDuvSlider.title = locksToPlanckian ? '高饱和模式固定在黑体轨迹上' : '';
+}
+
 // Wire CCT, Duv, and Rg target sliders
 if (targetCctSlider) {
     targetCctSlider.addEventListener('input', () => {
         targetCCT = parseInt(targetCctSlider.value);
         targetCctVal.textContent = `${targetCCT} K`;
-        if (!metamerModeEnabled) runRealtimeOptimizerDebounced();
+        if (metamerModeEnabled) applyTargetOptimizationDebounced();
+        else runRealtimeOptimizerDebounced();
         scheduleUpdate();
     });
 }
@@ -2786,7 +3310,8 @@ if (targetDuvSlider) {
     targetDuvSlider.addEventListener('input', () => {
         targetDuv = parseFloat(targetDuvSlider.value);
         targetDuvVal.textContent = `${targetDuv >= 0 ? '+' : ''}${targetDuv.toFixed(4)}`;
-        if (!metamerModeEnabled) runRealtimeOptimizerDebounced();
+        if (metamerModeEnabled) applyTargetOptimizationDebounced();
+        else runRealtimeOptimizerDebounced();
         scheduleUpdate();
     });
 }
@@ -2816,35 +3341,63 @@ if (visualFieldSelect) {
     });
 }
 
-if (metamerModeCheckbox) {
-    metamerModeCheckbox.addEventListener('change', () => {
-        metamerModeEnabled = metamerModeCheckbox.checked;
-        if (metamerDependentControls) metamerDependentControls.hidden = !metamerModeEnabled;
+document.querySelectorAll('input[name="metamer-profile"]').forEach(input => {
+    input.addEventListener('change', async () => {
+        if (!input.checked) return;
+        metamerProfile = input.value;
+        metamerModeEnabled = metamerProfile !== 'off';
+        if (metamerProfile === 'saturation') {
+            targetDuv = 0;
+            syncCctAndDuvControls();
+        }
+        syncMetamerTargetPolicy();
+        document.querySelectorAll('.metamer-profile-button').forEach(button => {
+            const selected = button.dataset.metamerProfile === metamerProfile;
+            button.classList.toggle('is-selected', selected);
+            button.setAttribute('aria-pressed', String(selected));
+        });
         if (!metamerModeEnabled) {
             normalizeChannelValuesToDisplayedPrecision();
-            resetComparisonVisibility();
+            clearBaseline();
             clearMetamerColourDelta();
             setMetamerStatus('');
-            syncMetamerControls(calculateMetrics(getCombinedSPD()));
             syncChannelSliderPrecision();
             scheduleUpdate();
             return;
         }
 
         const metrics = calculateMetrics(getCombinedSPD());
-        if (!syncMetamerControls(metrics)) {
-            syncChannelSliderPrecision();
-            scheduleUpdate();
+        if (!hasValidMetamerMetrics(metrics)) {
+            metamerProfile = 'fidelity';
+            metamerModeEnabled = false;
+            const fidelityInput = document.querySelector('input[name="metamer-profile"][value="fidelity"]');
+            if (fidelityInput) fidelityInput.checked = true;
+            document.querySelectorAll('.metamer-profile-button').forEach(button => {
+                const selected = button.dataset.metamerProfile === 'fidelity';
+                button.classList.toggle('is-selected', selected);
+                button.setAttribute('aria-pressed', String(selected));
+            });
+            setMetamerStatus('当前光谱无效，无法进行同色异谱优化。');
             return;
         }
-        updateTargetRgControl(metrics.rg);
-        setMetamerStatus(baselineSnapshot
-            ? 'Choose a target Rg.'
-            : 'Set a baseline before changing Rg.');
+        updateTargetRgControl(metamerProfile === 'saturation' ? 120 : 100);
         syncChannelSliderPrecision();
-        scheduleUpdate();
+        setMetamerStatus(metamerProfile === 'fidelity' ? '正在搜索高显色同色光谱…' : '正在搜索高饱和同色光谱…');
+        await applyTargetOptimization();
     });
-}
+});
+
+document.querySelectorAll('.metamer-profile-button').forEach(button => {
+    button.addEventListener('click', () => {
+        const requested = button.dataset.metamerProfile;
+        if (metamerProfile === requested) return;
+        const input = document.querySelector(`input[name="metamer-profile"][value="${requested}"]`);
+        if (input) {
+            input.checked = true;
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    });
+});
 
 if (targetRgSlider) {
     targetRgSlider.addEventListener('input', debounce(() => {
@@ -2872,12 +3425,25 @@ if (compareSpectrumCheckbox) {
 // Wire human-centred scenes
 document.querySelectorAll('.opt-preset-btn').forEach(btn => {
     btn.addEventListener('click', () => {
+        const scheduleToggle = document.getElementById('schedule-auto-toggle');
+        if (scheduleToggle) scheduleToggle.checked = false;
+        stopSchedule();
+        document.querySelectorAll('.opt-preset-btn.is-selected').forEach(item => item.classList.remove('is-selected'));
+        btn.classList.add('is-selected');
         const scene = typeof CCT_JOURNEY.sceneById === 'function'
             ? CCT_JOURNEY.sceneById(btn.dataset.scene)
             : CCT_JOURNEY.HUMAN_CENTRED_SCENES.find(item => item.id === btn.dataset.scene);
         applyHumanCentredScene(scene);
     });
 });
+
+document.getElementById('scene-tab')?.addEventListener('click', () => setOptimizerMode('scene'));
+document.getElementById('schedule-tab')?.addEventListener('click', () => setOptimizerMode('schedule'));
+document.getElementById('schedule-auto-toggle')?.addEventListener('change', event => {
+    if (event.target.checked) startSchedule();
+    else stopSchedule();
+});
+renderScheduleStages();
 
 if (cctJourneyPlayBtn) {
     cctJourneyPlayBtn.addEventListener('click', () => {
@@ -2892,6 +3458,7 @@ document.addEventListener('visibilitychange', () => {
     if (document.hidden && cctAnimation.status !== 'stopped') stopCctJourney();
 });
 window.addEventListener('pagehide', stopCctJourney);
+window.addEventListener('pagehide', stopSchedule);
 window.addEventListener('beforeunload', stopCctJourney);
 
 function syncTargetSliderFill(slider) {
@@ -2913,5 +3480,4 @@ if (exportRecipeBtn) {
 
 // Start
 init();
-
 })();

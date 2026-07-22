@@ -63,6 +63,60 @@ assert.ok(unreachable.achievedRf >= 80,
 assert.equal(unreachable.achievedRg, 115,
     `unreachable target did not return the nearest feasible Rg: ${unreachable.achievedRg}`);
 
+const fidelityProfile = optimizeMetamer({
+    channels, baselineValues, targetXy, targetRg: 100, evaluateSpd, xyToUv, objective: 'fidelity'
+});
+const saturationProfile = optimizeMetamer({
+    channels, baselineValues, targetXy, targetRg: 120, evaluateSpd, xyToUv, objective: 'saturation'
+});
+assert.equal(fidelityProfile.achievedRf, 95, 'high-fidelity profile maximises Rf at the locked colour point');
+assert.equal(fidelityProfile.achievedRg, 100, 'high-fidelity profile keeps the neutral-gamut solution when it has best Rf');
+assert.ok(saturationProfile.achievedRg <= 120,
+    'high-saturation profile respects the Rg 120 cap when chromaticity limits the reachable result');
+
+const unrestrictedSaturation = optimizeMetamer({
+    channels: [
+        { id: 'first', spd: [1, 0] },
+        { id: 'second', spd: [0, 1] }
+    ],
+    baselineValues: [50, 50],
+    targetXy,
+    targetRg: 120,
+    objective: 'saturation',
+    evaluateSpd(spd) {
+        const total = spd[0] + spd[1];
+        return { x: targetXy.x, y: targetXy.y, rg: 100 + total * 10, rf: 95 - total * 55 };
+    },
+    xyToUv
+});
+assert.equal(unrestrictedSaturation.achievedRg, 120, 'high-saturation profile stops at the Rg 120 cap');
+assert.ok(unrestrictedSaturation.achievedRf < 80, 'high-saturation profile does not impose an Rf floor');
+
+const unequalCompensationSaturation = optimizeMetamer({
+    channels: [
+        { id: 'strong-x', spd: [1, 0] },
+        { id: 'weak-x', spd: [0, 1] }
+    ],
+    baselineValues: [20, 10],
+    targetXy,
+    targetRg: 120,
+    objective: 'saturation',
+    evaluateSpd(spd) {
+        const colourError = spd[0] - 2 * spd[1];
+        return {
+            x: targetXy.x + colourError * 0.02,
+            y: targetXy.y,
+            rg: 100 + (spd[0] + spd[1] - 0.3) * 20,
+            rf: 20
+        };
+    },
+    xyToUv(x, y) { return { u: x, v: y }; }
+});
+assert.ok(unequalCompensationSaturation.achievedRg >= 119.5,
+    'high-saturation search supports unequal paired channel compensation at the locked colour point');
+assert.ok(unequalCompensationSaturation.deltaUv <= 0.0005,
+    'unequal paired compensation preserves the locked colour point');
+
 assert.throws(() => optimize(79), RangeError, 'targets below 80 are rejected');
 assert.throws(() => optimize(131), RangeError, 'targets above 130 are rejected');
 assert.throws(() => optimizeMetamer({

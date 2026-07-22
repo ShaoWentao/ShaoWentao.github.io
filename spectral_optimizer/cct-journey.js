@@ -60,24 +60,10 @@
             const section = document.querySelector('.presets-section');
             const heading = section && section.querySelector('h3');
             const buttons = section && section.querySelector('.preset-buttons');
-            if (!section || !heading || !buttons || section.querySelector('.presets-toggle')) return;
-
-            const toggle = document.createElement('button');
-            toggle.type = 'button';
-            toggle.className = 'presets-toggle';
-            toggle.setAttribute('aria-expanded', 'false');
-            toggle.setAttribute('aria-controls', 'preset-buttons');
-            toggle.innerHTML = '<strong>快速预设 <span>Presets</span></strong><span class="presets-toggle-icon" aria-hidden="true">⌄</span>';
-
+            if (!section || !heading || !buttons) return;
+            heading.textContent = '快速预设';
             buttons.id = 'preset-buttons';
-            buttons.hidden = true;
-            heading.replaceWith(toggle);
-
-            toggle.addEventListener('click', function () {
-                const expanded = toggle.getAttribute('aria-expanded') === 'true';
-                toggle.setAttribute('aria-expanded', String(!expanded));
-                buttons.hidden = expanded;
-            });
+            buttons.hidden = false;
         }
 
         if (document.readyState === 'loading') {

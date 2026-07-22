@@ -3,38 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spectral Optimizer | Digital Lighting Workspace</title>
-    <meta name="description" content="Interactive spectral power distribution optimizer for human-centric lighting research. Uses official CIE spectral data with simplified relative-channel modelling.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20260717-cla2">
+    <title>光谱优化器</title>
+    <meta name="description" content="用于多通道 LED 光谱调试、光品质分析与健康照明评估的光谱优化工具。">
+    <link rel="stylesheet" href="styles.css?v=20260722-layout13">
+    <link rel="stylesheet" href="layout-final.css?v=20260722-combo1">
 </head>
 <body>
-    <div class="bg-grid" aria-hidden="true"></div>
-
     <section class="page-hero">
-        <div class="kicker">Spectral Tool</div>
-        <h1>
-            <span class="title-main">光谱优化器</span>
-            <span class="title-sub">Spectral Optimizer</span>
-        </h1>
-        <p>Build channel mixes, inspect spectral power distribution, and estimate CCT, melanopic DER and circadian response with official CIE spectral data.</p>
+        <h1><span class="title-main">光谱优化器</span></h1>
+        <p>多通道 LED 光谱调试、光品质分析与健康照明评估</p>
     </section>
 
     <main id="app-main">
+        <div class="left-column">
         <section class="controls-panel glass-card" id="controls-panel">
             <div class="panel-header">
-                <h2>LED 通道控制 <span>Channel Control</span></h2>
+                <h2>LED 通道控制</h2>
             </div>
 
             <div class="mode-toggle-container">
-                <span class="mode-label" id="mode-label-4ch">4-Channel</span>
+                <span class="mode-label" id="mode-label-4ch">4 通道</span>
                 <label class="toggle-switch" id="mode-toggle">
-                    <input type="checkbox" id="mode-checkbox" aria-label="Toggle between 4-channel and 6-channel mode">
+                    <input type="checkbox" id="mode-checkbox" aria-label="切换 4 通道与 6 通道模式">
                     <span class="toggle-slider"></span>
                 </label>
-                <span class="mode-label" id="mode-label-6ch">6-Ch RGBCLA</span>
+                <span class="mode-label" id="mode-label-6ch">6 通道 RGBCLA</span>
             </div>
 
             <div class="data-note">
@@ -46,7 +39,7 @@
                 <input type="file" id="spd-import-input" accept=".csv,.txt,.tsv" hidden>
                 <button class="import-btn" id="spd-import-btn" type="button">
                     <span>导入通道 SPD</span>
-                    <small>CSV / TXT · 3-6 channels</small>
+                    <small>CSV / TXT · 3–6 通道</small>
                 </button>
                 <span class="import-status" id="spd-import-status">第一列为波长 nm，后面 3-6 列为通道功率；也可直接拖入页面。</span>
                 <label class="d65-toggle" title="关闭后，各通道会分别归一化，仅用于比较光谱形状">
@@ -59,46 +52,96 @@
             <div class="channels-container" id="channels-container"></div>
 
             <div class="presets-section">
-                <h3>快速预设 <span>Presets</span></h3>
+                <h3>色温预设</h3>
                 <div class="preset-buttons">
-                    <button class="preset-btn compact" data-preset="cct-1800" title="Planckian reference 1800K">1800K</button>
-                    <button class="preset-btn compact" data-preset="cct-2200" title="Planckian reference 2200K">2200K</button>
-                    <button class="preset-btn compact" data-preset="cct-2700" title="Planckian reference 2700K">2700K</button>
-                    <button class="preset-btn compact" data-preset="cct-3000" title="Planckian reference 3000K">3000K</button>
-                    <button class="preset-btn compact" data-preset="cct-3500" title="Planckian reference 3500K">3500K</button>
-                    <button class="preset-btn compact" data-preset="cct-4000" title="Planckian reference 4000K">4000K</button>
-                    <button class="preset-btn compact" data-preset="cct-5000" title="Planckian reference 5000K">5000K</button>
-                    <button class="preset-btn compact" data-preset="cct-5500" title="Planckian reference 5500K">5500K</button>
-                    <button class="preset-btn compact" data-preset="cct-6000" title="Planckian reference 6000K">6000K</button>
-                    <button class="preset-btn compact" data-preset="cct-6500" title="Planckian reference 6500K">6500K</button>
-                    <button class="preset-btn compact" data-preset="cct-12000" title="Planckian reference 12000K">12000K</button>
-                    <button class="preset-btn compact reset" data-preset="reset" title="Reset all sliders to 0%">重置</button>
+                    <button class="preset-btn compact" data-preset="cct-1800" title="黑体轨迹 1800 K">1800K</button>
+                    <button class="preset-btn compact" data-preset="cct-2200" title="黑体轨迹 2200 K">2200K</button>
+                    <button class="preset-btn compact" data-preset="cct-2700" title="黑体轨迹 2700 K">2700K</button>
+                    <button class="preset-btn compact" data-preset="cct-3000" title="黑体轨迹 3000 K">3000K</button>
+                    <button class="preset-btn compact" data-preset="cct-3500" title="黑体轨迹 3500 K">3500K</button>
+                    <button class="preset-btn compact" data-preset="cct-4000" title="黑体轨迹 4000 K">4000K</button>
+                    <button class="preset-btn compact" data-preset="cct-5000" title="黑体轨迹 5000 K">5000K</button>
+                    <button class="preset-btn compact" data-preset="cct-5500" title="黑体轨迹 5500 K">5500K</button>
+                    <button class="preset-btn compact" data-preset="cct-6000" title="黑体轨迹 6000 K">6000K</button>
+                    <button class="preset-btn compact" data-preset="cct-6500" title="黑体轨迹 6500 K">6500K</button>
+                    <button class="preset-btn compact" data-preset="cct-12000" title="黑体轨迹 12000 K">12000K</button>
+                    <button class="preset-btn compact reset" data-preset="reset" title="所有通道归零">重置</button>
                 </div>
             </div>
 
-            <section class="emitter-preview" id="emitter-preview" aria-labelledby="emitter-preview-title">
-                <div class="emitter-preview-heading">
-                    <h3 id="emitter-preview-title">当前光色 <span>Live Colour</span></h3>
-                    <span class="emitter-preview-status" id="emitter-preview-status">实时</span>
-                </div>
-                <div class="emitter-disc" id="emitter-disc" role="img" aria-label="当前混合光色预览"></div>
-                <div class="emitter-preview-values">
-                    <strong id="emitter-preview-cct">-- K</strong>
-                    <span id="emitter-preview-xy">x -- · y --</span>
-                </div>
-            </section>
         </section>
 
-        <section class="visualization-area">
-            <div class="charts-row">
+        <section class="optimizer-section glass-card" id="optimizer-section">
+            <div class="optimizer-header">
+                <h2><span class="ai-badge">ALG</span>光谱实时优化</h2>
+                <p class="optimizer-desc">目标参数变化后自动计算通道权重并更新光谱。</p>
+            </div>
+
+            <div class="optimizer-functional-grid">
+                <section class="tuning-group tuning-group-colour" aria-labelledby="colour-tuning-title">
+                    <div class="section-heading compact-heading">
+                        <div><span class="section-eyebrow">光色调试</span><h3 id="colour-tuning-title">色点与色彩表现</h3></div>
+                    </div>
+                    <div class="target-controls colour-target-controls">
+                        <div class="target-row">
+                            <label for="target-cct-slider">目标色温 CCT <span id="target-cct-val">4000 K</span></label>
+                            <input type="range" id="target-cct-slider" min="1600" max="12000" step="100" value="4000">
+                        </div>
+                        <div class="target-row">
+                            <label for="target-duv-slider">目标 Duv <span id="target-duv-val">+0.0000</span></label>
+                            <input type="range" id="target-duv-slider" min="-0.015" max="0.015" step="0.0005" value="0">
+                        </div>
+                    </div>
+                    <section class="pastel-debug-panel" aria-labelledby="pastel-debug-title">
+                        <div class="section-heading compact-heading">
+                            <div><h3 id="pastel-debug-title">淡彩 32 色</h3></div>
+                            <p>选择目标色并拟合当前通道</p>
+                        </div>
+                        <div class="pastel-palette-grid" id="pastel-palette-grid"></div>
+                        <p class="pastel-fit-status" id="pastel-fit-status" role="status" aria-live="polite">选择色卡后，将按当前通道光谱拟合目标色点。</p>
+                    </section>
+                </section>
+
+                <section class="tuning-group tuning-group-health" aria-labelledby="health-tuning-title">
+                    <div class="section-heading compact-heading">
+                        <div><span class="section-eyebrow">健康照明</span><h3 id="health-tuning-title">节律条件与 24 小时计划</h3></div>
+                    </div>
+                    <div class="health-condition-grid">
+                        <div class="target-row"><label for="eye-illuminance">眼部照度 <span id="eye-illuminance-val">300 lux</span></label><input type="range" id="eye-illuminance" min="10" max="1000" step="10" value="300"></div>
+                        <div class="target-row circadian-condition-row"><label for="exposure-duration">暴露时长 <span id="exposure-duration-val">1.0 h</span></label><input type="range" id="exposure-duration" min="0.5" max="3" step="0.5" value="1"></div>
+                        <div class="target-row circadian-condition-row"><label for="visual-field-factor">视野范围</label><select id="visual-field-factor"><option value="0.5">上方视野（0.5）</option><option value="1" selected>中央视野（1）</option><option value="2">全视野（2）</option></select></div>
+                    </div>
+                    <div class="preset-action-container">
+                        <div class="optimizer-mode-panel schedule-mode-panel" id="schedule-mode-panel" role="region" aria-label="24 小时计划">
+                            <div class="schedule-clock-row"><div><strong id="schedule-clock">00:00</strong><span id="schedule-current-stage">等待模拟</span></div><label class="schedule-auto-toggle"><input type="checkbox" id="schedule-auto-toggle"><span>快速模拟</span></label></div>
+                            <div class="schedule-stage-list" id="schedule-stage-list"></div>
+                            <p class="schedule-note" id="schedule-note">快速模拟仅播放已设置的场景时段；阶段开始后的 30 分钟内平滑过渡。</p>
+                        </div>
+                        <div class="optimizer-action-stack">
+                            <div class="journey-controls" role="group" aria-label="色温轨迹控制">
+                                <button class="journey-icon-btn" id="cct-journey-play" type="button" aria-label="播放色温轨迹" title="播放色温轨迹"><span aria-hidden="true">&#9654;</span></button>
+                                <button class="journey-icon-btn" id="cct-journey-stop" type="button" aria-label="停止色温轨迹" title="停止色温轨迹" disabled><span aria-hidden="true">&#9632;</span></button>
+                                <span class="journey-status" id="cct-journey-status" role="status" aria-live="polite">1600 K</span>
+                            </div>
+                            <button class="export-recipe-btn" id="export-recipe-btn" type="button"><span>导出配方</span></button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </section>
+
+        </div>
+        <div class="right-column">
+
+        <div class="charts-row">
                 <div class="spd-panel glass-card" id="spd-panel">
                     <div class="spd-header">
                         <h2>光谱功率分布 <span>SPD</span></h2>
                         <div class="spd-controls">
                             <label class="d65-toggle" id="d65-toggle-label">
-                                <input type="checkbox" id="d65-toggle" aria-label="Toggle D65 reference curve">
+                                <input type="checkbox" id="d65-toggle" aria-label="显示 D65 参考光谱">
                                 <span class="toggle-indicator"></span>
-                                <span class="toggle-text">D65 参考 Reference</span>
+                                <span class="toggle-text">D65 参考</span>
                             </label>
                         </div>
                     </div>
@@ -109,15 +152,49 @@
 
                 <div class="cie-panel glass-card" id="cie-panel">
                     <div class="cie-header">
-                        <h2>CIE 1931 色度图 <span>Chromaticity Diagram</span></h2>
+                        <h2>CIE 1931 色度图</h2>
                     </div>
                     <div class="canvas-wrapper" id="cie-canvas-wrapper">
                         <canvas id="cie-canvas"></canvas>
                     </div>
                 </div>
+
+                <section class="emitter-preview glass-card" id="emitter-preview" aria-labelledby="emitter-preview-title">
+                    <div class="emitter-preview-heading">
+                        <h3 id="emitter-preview-title">当前光色</h3>
+                        <span class="emitter-preview-status" id="emitter-preview-status">实时</span>
+                    </div>
+                    <div class="emitter-preview-stage">
+                        <div class="emitter-disc" id="emitter-disc" role="img" aria-label="当前混合光色预览"></div>
+                        <div class="emitter-preview-values">
+                            <strong id="emitter-preview-cct">-- K</strong>
+                            <span id="emitter-preview-xy">x -- · y --</span>
+                        </div>
+                    </div>
+                    <div class="metamer-controls emitter-metamer-controls" id="metamer-controls">
+                        <input type="radio" name="metamer-profile" value="off" hidden>
+                        <input type="radio" name="metamer-profile" value="fidelity" checked hidden>
+                        <input type="radio" name="metamer-profile" value="saturation" hidden>
+                        <div class="metamer-profile-options" role="group" aria-label="同色异谱优化模式">
+                            <button type="button" class="metamer-profile-button is-selected" data-metamer-profile="fidelity" aria-pressed="true">高显色</button>
+                            <button type="button" class="metamer-profile-button" data-metamer-profile="saturation" aria-pressed="false">高饱和</button>
+                        </div>
+                        <span class="visually-hidden metamer-status" id="metamer-status" role="status" aria-live="polite"></span>
+                        <span class="visually-hidden metamer-colour-delta" id="metamer-colour-delta"></span>
+                    </div>
+                </section>
             </div>
 
-            <div class="metrics-dashboard" id="metrics-dashboard">
+            <section class="metrics-workspace" id="metrics-dashboard" aria-label="光谱指标">
+                <section class="metric-group metric-group-quality" aria-labelledby="quality-metrics-title">
+                    <div class="section-heading">
+                        <div>
+                            <span class="section-eyebrow">光品质</span>
+                            <h2 id="quality-metrics-title">光品质参数</h2>
+                        </div>
+                        <p>色温、显色保真度与色域表现</p>
+                    </div>
+                    <div class="metric-group-grid quality-grid">
                 <div class="metric-card glass-card" id="card-cct">
                     <div class="metric-icon">CCT</div>
                     <div class="metric-info">
@@ -160,6 +237,49 @@
                     <div class="metric-bar" id="bar-rf"></div>
                 </div>
 
+                <div class="metric-card glass-card" id="card-rg">
+                    <div class="metric-icon">Rg</div>
+                    <div class="metric-info">
+                        <span class="metric-label">TM-30 色域指数</span>
+                        <div class="metric-value-row">
+                            <span class="metric-value" id="val-rg">--</span>
+                            <span class="metric-unit">TM-30</span>
+                        </div>
+                    </div>
+                    <div class="metric-bar" id="bar-rg"></div>
+                </div>
+                <div class="metric-card glass-card" id="card-delta-uv">
+                    <div class="metric-icon">Δuv</div>
+                    <div class="metric-info">
+                        <span class="metric-label">Duv 黑体偏离</span>
+                        <div class="metric-value-row"><span class="metric-value" id="val-delta-uv">--</span><span class="metric-unit">Δu'v'</span></div>
+                    </div>
+                    <div class="metric-bar" id="bar-delta-uv"></div>
+                </div>
+                    </div>
+                </section>
+
+                <section class="color-samples-panel glass-card" id="color-samples-panel" aria-labelledby="color-samples-title">
+                    <div class="color-samples-header">
+                        <div>
+                            <h2 id="color-samples-title">标准色样对比</h2>
+                            <p>TCS 显示 R1～R14；CES 显示 TM-30 的 16 色调矢量图形。</p>
+                        </div>
+                    </div>
+                    <div class="color-samples-grid" id="color-samples-grid" aria-live="polite"></div>
+                    <p class="color-samples-note">TCS 越接近 100，色彩还原越接近参考光；CES 用于观察 16 个色相区域的饱和度和色相偏移。</p>
+                </section>
+
+                <section class="metric-group metric-group-health" aria-labelledby="health-metrics-title">
+                    <div class="section-heading">
+                        <div>
+                            <span class="section-eyebrow">健康照明</span>
+                            <h2 id="health-metrics-title">健康照明参数</h2>
+                        </div>
+                        <p>非视觉效应与昼夜节律响应</p>
+                    </div>
+                    <div class="metric-group-grid health-grid">
+
                 <div class="metric-card glass-card" id="card-mel">
                     <div class="metric-icon">MEL</div>
                     <div class="metric-info">
@@ -182,8 +302,8 @@
                         </div>
                     </div>
                     <div class="metric-bar" id="bar-cs"></div>
-                    <div class="metric-secondary" id="val-cla2">Rea CLA2 -- · 1.0 h · Central</div>
-                    <span class="visually-hidden" id="cla2-conditions">Rea CLA 2.0 model with a 1.0 hour duration and Central visual field.</span>
+                    <div class="metric-secondary" id="val-cla2">Rea CLA 2.0 -- · 1.0 h · 中央视野</div>
+                    <span class="visually-hidden" id="cla2-conditions">Rea CLA 2.0 模型，暴露时长 1.0 h，中央视野。</span>
                     <span class="visually-hidden" id="circadian-status" role="status" aria-live="polite" aria-atomic="true"></span>
                 </div>
 
@@ -198,119 +318,29 @@
                     </div>
                     <div class="metric-bar" id="bar-medi"></div>
                 </div>
-
-                <div class="metric-card glass-card" id="card-rg">
-                    <div class="metric-icon">Rg</div>
-                    <div class="metric-info">
-                        <span class="metric-label">TM-30 色域指数</span>
-                        <div class="metric-value-row">
-                            <span class="metric-value" id="val-rg">--</span>
-                            <span class="metric-unit">TM-30</span>
-                        </div>
                     </div>
-                    <div class="metric-bar" id="bar-rg"></div>
-                </div>
-            </div>
-    <section class="optimizer-section glass-card" id="optimizer-section">
-        <div class="optimizer-header">
-            <h2>
-                <span class="ai-badge">ALG</span>
-                光谱实时优化 <span>Real-time Optimizer</span>
-            </h2>
-            <p class="optimizer-desc">目标参数变化后，自动运行确定性通道权重算法并更新光谱。</p>
-        </div>
-
-        <div class="optimizer-grid">
-            <div class="target-controls">
-                <div class="target-row">
-                    <label for="target-cct-slider">目标色温 Target CCT: <span id="target-cct-val">4000 K</span></label>
-                    <input type="range" id="target-cct-slider" min="1600" max="12000" step="100" value="4000">
-                </div>
-                <div class="target-row">
-                    <label for="target-duv-slider">目标 Duv 偏差: <span id="target-duv-val">+0.0000</span></label>
-                    <input type="range" id="target-duv-slider" min="-0.015" max="0.015" step="0.0005" value="0">
-                </div>
-                <div class="target-row">
-                    <label for="eye-illuminance">眼部照度 Eye illuminance: <span id="eye-illuminance-val">300 lux</span></label>
-                    <input type="range" id="eye-illuminance" min="10" max="1000" step="10" value="300">
-                </div>
-                <div class="target-row circadian-condition-row">
-                    <label for="exposure-duration">时长 Duration: <span id="exposure-duration-val">1.0 h</span></label>
-                    <input type="range" id="exposure-duration" min="0.5" max="3" step="0.5" value="1">
-                </div>
-                <div class="target-row circadian-condition-row">
-                    <label for="visual-field-factor">视野范围 Visual field</label>
-                    <select id="visual-field-factor">
-                        <option value="0.5">上方 · Superior (0.5)</option>
-                        <option value="1" selected>中央 · Central (1)</option>
-                        <option value="2">全视野 · Full field (2)</option>
-                    </select>
-                </div>
-                <div class="metamer-controls" id="metamer-controls">
-                    <label class="metamer-mode-toggle" for="metamer-mode-checkbox">
-                        <input type="checkbox" id="metamer-mode-checkbox">
-                        <span>Same colour point</span>
-                    </label>
-                    <div class="metamer-dependent-controls" id="metamer-dependent-controls" hidden>
-                        <label class="metamer-target-control" for="target-rg-slider">
-                            <span>Target Rg: <strong id="target-rg-val">100</strong></span>
-                            <input type="range" id="target-rg-slider" min="80" max="130" step="1" value="100">
-                        </label>
-                        <button class="set-baseline-btn" id="set-baseline-btn" type="button">Set baseline</button>
-                        <label class="compare-spectrum-control" for="compare-spectrum-checkbox">
-                            <input type="checkbox" id="compare-spectrum-checkbox" disabled>
-                            <span>Compare spectrum</span>
-                        </label>
-                        <div class="metamer-readout">
-                            <span class="metamer-status" id="metamer-status" role="status" aria-live="polite"></span>
-                            <span class="metamer-colour-delta" id="metamer-colour-delta"></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="preset-action-container">
-                <div class="optimizer-presets-grid">
-                    <button class="opt-preset-btn" data-scene="morning-transition" data-cct="3500" data-duv="0" data-lux="250" type="button" title="Morning Transition · 3500 K · 250 lux"><span>晨间过渡</span><small>Morning Transition</small></button>
-                    <button class="opt-preset-btn" data-scene="daytime-focus" data-cct="5000" data-duv="0" data-lux="400" type="button" title="Daytime Focus · 5000 K · 400 lux"><span>日间专注</span><small>Daytime Focus</small></button>
-                    <button class="opt-preset-btn" data-scene="collaboration" data-cct="4000" data-duv="0" data-lux="300" type="button" title="Collaboration · 4000 K · 300 lux"><span>协作交流</span><small>Collaboration</small></button>
-                    <button class="opt-preset-btn" data-scene="colour-vitality" data-cct="3500" data-duv="0" data-lux="300" type="button" title="Colour Vitality · 3500 K · 300 lux"><span>色彩活力</span><small>Colour Vitality</small></button>
-                    <button class="opt-preset-btn" data-scene="evening-wind-down" data-cct="2700" data-duv="0" data-lux="75" type="button" title="Evening Wind-down · 2700 K · 75 lux"><span>夜间放松</span><small>Evening Wind-down</small></button>
-                    <button class="opt-preset-btn" data-scene="night-low-disturbance" data-cct="2000" data-duv="0" data-lux="10" type="button" title="Night Low Disturbance · 2000 K · 10 lux"><span>夜间低干扰</span><small>Night Low Disturbance</small></button>
-                </div>
-                <div class="optimizer-action-stack">
-                    <div class="journey-controls" role="group" aria-label="CCT journey controls">
-                        <button class="journey-icon-btn" id="cct-journey-play" type="button" aria-label="Play CCT journey" title="Play CCT journey"><span aria-hidden="true">&#9654;</span></button>
-                        <button class="journey-icon-btn" id="cct-journey-stop" type="button" aria-label="Stop CCT journey" title="Stop CCT journey" disabled><span aria-hidden="true">&#9632;</span></button>
-                        <span class="journey-status" id="cct-journey-status" role="status" aria-live="polite">1600 K</span>
-                    </div>
-                    <button class="export-recipe-btn" id="export-recipe-btn" type="button">
-                        <span>导出配方</span>
-                        <small>Export Recipe</small>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-    </section>
+                </section>
         </section>
+        </div>
     </main>
 
     <footer id="app-footer">
-        <p>Official CIE spectral data | CIE 13.3 Ra / R9 | ANSI/IES TM-30 Rf / Rg | Human-Centric Lighting Research</p>
-        <p class="footer-cn">显色指标使用 14 个 CIE TCS 与 99 个 CES 计算；CLA 2.0 / CS 使用 Rea 模型，melanopic 指标遵循 CIE S 026。</p>
+        <p>采用 CIE 标准光谱数据与相关评价方法。</p>
+        <p class="footer-cn">显色指标使用 14 个 CIE TCS 与 99 个 CES 计算；CLA 2.0 / CS 使用 Rea 模型，Melanopic 指标遵循 CIE S 026。</p>
     </footer>
 
     <script src="spectral-data.js?v=20260717-rg2"></script>
     <script src="spectral-math.js?v=20260717-emitter1"></script>
     <script src="colour-quality-data.js?v=20260717-rg2"></script>
-    <script src="colour-quality.js?v=20260718-rg3"></script>
-    <script src="metamer-optimizer.js?v=20260718-r9-1"></script>
+    <script src="colour-quality.js?v=20260721-diagram1"></script>
+    <script src="pastel-palette.js?v=20260721-pastel1"></script>
+    <script src="metamer-optimizer.js?v=20260722-saturation3"></script>
     <script src="circadian-data.js?v=20260717-cla2"></script>
     <script src="circadian-math.js?v=20260717-cla2"></script>
-    <script src="cct-journey.js?v=20260718-rg3"></script>
+    <script src="cct-journey.js?v=20260722-presets1"></script>
+    <script src="circadian-schedule.js?v=20260722-simulation2"></script>
     <script src="default-rgbw-data.js?v=20260717-rgbw1"></script>
     <script src="default-rgbcla-data.js?v=20260718-rgbcla1"></script>
-    <script src="app.js?v=20260718-r9-1"></script>
+    <script src="app.js?v=20260722-profile1"></script>
 </body>
 </html>

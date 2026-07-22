@@ -344,7 +344,7 @@ main {
     font-size: 0.82rem;
     font-weight: 700;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 120ms ease;
 }
 
 .import-btn:hover {
@@ -581,7 +581,7 @@ main {
     font-family: inherit;
     font-size: 0.7rem;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 120ms ease;
 }
 .preset-btn:hover {
     background: rgba(228, 184, 91, 0.08);
@@ -707,7 +707,7 @@ main {
     border: 1.5px solid rgba(255,255,255,0.2);
     background: rgba(255,255,255,0.05);
     position: relative;
-    transition: all var(--transition-fast);
+    transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 120ms ease;
 }
 .d65-toggle input:checked ~ .toggle-indicator {
     background: var(--gold);
@@ -764,7 +764,7 @@ main {
     gap: 7px;
     position: relative;
     overflow: hidden;
-    transition: all var(--transition-fast);
+    transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 120ms ease;
 }
 .metric-card:hover {
     transform: translateY(-1px);
@@ -861,7 +861,8 @@ main {
     width: var(--bar-fill, 0%);
     border-radius: 2px;
     background: var(--bar-color, var(--accent-blue));
-    transition: width 0.6s ease;
+    transform-origin: left center;
+    transition: transform 220ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 /* CLA 2.0 secondary readout */
@@ -961,7 +962,7 @@ main {
     color: var(--text-primary);
     font-family: inherit;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 120ms ease;
     position: relative;
     overflow: hidden;
 }
@@ -1082,7 +1083,8 @@ main {
     border-radius: 3px;
     background: linear-gradient(90deg, var(--gold), var(--ember));
     width: 0%;
-    transition: width 0.1s linear;
+    transform-origin: left center;
+    transition: transform 180ms cubic-bezier(0.23, 1, 0.32, 1);
     box-shadow: 0 0 10px rgba(228, 184, 91, 0.36);
 }
 
@@ -1845,7 +1847,7 @@ footer {
     border-radius: 6px;
     color: var(--text-secondary);
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 120ms ease;
     font-family: inherit;
 }
 
@@ -1883,7 +1885,7 @@ footer {
     font-family: inherit;
     font-weight: 700;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 120ms ease;
 }
 
 .run-optimize-btn:hover {

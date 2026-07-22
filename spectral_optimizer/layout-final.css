@@ -1,0 +1,173 @@
+.charts-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(340px, 1fr);
+    grid-template-areas:
+        "spd cie"
+        "combo combo";
+    gap: 14px;
+    align-items: start;
+}
+
+.charts-row > .spd-panel { grid-area: spd; }
+.charts-row > .cie-panel { grid-area: cie; }
+
+.charts-row > .spd-panel,
+.charts-row > .cie-panel {
+    height: 360px;
+    box-sizing: border-box;
+}
+
+.charts-row > .spd-panel .canvas-wrapper {
+    height: 292px;
+    aspect-ratio: auto;
+}
+
+.charts-row > .cie-panel .canvas-wrapper,
+.charts-row > .cie-panel #cie-canvas-wrapper {
+    width: min(100%, 292px);
+    height: 292px;
+    margin-inline: auto;
+    aspect-ratio: 1;
+}
+
+.charts-row > .emitter-preview {
+    grid-area: combo;
+    display: grid;
+    grid-template-columns: minmax(250px, 0.72fr) minmax(0, 1.8fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    column-gap: 18px;
+    width: 100%;
+    height: auto;
+    padding: 12px;
+    box-sizing: border-box;
+    align-items: stretch;
+}
+
+.charts-row > .emitter-preview > .emitter-preview-heading {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.charts-row > .emitter-preview > .emitter-preview-stage {
+    grid-column: 1;
+    grid-row: 2;
+    width: 100%;
+    min-height: 210px;
+    margin-top: 12px;
+    aspect-ratio: auto;
+    flex-direction: row;
+    box-sizing: border-box;
+}
+
+.charts-row > .emitter-preview > .emitter-metamer-controls {
+    grid-column: 1;
+    grid-row: 3;
+}
+
+.charts-row > .emitter-preview > .tuning-group-health {
+    grid-column: 2;
+    grid-row: 1 / 4;
+    min-width: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0 0 0 18px;
+    border: 0;
+    border-left: 1px solid var(--divider);
+    border-radius: 0;
+    background: transparent;
+    box-sizing: border-box;
+    align-self: stretch;
+}
+
+.charts-row > .emitter-preview .health-condition-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.charts-row > .emitter-preview .preset-action-container,
+.charts-row > .emitter-preview .schedule-mode-panel {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.charts-row > .emitter-preview .schedule-stage-list {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 6px;
+    width: 100%;
+    max-height: none;
+    overflow: visible;
+}
+
+.charts-row > .emitter-preview .schedule-stage-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 28px;
+    grid-template-rows: auto auto;
+    gap: 5px;
+    min-width: 0;
+}
+
+.charts-row > .emitter-preview .schedule-stage-row input[type="time"] {
+    grid-column: 1;
+    grid-row: 1;
+    width: 100%;
+    min-width: 0;
+}
+
+.charts-row > .emitter-preview .schedule-stage-label {
+    grid-column: 1;
+    grid-row: 2;
+    min-width: 0;
+}
+
+.charts-row > .emitter-preview .schedule-preview-btn {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    align-self: center;
+}
+
+@media (max-width: 1000px) {
+    .charts-row {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "spd"
+            "cie"
+            "combo";
+    }
+
+    .charts-row > .emitter-preview {
+        grid-template-columns: 1fr;
+    }
+
+    .charts-row > .spd-panel,
+    .charts-row > .cie-panel {
+        height: auto;
+    }
+
+    .charts-row > .spd-panel .canvas-wrapper,
+    .charts-row > .cie-panel .canvas-wrapper,
+    .charts-row > .cie-panel #cie-canvas-wrapper {
+        height: auto;
+    }
+
+    .charts-row > .emitter-preview > .emitter-preview-heading,
+    .charts-row > .emitter-preview > .emitter-preview-stage,
+    .charts-row > .emitter-preview > .emitter-metamer-controls,
+    .charts-row > .emitter-preview > .tuning-group-health {
+        grid-column: 1;
+        grid-row: auto;
+    }
+
+    .charts-row > .emitter-preview > .tuning-group-health {
+        margin-top: 14px;
+        padding: 14px 0 0;
+        border-top: 1px solid var(--divider);
+        border-left: 0;
+    }
+}
+
+@media (max-width: 720px) {
+    .charts-row > .emitter-preview .health-condition-grid,
+    .charts-row > .emitter-preview .schedule-stage-list {
+        grid-template-columns: 1fr;
+    }
+}

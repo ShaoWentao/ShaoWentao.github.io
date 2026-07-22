@@ -181,7 +181,7 @@
         const bins = Array.from({ length: 16 }, () => ({ test: [], ref: [] }));
         for (let i = 0; i < refPoints.length; i++) {
             let angle = Math.atan2(refPoints[i][2], refPoints[i][1]) * 180 / Math.PI;
-            if (!Number.isFinite(angle)) return { rf: 0, rg: 0 };
+            if (!Number.isFinite(angle)) return { rf: 0, rg: 0, vector: null };
             if (angle < 0) angle += 360;
             const bin = Math.min(15, Math.floor(angle / 22.5));
             bins[bin].test.push([testPoints[i][1], testPoints[i][2]]);
@@ -191,13 +191,27 @@
             points.reduce((sum, point) => sum + point[0], 0) / points.length,
             points.reduce((sum, point) => sum + point[1], 0) / points.length
         ];
-        if (bins.some(bin => bin.test.length === 0 || bin.ref.length === 0)) return { rf: 0, rg: 0 };
+        if (bins.some(bin => bin.test.length === 0 || bin.ref.length === 0)) return { rf: 0, rg: 0, vector: null };
         const testPolygon = bins.map(bin => average(bin.test));
         const refPolygon = bins.map(bin => average(bin.ref));
         const meanDelta = deltas.reduce((sum, value) => sum + value, 0) / deltas.length;
+        const vector = testPolygon.map((testPoint, index) => {
+            const refPoint = refPolygon[index];
+            const refRadius = Math.hypot(refPoint[0], refPoint[1]) || 1;
+            const testRadius = Math.hypot(testPoint[0], testPoint[1]);
+            const refAngle = Math.atan2(refPoint[1], refPoint[0]);
+            const testAngle = Math.atan2(testPoint[1], testPoint[0]);
+            const binAngle = (index + 0.5) * Math.PI / 8;
+            const angle = binAngle + testAngle - refAngle;
+            return {
+                x: 100 * testRadius / refRadius * Math.cos(angle),
+                y: 100 * testRadius / refRadius * Math.sin(angle)
+            };
+        });
         return {
             rf: fidelityFromDelta(meanDelta),
-            rg: 100 * polygonArea(testPolygon) / polygonArea(refPolygon)
+            rg: 100 * polygonArea(testPolygon) / polygonArea(refPolygon),
+            vector
         };
     }
 
@@ -213,5 +227,117 @@
         return { ...cri, ...tm30, cct };
     }
 
-    return { calculateColourQuality };
+    const D65_XYZ = [0.95047, 1.00000, 1.08883];
+    const BRADFORD_MA = [
+        [ 0.8951,  0.2664, -0.1614],
+        [-0.7502,  1.7135,  0.0367],
+        [ 0.0389, -0.0685,  1.0296]
+    ];
+    const BRADFORD_MA_INV = [
+        [ 0.9869929, -0.1470543, 0.1599627],
+        [ 0.4323121,  0.5183603, 0.0492912],
+        [-0.0085287,  0.0400428, 0.9684867]
+    ];
+
+    function applyMatrix(matrix, vector) {
+        return matrix.map(row => row[0] * vector[0] + row[1] * vector[1] + row[2] * vector[2]);
+    }
+
+    function createBradfordMatrix(sourceWhite, destWhite) {
+        const srcCone = applyMatrix(BRADFORD_MA, sourceWhite);
+        const destCone = applyMatrix(BRADFORD_MA, destWhite);
+        const diag = [
+            [destCone[0] / srcCone[0], 0, 0],
+            [0, destCone[1] / srcCone[1], 0],
+            [0, 0, destCone[2] / srcCone[2]]
+        ];
+        const result = [[0,0,0],[0,0,0],[0,0,0]];
+        for (let r = 0; r < 3; r++) {
+            for (let c = 0; c < 3; c++) {
+                for (let i = 0; i < 3; i++) {
+                    result[r][c] += BRADFORD_MA_INV[r][i] * diag[i][i] * BRADFORD_MA[i][c];
+                }
+            }
+        }
+        return result;
+    }
+
+    function xyzToSrgb(XYZ) {
+        const rLinear =  3.2404542 * XYZ[0] - 1.5371385 * XYZ[1] - 0.4985314 * XYZ[2];
+        const gLinear = -0.9692660 * XYZ[0] + 1.8760108 * XYZ[1] + 0.0415560 * XYZ[2];
+        const bLinear =  0.0556434 * XYZ[0] - 0.2040259 * XYZ[1] + 1.0572252 * XYZ[2];
+
+        let r = rLinear, g = gLinear, b = bLinear;
+        const maxC = Math.max(r, g, b);
+        if (maxC > 1) {
+            r /= maxC;
+            g /= maxC;
+            b /= maxC;
+        }
+        r = Math.max(0, r);
+        g = Math.max(0, g);
+        b = Math.max(0, b);
+
+        const gamma = c => c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
+
+        return [
+            Math.round(gamma(r) * 255),
+            Math.round(gamma(g) * 255),
+            Math.round(gamma(b) * 255)
+        ];
+    }
+
+    function getAdaptedColor(sampleXYZ, sourceWhite) {
+        const d65Scale = [D65_XYZ[0]*100, D65_XYZ[1]*100, D65_XYZ[2]*100];
+        const transform = createBradfordMatrix(sourceWhite, d65Scale);
+        const adapted = applyMatrix(transform, sampleXYZ);
+        return xyzToSrgb([adapted[0]/100, adapted[1]/100, adapted[2]/100]);
+    }
+
+    function calculateSampleColors(spd) {
+        if (!DATA) return { tcs14: [], cesSubset: [] };
+        const suppliedSpd = spd && spd.length === 81 ? spd : null;
+        const suppliedCct = suppliedSpd ? cctFromSpd(suppliedSpd) : NaN;
+        const hasTestSpectrum = Number.isFinite(suppliedCct) && suppliedCct > 0;
+        const cct = hasTestSpectrum ? suppliedCct : 6504;
+        const testSpectrum = hasTestSpectrum ? suppliedSpd : DATA.d65;
+
+        const reference = referenceSpd(cct, DATA.cmf2, false);
+
+        const testWhite = xyz(testSpectrum, DATA.cmf2);
+        const refWhite = xyz(reference, DATA.cmf2);
+
+        const scaleTest = 100 / testWhite[1];
+        const scaledTestWhite = [testWhite[0]*scaleTest, testWhite[1]*scaleTest, testWhite[2]*scaleTest];
+
+        const scaleRef = 100 / refWhite[1];
+        const scaledRefWhite = [refWhite[0]*scaleRef, refWhite[1]*scaleRef, refWhite[2]*scaleRef];
+
+        const getColors = (samples, ids) => {
+            return samples.map((sample, index) => {
+                const sampleTestXYZ = xyz(testSpectrum, DATA.cmf2, sample);
+                const sampleRefXYZ = xyz(reference, DATA.cmf2, sample);
+
+                const scaledSampleTestXYZ = [sampleTestXYZ[0]*scaleTest, sampleTestXYZ[1]*scaleTest, sampleTestXYZ[2]*scaleTest];
+                const scaledSampleRefXYZ = [sampleRefXYZ[0]*scaleRef, sampleRefXYZ[1]*scaleRef, sampleRefXYZ[2]*scaleRef];
+
+                return {
+                    id: ids[index],
+                    testRGB: hasTestSpectrum ? getAdaptedColor(scaledSampleTestXYZ, scaledTestWhite) : null,
+                    refRGB: getAdaptedColor(scaledSampleRefXYZ, scaledRefWhite),
+                    testAvailable: hasTestSpectrum
+                };
+            });
+        };
+
+        const cesIndices = [3, 9, 15, 21, 27, 34, 40, 46, 52, 58, 64, 71, 77, 83, 89, 95]; // 16 samples for 16 hue bins
+        const cesSubset = cesIndices.map(i => DATA.ces99[i]);
+
+        return {
+            tcs14: getColors(DATA.tcs14, DATA.tcs14.map((sample, index) => `TCS${String(index + 1).padStart(2, '0')}`)),
+            cesSubset: getColors(cesSubset, cesIndices.map(index => `CES${String(index + 1).padStart(2, '0')}`))
+        };
+    }
+
+    return { calculateColourQuality, calculateSampleColors };
 });
