@@ -273,3 +273,38 @@
         grid-template-columns: repeat(5, minmax(0, 1fr));
     }
 }
+
+@media (min-width: 721px) and (max-width: 1499px) {
+    .quality-grid,
+    .health-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .metric-card {
+        height: auto;
+        min-height: 116px;
+        padding: 10px 9px;
+    }
+
+    .metric-label {
+        min-height: 2.5em;
+        white-space: normal;
+        line-height: 1.25;
+    }
+
+    .metric-value-row {
+        width: 100%;
+        min-width: 0;
+        justify-content: center;
+        flex-wrap: wrap;
+        row-gap: 1px;
+    }
+
+    .metric-value {
+        font-size: 1.18rem;
+    }
+
+    .metric-unit {
+        font-size: 0.6rem;
+    }
+}
