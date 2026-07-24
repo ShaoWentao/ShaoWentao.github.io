@@ -128,11 +128,28 @@
         return spd.map(value => value * scale);
     }
 
+    function daylightSpd(cct) {
+        if (!DATA.daylightBasis || !Array.isArray(DATA.daylightBasis.s0)) {
+            throw new Error('CIE daylight basis data is required for daylight references');
+        }
+        const temperature = clamp(Number(cct) || 6504, 4000, 25000);
+        const x = temperature <= 7000
+            ? -4.6070e9 / temperature ** 3 + 2.9678e6 / temperature ** 2 + 0.09911e3 / temperature + 0.244063
+            : -2.0064e9 / temperature ** 3 + 1.9018e6 / temperature ** 2 + 0.24748e3 / temperature + 0.237040;
+        const y = -3 * x * x + 2.87 * x - 0.275;
+        const denominator = 0.0241 + 0.2562 * x - 0.7341 * y;
+        const m1 = (-1.3515 - 1.7703 * x + 5.9114 * y) / denominator;
+        const m2 = (0.0300 - 31.4424 * x + 30.0717 * y) / denominator;
+        const { s0, s1, s2 } = DATA.daylightBasis;
+        return s0.map((value, index) => Math.max(0, value + m1 * s1[index] + m2 * s2[index]));
+    }
+
     function referenceSpd(cct, options) {
         assertReady();
-        const mode = options && options.referenceMode ? options.referenceMode : 'blackbody';
+        const mode = options && options.referenceMode ? options.referenceMode : 'auto';
         if (mode === 'd65' && Array.isArray(DATA.d65) && DATA.d65.length === DATA.wavelengths.length) return DATA.d65.slice();
         if (Array.isArray(options && options.referenceSpd)) return resampleSpd(options.referenceSpd, options.referenceSpdOptions || {});
+        if (mode === 'daylight' || (mode === 'auto' && Number(cct) >= 5000)) return daylightSpd(cct);
         return SpectralMath.blackbodySpd(cct || 3000, DATA.wavelengths);
     }
 
@@ -297,6 +314,7 @@
         resampleSpd,
         normalizeToY,
         xyzFromSpd,
+        daylightSpd,
         referenceSpd,
         labFromXyz,
         lchFromLab,

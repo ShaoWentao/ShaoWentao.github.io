@@ -7,6 +7,7 @@
     <meta name="description" content="用于多通道 LED 光谱调试、光品质分析与健康照明评估的光谱优化工具。">
     <link rel="stylesheet" href="styles.css?v=20260722-layout13">
     <link rel="stylesheet" href="layout-final.css?v=20260722-combo1">
+    <link rel="stylesheet" href="material-panel.css?v=20260724-material2">
 </head>
 <body>
     <section class="page-hero">
@@ -270,6 +271,43 @@
                     <p class="color-samples-note">TCS 越接近 100，色彩还原越接近参考光；CES 用于观察 16 个色相区域的饱和度和色相偏移。</p>
                 </section>
 
+                <section class="material-panel glass-card" id="material-panel" aria-labelledby="material-panel-title">
+                    <div class="material-panel-header">
+                        <div>
+                            <h2 id="material-panel-title">材质光色对比</h2>
+                            <p>选择材质，直观看同一表面在标准参考光与当前光谱下的变化。</p>
+                        </div>
+                        <span class="material-reference" id="material-reference">等待有效光谱</span>
+                    </div>
+                    <div class="material-selector" id="material-selector" role="group" aria-label="选择材质"></div>
+                    <div class="material-detail">
+                        <div class="material-detail-copy">
+                            <h3 id="material-detail-title">暖橡木饰面</h3>
+                            <p id="material-detail-description">用于木材、木饰面与暖色室内饰面的光谱比较。</p>
+                            <span class="material-category" id="material-detail-category">木材</span>
+                            <span class="material-data-badge" id="material-detail-source">工程模型 · 可替换为实测数据</span>
+                        </div>
+                        <div class="material-compare" aria-label="材质效果对比">
+                            <figure>
+                                <div class="material-appearance" id="material-reference-appearance"></div>
+                                <figcaption><span>标准参考光</span><span>基准</span></figcaption>
+                            </figure>
+                            <span class="material-compare-arrow" aria-hidden="true">→</span>
+                            <figure>
+                                <div class="material-appearance" id="material-current-appearance"></div>
+                                <figcaption><span>当前光谱</span><span>模拟效果</span></figcaption>
+                            </figure>
+                        </div>
+                        <div class="material-metrics" aria-live="polite">
+                            <div class="material-metric" id="material-delta-l"><span>ΔL* 明度</span><strong>--</strong><small>±1 接近</small></div>
+                            <div class="material-metric" id="material-delta-c-percent"><span>ΔC% 彩度</span><strong>--</strong><small>正值更鲜艳</small></div>
+                            <div class="material-metric" id="material-delta-h"><span>Δh 色相</span><strong>--</strong><small>±1° 较稳定</small></div>
+                            <div class="material-metric" id="material-delta-e"><span>ΔE00 综合色差</span><strong>--</strong><small>≤1 很小 / >3 明显</small></div>
+                        </div>
+                    </div>
+                    <p class="material-panel-note">纹理与屏幕颜色用于帮助理解变化，不等同于真实材质观感。当前内置项为工程参考模型；后续可加入 USGS/JPL 实测样本和用户实测 CSV。</p>
+                </section>
+
                 <section class="metric-group metric-group-health" aria-labelledby="health-metrics-title">
                     <div class="section-heading">
                         <div>
@@ -333,6 +371,9 @@
     <script src="spectral-math.js?v=20260717-emitter1"></script>
     <script src="colour-quality-data.js?v=20260717-rg2"></script>
     <script src="colour-quality.js?v=20260721-diagram1"></script>
+    <script src="material-reflectance-data.js?v=20260724-material1"></script>
+    <script src="material-color.js?v=20260724-material2"></script>
+    <script src="material-panel.js?v=20260724-material2"></script>
     <script src="pastel-palette.js?v=20260721-pastel1"></script>
     <script src="metamer-optimizer.js?v=20260722-saturation3"></script>
     <script src="circadian-data.js?v=20260717-cla2"></script>

@@ -48,6 +48,7 @@
             category: definition.category,
             targetHueZone: definition.targetHueZone,
             intendedUse: definition.intendedUse,
+            intendedUseCN: definition.intendedUseCN,
             dataQualification: DATA_QUALIFICATION,
             reflectance: interpolateAnchors(definition.anchors),
             anchors: Object.freeze(definition.anchors.map(pair => Object.freeze(pair.slice())))
@@ -62,6 +63,7 @@
             category: 'wood',
             targetHueZone: 'red-orange-yellow',
             intendedUse: 'wood, veneer, warm interior finish optimisation',
+            intendedUseCN: '用于木材、木饰面与暖色室内饰面的光谱比较。',
             anchors: [[380, 0.075], [400, 0.10], [450, 0.16], [500, 0.22], [550, 0.31], [600, 0.43], [650, 0.52], [700, 0.56], [780, 0.58]]
         }),
         material({
@@ -71,6 +73,7 @@
             category: 'wood',
             targetHueZone: 'red-orange-brown',
             intendedUse: 'dark wood and warm brown material optimisation',
+            intendedUseCN: '用于深色木材与暖棕色材料的光谱比较。',
             anchors: [[380, 0.035], [400, 0.045], [450, 0.075], [500, 0.11], [550, 0.17], [600, 0.27], [650, 0.34], [700, 0.37], [780, 0.39]]
         }),
         material({
@@ -80,6 +83,7 @@
             category: 'leather',
             targetHueZone: 'red-orange-brown',
             intendedUse: 'leather, warm upholstery, hospitality material optimisation',
+            intendedUseCN: '用于皮革、暖色软包与酒店材料的光谱比较。',
             anchors: [[380, 0.035], [400, 0.05], [450, 0.085], [500, 0.14], [550, 0.23], [600, 0.36], [650, 0.46], [700, 0.50], [780, 0.52]]
         }),
         material({
@@ -89,6 +93,7 @@
             category: 'fabric',
             targetHueZone: 'yellow-orange-neutral',
             intendedUse: 'fabric, curtain, upholstery and soft furnishing optimisation',
+            intendedUseCN: '用于织物、窗帘、软包与软装材料的光谱比较。',
             anchors: [[380, 0.30], [400, 0.35], [450, 0.42], [500, 0.48], [550, 0.55], [600, 0.62], [650, 0.65], [700, 0.66], [780, 0.68]]
         }),
         material({
@@ -98,6 +103,7 @@
             category: 'plant',
             targetHueZone: 'green',
             intendedUse: 'plant and biophilic interior lighting optimisation',
+            intendedUseCN: '用于绿植与亲自然室内照明的光谱比较。',
             anchors: [[380, 0.035], [400, 0.04], [450, 0.055], [500, 0.12], [540, 0.28], [560, 0.34], [600, 0.18], [650, 0.08], [680, 0.06], [700, 0.09], [780, 0.12]]
         }),
         material({
@@ -107,6 +113,7 @@
             category: 'skin-tone-sample',
             targetHueZone: 'orange-red',
             intendedUse: 'human-centred scene rendering simulation; use measured datasets for medical or product claims',
+            intendedUseCN: '用于以人为本场景的肤色呈现模拟；涉及医疗或产品声明时须采用实测数据。',
             anchors: [[380, 0.18], [400, 0.22], [450, 0.30], [500, 0.38], [550, 0.45], [600, 0.55], [650, 0.62], [700, 0.66], [780, 0.68]]
         }),
         material({
@@ -116,6 +123,7 @@
             category: 'neutral',
             targetHueZone: 'neutral',
             intendedUse: 'whitepoint stability and neutral surface check',
+            intendedUseCN: '用于检查白点稳定性与中性表面呈现。',
             anchors: [[380, 0.72], [400, 0.75], [450, 0.78], [500, 0.80], [550, 0.81], [600, 0.81], [650, 0.80], [700, 0.79], [780, 0.77]]
         })
     ]);

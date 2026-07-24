@@ -1591,6 +1591,7 @@ function updateMetrics() {
     const m = calculateMetrics(combined);
     updateEmitterPreview(combined, m);
     updateColorSamples(combined);
+    if (window.MaterialPanel) window.MaterialPanel.update(combined, m);
     if (metamerModeEnabled) syncMetamerControls(m);
     updateMetamerColourDelta(combined);
 
