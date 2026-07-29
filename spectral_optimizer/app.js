@@ -418,7 +418,11 @@ function generateCIEBackground() {
     oCtx.clip();
 
     // 3. Render sRGB pixel grid inside tongue
-    const step = 0.0035;
+    // The gamut background is decorative; a dense 0.0035 xy grid creates
+    // roughly 60,000 canvas fills and can lock tablets for tens of seconds.
+    // Canvas interpolation keeps this coarser grid visually smooth while the
+    // locus, channel points and measured coordinates remain full precision.
+    const step = 0.008;
     for (let xVal = 0.0; xVal <= 0.85; xVal += step) {
         for (let yVal = 0.0; yVal <= 0.85; yVal += step) {
             if (yVal === 0) continue;
@@ -677,7 +681,7 @@ function renderCIE() {
     cieCtx.stroke();
 
     // Center dot
-    cieCtx.fillStyle = '#ffffff';
+    cieCtx.fillStyle = '#fbfaf7';
     cieCtx.beginPath();
     cieCtx.arc(mPt.x, mPt.y, 4, 0, 2 * Math.PI);
     cieCtx.fill();
@@ -999,7 +1003,8 @@ function calculateMetrics(combinedSPD) {
         melanopicEDI,
         cla: circadian.cla,
         cs: circadian.cs,
-        blueYellowState: circadian.blueYellowState
+        blueYellowState: circadian.blueYellowState,
+        quality
     };
 }
 
@@ -1345,10 +1350,7 @@ function renderSPD() {
     ctx.clearRect(0, 0, W, H);
 
     // ── Background ──
-    const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
-    bgGrad.addColorStop(0, '#fffaf0');
-    bgGrad.addColorStop(1, '#f1eadf');
-    ctx.fillStyle = bgGrad;
+    ctx.fillStyle = '#fbfaf7';
     ctx.fillRect(0, 0, W, H);
 
     // ── Wavelength color strip at bottom ──
@@ -1430,6 +1432,20 @@ function renderSPD() {
         ctx.fillText('D65', d65X, plotY + 15);
     }
 
+    if (window.SpectralProfessional) {
+        window.SpectralProfessional.drawActionCurves({
+            ctx,
+            plotX,
+            plotY,
+            plotW,
+            plotH,
+            fallback: {
+                photopic: preV,
+                melanopic: preMel
+            }
+        });
+    }
+
     // ── Compute combined SPD & find max ──
     const channels = getActiveChannels();
     const combined = getCombinedSPD();
@@ -1445,8 +1461,9 @@ function renderSPD() {
         if (duty < 1e-3) continue;
 
         ctx.beginPath();
-        ctx.strokeStyle = ch.color + 'cc';
-        ctx.lineWidth = 2.1;
+        ctx.setLineDash([4, 3]);
+        ctx.strokeStyle = ch.color + 'b8';
+        ctx.lineWidth = 1.55;
 
         for (let i = 0; i < NUM_POINTS; i++) {
             const val = duty * getChannelSPDValue(ch, wavelengths[i]) * scale;
@@ -1456,16 +1473,7 @@ function renderSPD() {
             else ctx.lineTo(x, y);
         }
         ctx.stroke();
-
-        // Filled area with gradient
-        const fillGrad = ctx.createLinearGradient(0, plotY, 0, plotY + plotH);
-        fillGrad.addColorStop(0, ch.color + '16');
-        fillGrad.addColorStop(1, ch.color + '00');
-        ctx.lineTo(plotX + plotW, plotY + plotH);
-        ctx.lineTo(plotX, plotY + plotH);
-        ctx.closePath();
-        ctx.fillStyle = fillGrad;
-        ctx.fill();
+        ctx.setLineDash([]);
     }
 
     // ── Combined SPD curve (main) ──
@@ -1487,26 +1495,12 @@ function renderSPD() {
     }
 
     if (maxCombined > 1e-6) {
-        // Contrast halo
-        ctx.beginPath();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.88)';
-        ctx.lineWidth = 8;
-        ctx.lineJoin = 'round';
-        for (let i = 0; i < NUM_POINTS; i++) {
-            const val = combined[i] * scale;
-            const x = plotX + (i / (NUM_POINTS - 1)) * plotW;
-            const y = plotY + plotH - val * plotH;
-            if (i === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-        }
-        ctx.stroke();
-
         // Main line
         ctx.beginPath();
-        ctx.strokeStyle = '#8a5a10';
-        ctx.lineWidth = 3.2;
-        ctx.shadowColor = 'rgba(138, 90, 16, 0.22)';
-        ctx.shadowBlur = 8;
+        ctx.strokeStyle = '#25211c';
+        ctx.lineWidth = 1.8;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
         for (let i = 0; i < NUM_POINTS; i++) {
             const val = combined[i] * scale;
             const x = plotX + (i / (NUM_POINTS - 1)) * plotW;
@@ -1515,7 +1509,6 @@ function renderSPD() {
             else ctx.lineTo(x, y);
         }
         ctx.stroke();
-        ctx.shadowBlur = 0;
 
         // Gradient fill under combined
         ctx.beginPath();
@@ -1529,12 +1522,58 @@ function renderSPD() {
         ctx.lineTo(plotX + plotW, plotY + plotH);
         ctx.lineTo(plotX, plotY + plotH);
         ctx.closePath();
-        const combinedGrad = ctx.createLinearGradient(0, plotY, 0, plotY + plotH);
-        combinedGrad.addColorStop(0, 'rgba(201, 148, 45, 0.18)');
-        combinedGrad.addColorStop(0.55, 'rgba(201, 148, 45, 0.06)');
-        combinedGrad.addColorStop(1, 'rgba(201, 148, 45, 0)');
+        const combinedGrad = ctx.createLinearGradient(plotX, 0, plotX + plotW, 0);
+        for (let nm = LAMBDA_MIN; nm <= LAMBDA_MAX; nm += 10) {
+            const [r, g, b] = wavelengthToRGB(nm);
+            combinedGrad.addColorStop(
+                (nm - LAMBDA_MIN) / (LAMBDA_MAX - LAMBDA_MIN),
+                `rgb(${r},${g},${b})`
+            );
+        }
         ctx.fillStyle = combinedGrad;
         ctx.fill();
+
+        // Redraw the combined outline above the full-colour spectral fill.
+        ctx.beginPath();
+        ctx.strokeStyle = '#25211c';
+        ctx.lineWidth = 1.8;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        for (let i = 0; i < NUM_POINTS; i++) {
+            const val = combined[i] * scale;
+            const x = plotX + (i / (NUM_POINTS - 1)) * plotW;
+            const y = plotY + plotH - val * plotH;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        // Channel signatures sit above the spectral fill as coloured dashed
+        // guides, matching the requested instrument-style presentation.
+        for (const ch of channels) {
+            const duty = (channelValues[ch.id] || 0) / 100;
+            if (duty < 1e-3) continue;
+            ctx.beginPath();
+            ctx.setLineDash([4, 3]);
+            const channelRgb = /^#[0-9a-f]{6}$/i.test(ch.color)
+                ? [
+                    parseInt(ch.color.slice(1, 3), 16),
+                    parseInt(ch.color.slice(3, 5), 16),
+                    parseInt(ch.color.slice(5, 7), 16)
+                ]
+                : [55, 68, 82];
+            ctx.strokeStyle = `rgb(${Math.round(channelRgb[0] * 0.68)},${Math.round(channelRgb[1] * 0.68)},${Math.round(channelRgb[2] * 0.68)})`;
+            ctx.lineWidth = 1.5;
+            for (let i = 0; i < NUM_POINTS; i++) {
+                const val = duty * getChannelSPDValue(ch, wavelengths[i]) * scale;
+                const x = plotX + (i / (NUM_POINTS - 1)) * plotW;
+                const y = plotY + plotH - val * plotH;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
     }
 
     // ── Plot border ──
@@ -1590,10 +1629,36 @@ function updateMetrics() {
     const combined = getCombinedSPD();
     const m = calculateMetrics(combined);
     updateEmitterPreview(combined, m);
-    updateColorSamples(combined);
+    if (!scheduleSimulationActive) updateColorSamples(combined, m.quality);
     if (window.MaterialPanel) window.MaterialPanel.update(combined, m);
     if (metamerModeEnabled) syncMetamerControls(m);
     updateMetamerColourDelta(combined);
+
+    if (window.SpectralProfessional) {
+        window.SpectralProfessional.update({
+            spd: combined,
+            metrics: m,
+            x: currentX,
+            y: currentY,
+            channels: getActiveChannels().map(channel => ({
+                id: channel.id,
+                name: channel.nameCN || channel.name,
+                color: channel.color,
+                duty: (channelValues[channel.id] || 0) / 100,
+                x: channel.chromaticity ? channel.chromaticity.x : NaN,
+                y: channel.chromaticity ? channel.chromaticity.y : NaN,
+                spd: wavelengths.map(lambda => getChannelSPDValue(channel, lambda))
+            })),
+            fallback: {
+                photopic: preV,
+                melanopic: preMel,
+                d65: preD65,
+                xBar: preCieX,
+                yBar: preCieY,
+                zBar: preCieZ
+            }
+        });
+    }
 
     // CCT
     updateMetricCard('cct', valCCT, barCCT, m.cct, prevMetrics.cct, {
@@ -2014,6 +2079,12 @@ d65Toggle.addEventListener('change', () => {
     scheduleUpdate();
 });
 
+document.addEventListener('spectral-professional-overlay-change', () => renderSPD());
+document.addEventListener('spectral-professional-curves-ready', () => {
+    renderSPD();
+    updateMetrics();
+});
+
 // ═══════════════════════════════════════════════
 // PRESETS
 // ═══════════════════════════════════════════════
@@ -2400,8 +2471,9 @@ function prioritizeColourVitality(channels, solution) {
     };
 }
 
-function optimizeValuesForScene(channels, targetCCT, targetDuv, emphasis = '') {
+function optimizeValuesForScene(channels, targetCCT, targetDuv, emphasis = '', options = {}) {
     const n = channels.length;
+    const skipColourQuality = options.skipColourQuality === true;
 
     // A neutral CCT target must use the same full-spectrum fit as the CCT
     // preset buttons. Matching chromaticity alone can produce a metamer with
@@ -2417,6 +2489,7 @@ function optimizeValuesForScene(channels, targetCCT, targetDuv, emphasis = '') {
             cct: computeCCTFromValues(channels, values),
             error: Math.hypot(finalXy.x - targetXyLoc.x, finalXy.y - targetXyLoc.y)
         };
+        if (skipColourQuality) return solution;
         return emphasis === 'high-fidelity-and-rg-105-115'
             ? prioritizeColourVitality(channels, solution)
             : prioritizeColourFidelity(channels, solution, targetCCT, targetDuv);
@@ -2868,7 +2941,7 @@ function createPastelCard(sample) {
     return button;
 }
 
-function updateColorSamples(spd) {
+function updateColorSamples(spd, precomputedQuality = null) {
     const grid = document.getElementById('color-samples-grid');
     const pastelGrid = document.getElementById('pastel-palette-grid');
     if (!grid) return;
@@ -2879,11 +2952,14 @@ function updateColorSamples(spd) {
         PASTEL_PALETTE.samples.forEach(sample => fragment.appendChild(createPastelCard(sample)));
         pastelGrid.appendChild(fragment);
     }
-    const qualitySpd = [];
-    for (let index = 0; index < spd.length; index += 5) qualitySpd.push(spd[index]);
-    const quality = typeof COLOUR_QUALITY.calculateColourQuality === 'function'
-        ? COLOUR_QUALITY.calculateColourQuality(qualitySpd)
-        : null;
+    let quality = precomputedQuality;
+    if (!quality) {
+        const qualitySpd = [];
+        for (let index = 0; index < spd.length; index += 5) qualitySpd.push(spd[index]);
+        quality = typeof COLOUR_QUALITY.calculateColourQuality === 'function'
+            ? COLOUR_QUALITY.calculateColourQuality(qualitySpd)
+            : null;
+    }
     if (quality && quality.cct > 0 && SPECTRAL_MATH.estimateCctAndDuvFromXy) {
         const xy = xyFromSPD(spd);
         const estimate = SPECTRAL_MATH.estimateCctAndDuvFromXy(xy.x, xy.y);
@@ -2967,8 +3043,10 @@ function applyHumanCentredScene(scene) {
 let scheduleTimer = null;
 let lastScheduleKey = '';
 let scheduleSimulationMinute = null;
-const SCHEDULE_SIMULATION_STEP_MINUTES = 15;
-const SCHEDULE_SIMULATION_INTERVAL_MS = 250;
+let scheduleSimulationActive = false;
+const SCHEDULE_SIMULATION_STEP_MINUTES = 30;
+const SCHEDULE_SIMULATION_INTERVAL_MS = 180;
+const scheduleSolutionCache = new Map();
 
 function scheduleStagesFromUi() {
     return CIRCADIAN_SCHEDULE.DEFAULT_STAGES.map(stage => {
@@ -2983,7 +3061,7 @@ function setScheduleActiveRow(stageId) {
     });
 }
 
-function applyScheduledTarget(target) {
+function applyScheduledTarget(target, fullQuality = false) {
     stopCctJourney();
     runRealtimeOptimizerDebounced.cancel();
     targetCCT = Math.round(target.cctK / 100) * 100;
@@ -2995,7 +3073,27 @@ function applyScheduledTarget(target) {
         eyeIlluminanceVal.textContent = `${eyeIlluminance} lux`;
         syncTargetSliderFill(eyeIlluminanceSlider);
     }
-    applyTargetOptimization(target.emphasis);
+    if (fullQuality) {
+        applyTargetOptimization(target.emphasis);
+        return;
+    }
+
+    const channels = getActiveChannels();
+    if (!channels.length) return;
+    const cacheKey = `${channels.map(channel => channel.id).join(',')}|${targetCCT}|${targetDuv.toFixed(4)}|${target.emphasis || ''}`;
+    let valuesById = scheduleSolutionCache.get(cacheKey);
+    if (!valuesById) {
+        const solved = optimizeValuesForScene(
+            channels,
+            targetCCT,
+            targetDuv,
+            target.emphasis,
+            { skipColourQuality: true }
+        );
+        valuesById = solutionValuesById(channels, solved);
+        scheduleSolutionCache.set(cacheKey, valuesById);
+    }
+    applyValuesImmediate(valuesById);
 }
 
 function scheduleSimulationRange() {
@@ -3038,21 +3136,26 @@ function scheduleTick(force = false, applyTarget = true, simulatedMinute = null)
     const key = `${state.active.id}:${minuteOfDay}:${Math.round(state.progress * 100)}`;
     if (!applyTarget || (!force && key === lastScheduleKey)) return;
     lastScheduleKey = key;
-    applyScheduledTarget(CIRCADIAN_SCHEDULE.blendScenes(previousScene, activeScene, state.progress));
+    applyScheduledTarget(CIRCADIAN_SCHEDULE.blendScenes(previousScene, activeScene, state.progress), false);
 }
 
 function stopSchedule() {
+    const wasActive = scheduleSimulationActive;
     if (scheduleTimer !== null) clearInterval(scheduleTimer);
     scheduleTimer = null;
     scheduleSimulationMinute = null;
+    scheduleSimulationActive = false;
     lastScheduleKey = '';
+    if (wasActive) scheduleUpdate();
 }
 
 function startSchedule() {
     stopSchedule();
+    scheduleSolutionCache.clear();
+    scheduleSimulationActive = true;
     const range = scheduleSimulationRange();
     scheduleSimulationMinute = range.start;
-    scheduleTick(true, true, scheduleSimulationMinute);
+    scheduleTick(false, true, scheduleSimulationMinute);
     scheduleTimer = setInterval(() => {
         scheduleSimulationMinute = CIRCADIAN_SCHEDULE.advanceSimulationMinute(
             scheduleSimulationMinute,
@@ -3214,7 +3317,7 @@ function init() {
     buildChannelSliders();
 
     // Set initial values for a nice demo
-    const initial = { red: 30, green: 45, blue: 55, warmwhite: 40, cyan: 35, lime: 30, amber: 25 };
+    const initial = { red: 98, green: 67, blue: 33, warmwhite: 0, cyan: 35, lime: 30, amber: 25 };
     for (const [id, val] of Object.entries(initial)) {
         channelValues[id] = val;
     }
@@ -3240,7 +3343,9 @@ function init() {
     document.querySelectorAll('.target-row input[type="range"]').forEach(syncTargetSliderFill);
     updateCctJourneyControls();
 
-    runRealtimeOptimizer();
+    // The default 4-channel values are pre-fitted to the initial 4000 K target.
+    // Render them directly so navigation is never blocked by a full optimizer run.
+    scheduleUpdate();
 
     // Handle resize
     let resizeTimer;

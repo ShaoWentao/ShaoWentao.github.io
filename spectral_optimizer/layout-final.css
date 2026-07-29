@@ -308,3 +308,81 @@
         font-size: 0.6rem;
     }
 }
+
+/* Place the two standard chromaticity diagrams together. */
+.charts-row {
+    grid-template-columns: minmax(0, 1.55fr) repeat(2, minmax(220px, 0.72fr));
+    grid-template-areas:
+        "spd cie cie76"
+        "combo combo combo";
+}
+
+.charts-row > .cie1976-panel {
+    grid-area: cie76;
+    height: 360px;
+    box-sizing: border-box;
+}
+
+.cie1976-panel .cie-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    min-height: 43px;
+    padding: 14px 12px 10px;
+    border-bottom: 1px solid var(--divider);
+}
+
+.cie1976-panel .cie-header h2 {
+    margin: 0;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.cie1976-coordinate {
+    color: var(--text-secondary);
+    font: 600 9px "JetBrains Mono", monospace;
+    white-space: nowrap;
+}
+
+.cie1976-canvas-wrapper {
+    width: min(100%, 292px);
+    height: auto;
+    margin: 10px auto 0;
+    aspect-ratio: 1;
+}
+
+#professional-cie1976 {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+@media (max-width: 1000px) {
+    .charts-row {
+        grid-template-columns: 1fr 1fr;
+        grid-template-areas:
+            "spd spd"
+            "cie cie76"
+            "combo combo";
+    }
+
+    .charts-row > .cie1976-panel {
+        height: auto;
+    }
+
+    .cie1976-canvas-wrapper {
+        height: auto;
+    }
+}
+
+@media (max-width: 720px) {
+    .charts-row {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "spd"
+            "cie"
+            "cie76"
+            "combo";
+    }
+}

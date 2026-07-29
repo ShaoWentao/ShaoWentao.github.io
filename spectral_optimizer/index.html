@@ -279,13 +279,35 @@
                         </div>
                         <span class="material-reference" id="material-reference">等待有效光谱</span>
                     </div>
+                    <div class="material-category-tabs" id="material-category-tabs" role="tablist" aria-label="材质分类">
+                        <button type="button" class="category-pill is-selected" data-category="wood" role="tab" aria-selected="true">木材</button>
+                        <button type="button" class="category-pill" data-category="stone" role="tab" aria-selected="false">石材</button>
+                        <button type="button" class="category-pill" data-category="fabric" role="tab" aria-selected="false">织物</button>
+                        <button type="button" class="category-pill" data-category="leather" role="tab" aria-selected="false">皮革</button>
+                        <button type="button" class="category-pill" data-category="metal" role="tab" aria-selected="false">金属</button>
+                        <button type="button" class="category-pill" data-category="paint" role="tab" aria-selected="false">涂料</button>
+                        <button type="button" class="category-pill" data-category="plant" role="tab" aria-selected="false">绿植</button>
+                        <button type="button" class="category-pill" data-category="neutral" role="tab" aria-selected="false">中性面</button>
+                        <button type="button" class="category-pill" data-category="user" role="tab" aria-selected="false">我的材质</button>
+                    </div>
                     <div class="material-selector" id="material-selector" role="group" aria-label="选择材质"></div>
                     <div class="material-detail">
                         <div class="material-detail-copy">
                             <h3 id="material-detail-title">暖橡木饰面</h3>
                             <p id="material-detail-description">用于木材、木饰面与暖色室内饰面的光谱比较。</p>
                             <span class="material-category" id="material-detail-category">木材</span>
-                            <span class="material-data-badge" id="material-detail-source">工程模型 · 可替换为实测数据</span>
+                            <div class="material-source-badges">
+                                <span class="source-badge source-badge--appearance">
+                                    <span class="source-badge__indicator source-badge__indicator--engineering"></span>
+                                    <span class="source-badge__label">外观来源</span>
+                                    <span class="source-badge__value" id="material-appearance-source">程序纹理</span>
+                                </span>
+                                <span class="source-badge source-badge--spectral">
+                                    <span class="source-badge__indicator source-badge__indicator--engineering"></span>
+                                    <span class="source-badge__label">光谱来源</span>
+                                    <span class="source-badge__value" id="material-spectral-source">工程模型 · 可替换为实测数据</span>
+                                </span>
+                            </div>
                         </div>
                         <div class="material-compare" aria-label="材质效果对比">
                             <figure>
@@ -305,8 +327,66 @@
                             <div class="material-metric" id="material-delta-e"><span>ΔE00 综合色差</span><strong>--</strong><small>≤1 很小 / >3 明显</small></div>
                         </div>
                     </div>
-                    <p class="material-panel-note">纹理与屏幕颜色用于帮助理解变化，不等同于真实材质观感。当前内置项为工程参考模型；后续可加入 USGS/JPL 实测样本和用户实测 CSV。</p>
+                    <div class="material-reflectance">
+                        <div>
+                            <h3>光谱反射率 <span class="reflectance-source-tag" id="material-reflectance-source-tag"></span></h3>
+                            <p>横轴 380–780 nm，纵轴相对反射率。</p>
+                            <small id="material-reflectance-source">工程参考曲线</small>
+                        </div>
+                        <canvas id="material-reflectance-canvas" width="720" height="150" aria-label="当前材质光谱反射率曲线"></canvas>
+                    </div>
+                    <p class="material-panel-note">外观纹理与光谱反射率来源独立标注，不暗示同一块样品。实测光谱来自 USGS 等开放数据库；工程近似曲线基于典型材料反射特征构建。涉及产品验证时，请通过「我的材质」导入对应实物的反射率 CSV 与照片。</p>
+
+                    <!-- Hidden file inputs for material upload -->
+                    <input type="file" id="material-csv-input" accept=".csv,.txt,.tsv" hidden>
+                    <input type="file" id="material-photo-input" accept="image/png,image/jpeg,image/webp" hidden>
                 </section>
+
+                <!-- Material upload dialog (hidden by default) -->
+                <div class="material-upload-overlay" id="material-upload-overlay" hidden>
+                    <div class="material-upload-dialog" role="dialog" aria-labelledby="upload-dialog-title">
+                        <h2 id="upload-dialog-title">导入材质</h2>
+                        <p>上传反射率 CSV 文件（波长 nm + 反射率），可选附带材质照片。</p>
+                        <div class="upload-field">
+                            <label for="upload-material-name">材质名称</label>
+                            <input type="text" id="upload-material-name" placeholder="例如：定制木饰面" maxlength="40">
+                        </div>
+                        <div class="upload-field">
+                            <label for="upload-material-category">材质分类</label>
+                            <select id="upload-material-category">
+                                <option value="wood">木材</option>
+                                <option value="stone">石材</option>
+                                <option value="fabric">织物</option>
+                                <option value="leather">皮革</option>
+                                <option value="metal">金属</option>
+                                <option value="paint">涂料</option>
+                                <option value="plant">绿植</option>
+                                <option value="neutral">中性</option>
+                            </select>
+                        </div>
+                        <div class="upload-field">
+                            <label>反射率数据（CSV）</label>
+                            <div class="upload-drop-zone" id="upload-csv-zone">
+                                <strong>选择 CSV 文件</strong>
+                                <span>或拖入 · 两列：波长nm / 反射率0–1 · 至少5行</span>
+                            </div>
+                            <div class="upload-preview" id="upload-csv-preview" hidden></div>
+                        </div>
+                        <div class="upload-field">
+                            <label>材质照片（可选）</label>
+                            <div class="upload-drop-zone" id="upload-photo-zone">
+                                <strong>选择照片</strong>
+                                <span>PNG / JPEG / WebP · 最大 2 MB</span>
+                            </div>
+                            <div class="upload-preview" id="upload-photo-preview" hidden></div>
+                        </div>
+                        <div id="upload-error" style="color:#c9342c;font-size:11px;margin-top:8px" hidden></div>
+                        <div class="upload-dialog-actions">
+                            <button type="button" class="upload-dialog-cancel" id="upload-dialog-cancel">取消</button>
+                            <button type="button" class="upload-dialog-submit" id="upload-dialog-submit" disabled>确认添加</button>
+                        </div>
+                    </div>
+                </div>
 
                 <section class="metric-group metric-group-health" aria-labelledby="health-metrics-title">
                     <div class="section-heading">
@@ -373,6 +453,7 @@
     <script src="colour-quality.js?v=20260721-diagram1"></script>
     <script src="material-reflectance-data.js?v=20260724-material1"></script>
     <script src="material-color.js?v=20260724-material2"></script>
+    <script src="material-upload.js?v=20260725-upload1"></script>
     <script src="material-panel.js?v=20260724-material2"></script>
     <script src="pastel-palette.js?v=20260721-pastel1"></script>
     <script src="metamer-optimizer.js?v=20260722-saturation3"></script>
@@ -382,6 +463,7 @@
     <script src="circadian-schedule.js?v=20260722-simulation2"></script>
     <script src="default-rgbw-data.js?v=20260717-rgbw1"></script>
     <script src="default-rgbcla-data.js?v=20260718-rgbcla1"></script>
+    <script src="professional-analysis.js?v=20260727-professional1"></script>
     <script src="app.js?v=20260722-profile1"></script>
 </body>
 </html>

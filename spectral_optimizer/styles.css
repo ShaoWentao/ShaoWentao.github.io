@@ -421,6 +421,332 @@ body {
     }
 }
 
+/* Professional spectral analysis */
+.action-curve-menu {
+    position: relative;
+}
+
+.action-curve-menu > summary {
+    min-height: 32px;
+    padding: 6px 10px;
+    border: 1px solid rgba(72, 64, 52, 0.16);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.72);
+    color: #4c463e;
+    font-size: 12px;
+    font-weight: 650;
+    cursor: pointer;
+    list-style: none;
+}
+
+.action-curve-menu > summary::-webkit-details-marker {
+    display: none;
+}
+
+.action-curve-popover {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 220px;
+    padding: 10px;
+    border: 1px solid rgba(72, 64, 52, 0.14);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 12px 30px rgba(52, 45, 34, 0.16);
+}
+
+.action-curve-popover label {
+    display: grid;
+    grid-template-columns: 18px 12px 1fr;
+    align-items: center;
+    gap: 7px;
+    min-height: 30px;
+    font-size: 12px;
+}
+
+.action-curve-popover label > span {
+    width: 10px;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--curve-color);
+}
+
+.action-curve-popover small {
+    display: block;
+    margin-top: 7px;
+    color: #81786c;
+    line-height: 1.45;
+}
+
+.professional-analysis-panel {
+    grid-column: 1 / -1;
+    padding: 0;
+    overflow: visible;
+}
+
+.professional-analysis-panel > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 15px 18px;
+    cursor: pointer;
+    list-style: none;
+}
+
+.professional-analysis-panel > summary::-webkit-details-marker {
+    display: none;
+}
+
+.professional-analysis-panel > summary > span:first-child {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+
+.professional-analysis-panel > summary strong {
+    font-size: 15px;
+}
+
+.professional-analysis-panel > summary small,
+.professional-analysis-panel > summary > span:last-child {
+    color: #898176;
+    font-size: 12px;
+}
+
+.professional-analysis-panel[open] > summary {
+    border-bottom: 1px solid rgba(72, 64, 52, 0.1);
+}
+
+.professional-analysis-body {
+    display: grid;
+    grid-template-columns: minmax(340px, 0.8fr) minmax(430px, 1.2fr);
+    gap: 16px;
+    padding: 16px 18px 18px;
+}
+
+.professional-coordinate-grid {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.professional-coordinate-grid > div,
+.alpha-opic-grid > div {
+    min-width: 0;
+    padding: 11px 12px;
+    border-radius: 8px;
+    background: #f7f7f9;
+}
+
+.professional-coordinate-grid span,
+.alpha-opic-grid span,
+.alpha-opic-grid small {
+    display: block;
+    color: #7b746a;
+    font-size: 11px;
+}
+
+.professional-coordinate-grid strong {
+    display: block;
+    margin-top: 5px;
+    font: 650 14px "JetBrains Mono", monospace;
+}
+
+.professional-diagram-section {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+}
+
+.professional-diagram-section figure {
+    min-width: 0;
+    width: min(100%, 720px);
+    justify-self: center;
+    margin: 0;
+    padding: 12px;
+    border: 1px solid rgba(72, 64, 52, 0.1);
+    border-radius: 10px;
+    background: #fff;
+}
+
+.professional-diagram-section figcaption {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.professional-diagram-section figcaption strong {
+    color: #302d29;
+    font-size: 13px;
+}
+
+.professional-diagram-section figcaption span {
+    color: #847c71;
+    font: 500 11px "JetBrains Mono", monospace;
+}
+
+.professional-diagram-section canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    border-radius: 8px;
+}
+
+.alpha-opic-section,
+.channel-contribution-section {
+    min-width: 0;
+    padding: 14px;
+    border: 1px solid rgba(72, 64, 52, 0.1);
+    border-radius: 10px;
+}
+
+.professional-subhead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.professional-subhead strong,
+.professional-subhead small {
+    display: block;
+}
+
+.professional-subhead small {
+    margin-top: 3px;
+    color: #847c71;
+    font-size: 11px;
+}
+
+.professional-subhead select {
+    max-width: 160px;
+    height: 32px;
+    border: 1px solid rgba(72, 64, 52, 0.16);
+    border-radius: 7px;
+    background: #fff;
+}
+
+.alpha-opic-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 7px;
+}
+
+.alpha-opic-grid span {
+    padding-left: 8px;
+    border-left: 3px solid var(--curve-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.alpha-opic-grid strong {
+    display: block;
+    margin-top: 8px;
+    font: 700 18px "JetBrains Mono", monospace;
+}
+
+.channel-contribution-list {
+    display: grid;
+    gap: 8px;
+}
+
+.channel-contribution-row {
+    display: grid;
+    grid-template-columns: minmax(95px, 0.65fr) minmax(120px, 1.5fr) 48px;
+    align-items: center;
+    gap: 9px;
+    font-size: 11px;
+}
+
+.channel-contribution-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.channel-contribution-name i {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-right: 6px;
+    border-radius: 50%;
+    background: var(--channel-color);
+}
+
+.channel-contribution-track {
+    height: 7px;
+    overflow: hidden;
+    border-radius: 5px;
+    background: #e9e7e3;
+}
+
+.channel-contribution-track b {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--channel-color);
+}
+
+.channel-contribution-row > strong {
+    text-align: right;
+    font: 650 11px "JetBrains Mono", monospace;
+}
+
+.channel-contribution-section > p,
+.professional-data-status {
+    margin: 11px 0 0;
+    color: #847c71;
+    font-size: 10px;
+    line-height: 1.45;
+}
+
+.professional-data-status {
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 1200px) {
+    .professional-analysis-body {
+        grid-template-columns: 1fr;
+    }
+
+    .professional-coordinate-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .alpha-opic-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 620px) {
+    .professional-analysis-panel > summary > span:first-child {
+        display: block;
+    }
+
+    .professional-coordinate-grid,
+    .alpha-opic-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .channel-contribution-row {
+        grid-template-columns: minmax(80px, 0.8fr) minmax(80px, 1fr) 44px;
+    }
+
+    .professional-diagram-section {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* Final chart composition: analysis above, live colour and daily plan together. */
 .charts-row {
     grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);

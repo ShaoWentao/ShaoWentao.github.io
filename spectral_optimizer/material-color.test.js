@@ -11,7 +11,7 @@ function nearZero(value, tolerance, label) {
 
 function assertReferenceMatch(spd, cct, options, label) {
     const results = MaterialColor.calculateAllMaterials(spd, { cct, ...options });
-    assert.equal(results.length, 7, `${label}: all material models must be evaluated`);
+    assert.equal(results.length, 21, `${label}: all material models must be evaluated`);
     for (const result of results) {
         nearZero(result.deltaL, 1e-8, `${label} ${result.materialId} deltaL`);
         nearZero(result.deltaC, 1e-8, `${label} ${result.materialId} deltaC`);
