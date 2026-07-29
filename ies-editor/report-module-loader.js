@@ -1,8 +1,7 @@
 (() => {
   const REPORT_MODULES = [
     '../ies-report/report-fixed-footer-layout.js',
-    '../ies-report/report-candela-pagination.js',
-    '../ies-report/report-beam-flux-label.js'
+    '../ies-report/report-candela-pagination.js'
   ];
 
   function frame() {
