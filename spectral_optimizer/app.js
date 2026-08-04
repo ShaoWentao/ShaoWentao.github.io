@@ -125,16 +125,17 @@ let compareSpectrumEnabled = false;
 let isMetamerOptimizing = false;
 let materialOptimizationGeneration = 0;
 let isMaterialOptimizing = false;
+let diningOptimizationSession = null;
 const materialOptimizationBaselines = new Map();
 const diningOptimizationBaselines = new Map();
 const metamerWorkerClient = typeof METAMER_WORKER_CLIENT.createMetamerWorkerClient === 'function'
     ? METAMER_WORKER_CLIENT.createMetamerWorkerClient({
-        workerUrl: 'metamer-worker.js?v=20260804-material-target-lock'
+        workerUrl: 'metamer-worker.js?v=20260804-dining-condition-baseline'
     })
     : null;
 const sceneOptimizerWorkerClient = typeof SCENE_OPTIMIZER_WORKER_CLIENT.createSceneOptimizerWorkerClient === 'function'
     ? SCENE_OPTIMIZER_WORKER_CLIENT.createSceneOptimizerWorkerClient({
-        workerUrl: 'scene-optimizer-worker.js?v=20260804-material-target-lock'
+        workerUrl: 'scene-optimizer-worker.js?v=20260804-dining-condition-baseline'
     })
     : null;
 const cctAnimation = {
@@ -2053,13 +2054,29 @@ function sameChannelValues(left, right) {
     return Array.isArray(left) && Array.isArray(right) && left.length === right.length &&
         left.every((value, index) => {
             // The regular-mode handoff rounds values to the 0.1% UI precision.
-            // Compare at that same precision so a repeat click reuses the
-            // original dining baseline instead of treating the rounded result
-            // as a new starting spectrum.
+            // Compare at that same precision so an applied result is not mistaken
+            // for an external channel edit.
             const roundedLeft = Number(Number(value).toFixed(1));
             const roundedRight = Number(Number(right[index]).toFixed(1));
             return Math.abs(roundedLeft - roundedRight) <= 1e-9;
         });
+}
+
+function resolveDiningOptimizationSession(channels, liveValues) {
+    const channelSignature = activeChannelSignature(channels);
+    const canReuse = diningOptimizationSession &&
+        diningOptimizationSession.channelSignature === channelSignature &&
+        (sameChannelValues(liveValues, diningOptimizationSession.resultValues) ||
+            sameChannelValues(liveValues, diningOptimizationSession.sourceValues));
+    if (!canReuse) {
+        diningOptimizationBaselines.clear();
+        diningOptimizationSession = {
+            channelSignature,
+            sourceValues: liveValues.slice(),
+            resultValues: liveValues.slice()
+        };
+    }
+    return diningOptimizationSession;
 }
 
 function scaleChannelValuesToPhotopicY(channels, values, targetY) {
@@ -2228,13 +2245,17 @@ function handleMaterialOptimizationRequest(event) {
                 let materialBaseline = null;
                 let diningBaseline = null;
                 if (isDiningOptimization) {
+                    const session = resolveDiningOptimizationSession(channels, liveValues);
                     const key = diningOptimizationKey(request, channels, materials);
                     const cached = diningOptimizationBaselines.get(key);
-                    if (cached && sameChannelValues(liveValues, cached.resultValues)) {
-                        initialValues = cached.initialValues.slice();
+                    initialValues = session.sourceValues.slice();
+                    if (cached && sameChannelValues(cached.initialValues, session.sourceValues)) {
                         diningBaseline = cached;
                     } else {
-                        diningBaseline = { initialValues: liveValues.slice(), resultValues: liveValues.slice() };
+                        diningBaseline = {
+                            initialValues: session.sourceValues.slice(),
+                            resultValues: session.sourceValues.slice()
+                        };
                         diningOptimizationBaselines.set(key, diningBaseline);
                     }
                 } else {
@@ -2259,8 +2280,9 @@ function handleMaterialOptimizationRequest(event) {
                     ? activeBaseline.referenceDuv : null;
                 const referenceCct = targetMode === 'scene' && sceneCct
                     ? sceneCct
-                    : (cachedReferenceCct || (Number.isFinite(Number(request.cct)) && Number(request.cct) > 0
-                        ? Number(request.cct) : Number(initialEstimate?.cct) || targetCCT));
+                    : (cachedReferenceCct || Number(initialEstimate?.cct) ||
+                        (Number.isFinite(Number(request.cct)) && Number(request.cct) > 0
+                            ? Number(request.cct) : targetCCT));
                 const referenceDuv = targetMode === 'scene' && Number.isFinite(requestedDuv)
                     ? requestedDuv : (cachedReferenceDuv ?? (Number(initialEstimate?.duv) || 0));
                 const targetXy = targetMode === 'scene'
@@ -2431,6 +2453,9 @@ function handleMaterialOptimizationRequest(event) {
                     if (generation !== materialOptimizationGeneration) return;
                 }
                 if (activeBaseline) activeBaseline.resultValues = finalValues.slice();
+                if (isDiningOptimization && applied && diningOptimizationSession) {
+                    diningOptimizationSession.resultValues = finalValues.slice();
+                }
 
                 const beforePhotopicY = Number(beforeSnapshot.metrics.photopicY);
                 const afterPhotopicY = Number(afterSnapshot.metrics.photopicY);
