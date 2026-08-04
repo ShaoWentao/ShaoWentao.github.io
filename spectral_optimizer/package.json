@@ -1,0 +1,31 @@
+{
+  "name": "spectral-optimizer",
+  "version": "1.0.0",
+  "description": "Browser-based computational lighting spectral optimizer",
+  "scripts": {
+    "start": "node local-server.js",
+    "preview": "node local-server.js",
+    "test": "node test-runner.js",
+    "test:browser": "node browser-integration.test.js",
+    "test:loading": "node module-loading.test.js",
+    "test:standards": "node standards-validation.test.js",
+    "test:rgbw": "node rgbw-regression.test.js",
+    "test:material": "node material-workbench.test.js",
+    "test:dining": "node dining-light-data.test.js && node dining-scene-mode.test.js && node dining-workbench.test.js",
+    "test:export": "node recipe-export.test.js && node recipe-export-browser.test.js && node xlsx-workbook.test.js",
+    "audit:page": "node page-audit.js",
+    "validation:report": "node validation-report.js"
+  },
+  "keywords": [
+    "spectral",
+    "optimizer",
+    "lighting",
+    "cie1931"
+  ],
+  "author": "ShaoWentao",
+  "license": "ISC",
+  "devDependencies": {
+    "puppeteer": "^25.3.0",
+    "sharp": "^0.35.3"
+  }
+}

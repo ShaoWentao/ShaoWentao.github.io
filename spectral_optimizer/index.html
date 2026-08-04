@@ -5,18 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>光谱优化器</title>
     <meta name="description" content="用于多通道 LED 光谱调试、光品质分析与健康照明评估的光谱优化工具。">
-    <link rel="stylesheet" href="styles.css?v=20260722-layout13">
-    <link rel="stylesheet" href="layout-final.css?v=20260722-combo1">
-    <link rel="stylesheet" href="material-panel.css?v=20260724-material2">
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="styles.css?v=20260804-material-target-lock">
+    <link rel="stylesheet" href="layout-final.css?v=20260804-material-target-lock">
+    <link rel="stylesheet" href="material-panel.css?v=20260804-material-target-lock">
 </head>
 <body>
+    <aside class="local-file-warning" id="local-file-warning" hidden>
+        当前为本地文件兼容模式。请运行 <strong>start-local.bat</strong>，通过本地服务启用专业数据与 Web Worker。
+    </aside>
     <section class="page-hero">
         <h1><span class="title-main">光谱优化器</span></h1>
         <p>多通道 LED 光谱调试、光品质分析与健康照明评估</p>
     </section>
 
-    <main id="app-main">
-        <div class="left-column">
+    <main id="app-main" class="workbench-shell">
+        <aside class="workbench-sidebar" id="workbench-sidebar" aria-label="光谱输入与目标">
         <section class="controls-panel glass-card" id="controls-panel">
             <div class="panel-header">
                 <h2>LED 通道控制</h2>
@@ -52,7 +56,7 @@
 
             <div class="channels-container" id="channels-container"></div>
 
-            <div class="presets-section">
+            <div class="presets-section workbench-control-card" id="preset-panel">
                 <h3>色温预设</h3>
                 <div class="preset-buttons">
                     <button class="preset-btn compact" data-preset="cct-1800" title="黑体轨迹 1800 K">1800K</button>
@@ -79,9 +83,10 @@
             </div>
 
             <div class="optimizer-functional-grid">
-                <section class="tuning-group tuning-group-colour" aria-labelledby="colour-tuning-title">
+                <section class="tuning-group tuning-group-colour workbench-control-card" id="white-target-panel" aria-labelledby="colour-tuning-title">
                     <div class="section-heading compact-heading">
                         <div><span class="section-eyebrow">光色调试</span><h3 id="colour-tuning-title">色点与色彩表现</h3></div>
+                        <span class="target-mode-status" id="colour-target-mode">白光目标</span>
                     </div>
                     <div class="target-controls colour-target-controls">
                         <div class="target-row">
@@ -93,17 +98,14 @@
                             <input type="range" id="target-duv-slider" min="-0.015" max="0.015" step="0.0005" value="0">
                         </div>
                     </div>
-                    <section class="pastel-debug-panel" aria-labelledby="pastel-debug-title">
-                        <div class="section-heading compact-heading">
-                            <div><h3 id="pastel-debug-title">淡彩 32 色</h3></div>
-                            <p>选择目标色并拟合当前通道</p>
-                        </div>
+                    <details class="pastel-debug-panel sidebar-details" id="pastel-target-details">
+                        <summary id="pastel-debug-title">淡彩 32 色目标</summary>
                         <div class="pastel-palette-grid" id="pastel-palette-grid"></div>
                         <p class="pastel-fit-status" id="pastel-fit-status" role="status" aria-live="polite">选择色卡后，将按当前通道光谱拟合目标色点。</p>
-                    </section>
+                    </details>
                 </section>
 
-                <section class="tuning-group tuning-group-health" aria-labelledby="health-tuning-title">
+                <section class="tuning-group tuning-group-health workbench-control-card" id="circadian-condition-panel" aria-labelledby="health-tuning-title">
                     <div class="section-heading compact-heading">
                         <div><span class="section-eyebrow">健康照明</span><h3 id="health-tuning-title">节律条件与 24 小时计划</h3></div>
                     </div>
@@ -131,10 +133,20 @@
             </div>
         </section>
 
-        </div>
-        <div class="right-column">
+        </aside>
+        <div class="workbench-results" id="workbench-results">
 
-        <div class="charts-row">
+        <section class="workbench-summary" id="workbench-summary" aria-label="关键指标摘要">
+            <article class="summary-card" data-summary="cct"><span>CCT</span><strong id="summary-cct-value">--</strong><small id="summary-cct-note">目标 --</small></article>
+            <article class="summary-card" data-summary="duv"><span>Duv</span><strong id="summary-duv-value">--</strong><small id="summary-duv-note">目标 --</small></article>
+            <article class="summary-card" data-summary="rf"><span>Rf</span><strong id="summary-rf-value">--</strong><small>TM-30 保真度</small></article>
+            <article class="summary-card" data-summary="rg"><span>Rg</span><strong id="summary-rg-value">--</strong><small>TM-30 色域面积</small></article>
+            <article class="summary-card" data-summary="medi"><span>Melanopic EDI</span><strong id="summary-medi-value">--</strong><small id="summary-medi-note">眼部照度 --</small></article>
+            <article class="summary-card" data-summary="cs"><span>CS</span><strong id="summary-cs-value">--</strong><small id="summary-cs-note">--</small></article>
+            <article class="summary-card" data-summary="mel"><span>MEL</span><strong id="summary-mel-value">--</strong><small>Melanopic DER</small></article>
+        </section>
+
+        <div class="workbench-core-charts" id="workbench-core-charts">
                 <div class="spd-panel glass-card" id="spd-panel">
                     <div class="spd-header">
                         <h2>光谱功率分布 <span>SPD</span></h2>
@@ -147,46 +159,103 @@
                         </div>
                     </div>
                     <div class="canvas-wrapper" id="canvas-wrapper">
+                        <div class="panel-loading-state" id="spd-loading-state" role="status">正在准备光谱…</div>
                         <canvas id="spd-canvas"></canvas>
                     </div>
+                    <details class="embedded-analysis-details" id="spd-contribution-details">
+                        <summary>通道贡献</summary>
+                        <div class="professional-subhead">
+                            <div><strong>单通道贡献</strong><small>当前配方下可线性分解的响应占比</small></div>
+                            <select id="channel-contribution-metric" aria-label="选择通道贡献指标">
+                                <option value="photopic">Photopic</option>
+                                <option value="cyanopic">S-cone-opic</option>
+                                <option value="chloropic">M-cone-opic</option>
+                                <option value="erythropic">L-cone-opic</option>
+                                <option value="rhodopic">Rhodopic</option>
+                                <option value="melanopic">Melanopic</option>
+                                <option value="radiant">相对辐射功率</option>
+                            </select>
+                        </div>
+                        <div class="channel-contribution-list" id="channel-contribution-list"></div>
+                        <p class="embedded-analysis-note">显色指标属于混合光谱的综合色彩评价，不作为可相加的单通道贡献。</p>
+                    </details>
                 </div>
 
-                <div class="cie-panel glass-card" id="cie-panel">
-                    <div class="cie-header">
-                        <h2>CIE 1931 色度图</h2>
-                    </div>
-                    <div class="canvas-wrapper" id="cie-canvas-wrapper">
-                        <canvas id="cie-canvas"></canvas>
-                    </div>
-                </div>
-
-                <section class="emitter-preview glass-card" id="emitter-preview" aria-labelledby="emitter-preview-title">
-                    <div class="emitter-preview-heading">
-                        <h3 id="emitter-preview-title">当前光色</h3>
-                        <span class="emitter-preview-status" id="emitter-preview-status">实时</span>
-                    </div>
-                    <div class="emitter-preview-stage">
-                        <div class="emitter-disc" id="emitter-disc" role="img" aria-label="当前混合光色预览"></div>
-                        <div class="emitter-preview-values">
-                            <strong id="emitter-preview-cct">-- K</strong>
-                            <span id="emitter-preview-xy">x -- · y --</span>
+                <section class="chromaticity-panel glass-card" id="chromaticity-panel" aria-labelledby="chromaticity-panel-title">
+                    <div class="chromaticity-panel-header">
+                        <div class="chromaticity-panel-title">
+                            <h2 id="chromaticity-panel-title">色点分析</h2>
+                        </div>
+                        <div class="chromaticity-controls">
+                            <div class="chromaticity-tabs" role="tablist" aria-label="色度坐标系统">
+                                <button type="button" id="chromaticity-tab-1931" role="tab" aria-selected="true" aria-controls="chromaticity-pane-1931" data-chromaticity-view="cie1931">CIE 1931 xy</button>
+                                <button type="button" id="chromaticity-tab-1976" role="tab" aria-selected="false" aria-controls="chromaticity-pane-1976" data-chromaticity-view="cie1976" tabindex="-1">CIE 1976 u′v′</button>
+                            </div>
+                            <label class="chromaticity-channel-toggle">
+                                <input type="checkbox" id="chromaticity-channel-points">
+                                <span>显示通道点</span>
+                            </label>
+                        </div>
+                        <div class="chromaticity-summary" aria-live="polite">
+                            <span id="chromaticity-summary-xy">x -- · y --</span>
+                            <span id="chromaticity-summary-upvp">u′ -- · v′ --</span>
+                            <span id="professional-xyz">X -- · Y -- · Z --</span>
+                            <span id="professional-dominant">-- nm</span>
+                            <span id="professional-purity">--%</span>
                         </div>
                     </div>
-                    <div class="metamer-controls emitter-metamer-controls" id="metamer-controls">
-                        <input type="radio" name="metamer-profile" value="off" hidden>
-                        <input type="radio" name="metamer-profile" value="fidelity" checked hidden>
+                    <div class="chromaticity-pane" id="chromaticity-pane-1931" role="tabpanel" aria-labelledby="chromaticity-tab-1931">
+                        <div class="chromaticity-pane-heading">
+                            <span>CIE 1931 xy 色度图</span>
+                        </div>
+                        <div class="canvas-wrapper chromaticity-canvas-wrapper" id="cie-canvas-wrapper">
+                            <canvas id="cie-canvas" width="350" height="350" aria-label="CIE 1931 xy 色度图"></canvas>
+                        </div>
+                    </div>
+                    <div class="chromaticity-pane" id="chromaticity-pane-1976" role="tabpanel" aria-labelledby="chromaticity-tab-1976" hidden>
+                        <div class="chromaticity-pane-heading">
+                            <span>CIE 1976 UCS u′v′ 色度图</span>
+                        </div>
+                        <div class="canvas-wrapper chromaticity-canvas-wrapper" id="cie1976-canvas-wrapper">
+                            <canvas id="professional-cie1976" width="350" height="350" aria-label="CIE 1976 UCS u′v′ 色度图"></canvas>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="emitter-preview workbench-current-light glass-card" id="emitter-preview" aria-labelledby="emitter-preview-title">
+                    <div class="current-light-summary">
+                        <div class="emitter-preview-heading">
+                            <h3 id="emitter-preview-title">当前光色与情景模拟</h3>
+                            <span class="emitter-preview-status" id="emitter-preview-status">实时</span>
+                        </div>
+                        <div class="emitter-preview-stage">
+                            <div class="emitter-disc" id="emitter-disc" role="img" aria-label="当前混合光色预览"></div>
+                            <div class="emitter-preview-values">
+                                <strong id="emitter-preview-cct">-- K</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="metamer-controls emitter-metamer-controls optimization-mode-panel" id="metamer-controls">
+                        <input type="radio" name="metamer-profile" value="off" checked hidden>
+                        <input type="radio" name="metamer-profile" value="fidelity" hidden>
                         <input type="radio" name="metamer-profile" value="saturation" hidden>
                         <div class="metamer-profile-options" role="group" aria-label="同色异谱优化模式">
-                            <button type="button" class="metamer-profile-button is-selected" data-metamer-profile="fidelity" aria-pressed="true">高显色</button>
+                            <button type="button" class="metamer-profile-button is-selected" data-metamer-profile="off" aria-pressed="true">常规</button>
+                            <button type="button" class="metamer-profile-button" data-metamer-profile="fidelity" aria-pressed="false">高显色</button>
                             <button type="button" class="metamer-profile-button" data-metamer-profile="saturation" aria-pressed="false">高饱和</button>
                         </div>
-                        <span class="visually-hidden metamer-status" id="metamer-status" role="status" aria-live="polite"></span>
-                        <span class="visually-hidden metamer-colour-delta" id="metamer-colour-delta"></span>
+                        <span class="metamer-status" id="metamer-status" role="status" aria-live="polite">常规模式</span>
+                        <span class="metamer-colour-delta" id="metamer-colour-delta"></span>
                     </div>
                 </section>
             </div>
 
-            <section class="metrics-workspace" id="metrics-dashboard" aria-label="光谱指标">
+            <section class="analysis-workspace glass-card" id="analysis-workspace" aria-label="综合分析工作区">
+                <div class="analysis-workspace-tabs" role="tablist" aria-label="分析类型">
+                    <button type="button" id="analysis-tab-colour" data-analysis-tab="colour" aria-selected="true">显色与色样</button>
+                    <button type="button" id="analysis-tab-material" data-analysis-tab="material" aria-selected="false" tabindex="-1">材质验证</button>
+                    <button type="button" id="analysis-tab-dining" data-analysis-tab="dining" aria-selected="false" tabindex="-1">食材与餐饮</button>
+                </div>
                 <section class="metric-group metric-group-quality" aria-labelledby="quality-metrics-title">
                     <div class="section-heading">
                         <div>
@@ -253,7 +322,7 @@
                     <div class="metric-icon">Δuv</div>
                     <div class="metric-info">
                         <span class="metric-label">Duv 黑体偏离</span>
-                        <div class="metric-value-row"><span class="metric-value" id="val-delta-uv">--</span><span class="metric-unit">Δu'v'</span></div>
+                        <div class="metric-value-row"><span class="metric-value" id="val-delta-uv">--</span><span class="metric-unit">Duv</span></div>
                     </div>
                     <div class="metric-bar" id="bar-delta-uv"></div>
                 </div>
@@ -264,7 +333,7 @@
                     <div class="color-samples-header">
                         <div>
                             <h2 id="color-samples-title">标准色样对比</h2>
-                            <p>TCS 显示 R1～R14；CES 显示 TM-30 的 16 色调矢量图形。</p>
+                            <p>TCS 显示 R1～R15；CES 显示 TM-30 的 16 色调矢量图形。</p>
                         </div>
                     </div>
                     <div class="color-samples-grid" id="color-samples-grid" aria-live="polite"></div>
@@ -279,13 +348,64 @@
                         </div>
                         <span class="material-reference" id="material-reference">等待有效光谱</span>
                     </div>
+                    <div class="panel-loading-state" id="material-loading-state" role="status">正在准备材质分析…</div>
+                    <div class="material-optimization-bar" aria-label="材质光色优化">
+                        <label for="material-preference-goal">
+                            <span>优化目标</span>
+                            <select id="material-preference-goal">
+                                <option value="preference" selected>偏好增强（实验模型）</option>
+                                <option value="fidelity">准确还原</option>
+                            </select>
+                        </label>
+                        <label for="material-optimization-scope">
+                            <span>优化范围</span>
+                            <select id="material-optimization-scope">
+                                <option value="selected">当前材质</option>
+                                <option value="all">全部材质</option>
+                            </select>
+                        </label>
+                        <label for="material-preference-level" id="material-preference-level-field">
+                            <span>偏好程度</span>
+                            <select id="material-preference-level">
+                                <option value="soft">柔和</option>
+                                <option value="recommended" selected>推荐</option>
+                                <option value="vivid">鲜明</option>
+                            </select>
+                        </label>
+                        <button type="button" id="material-optimize-button">优化偏好表现</button>
+                        <span id="material-optimization-status" role="status" aria-live="polite">按各材质独立偏好目标优化彩度、色相和明度</span>
+                    </div>
+                    <section class="material-result-summary" id="material-result-summary" hidden aria-live="polite">
+                        <div class="material-result-summary-copy">
+                            <strong id="material-result-conclusion">优化完成后显示结论</strong>
+                            <span id="material-result-error">等待误差变化</span>
+                            <span id="material-result-channel">等待通道变化</span>
+                        </div>
+                        <div class="material-result-metrics" id="material-result-metrics"></div>
+                    </section>
+                    <div class="material-preference-summary" id="material-preference-summary">
+                        <span id="material-preference-source">材质专属 · 工程偏好模型</span>
+                        <span id="material-preference-targets">目标 ΔC* +4.0 · Δh 0° · ΔL* +0.5</span>
+                        <button type="button" id="material-preference-open">偏好参数</button>
+                    </div>
                     <div class="material-selector" id="material-selector" role="group" aria-label="选择材质"></div>
                     <div class="material-detail">
                         <div class="material-detail-copy">
                             <h3 id="material-detail-title">暖橡木饰面</h3>
                             <p id="material-detail-description">用于木材、木饰面与暖色室内饰面的光谱比较。</p>
-                            <span class="material-category" id="material-detail-category">木材</span>
-                            <span class="material-data-badge" id="material-detail-source">工程模型 · 可替换为实测数据</span>
+                            <span class="material-category" id="material-detail-category">材质样本</span>
+                            <div class="material-source-badges">
+                                <span class="source-badge source-badge--appearance">
+                                    <span class="source-badge__indicator source-badge__indicator--engineering"></span>
+                                    <span class="source-badge__label">外观来源</span>
+                                    <span class="source-badge__value" id="material-appearance-source">本地高清材质照片</span>
+                                </span>
+                                <span class="source-badge source-badge--spectral">
+                                    <span class="source-badge__indicator source-badge__indicator--engineering"></span>
+                                    <span class="source-badge__label">光谱来源</span>
+                                    <span class="source-badge__value" id="material-spectral-source">工程模型 · 可替换为实测数据</span>
+                                </span>
+                            </div>
                         </div>
                         <div class="material-compare" aria-label="材质效果对比">
                             <figure>
@@ -295,7 +415,7 @@
                             <span class="material-compare-arrow" aria-hidden="true">→</span>
                             <figure>
                                 <div class="material-appearance" id="material-current-appearance"></div>
-                                <figcaption><span>当前光谱</span><span>模拟效果</span></figcaption>
+                                <figcaption><span>当前光谱</span><span id="material-preview-mode">模拟效果</span></figcaption>
                             </figure>
                         </div>
                         <div class="material-metrics" aria-live="polite">
@@ -305,83 +425,251 @@
                             <div class="material-metric" id="material-delta-e"><span>ΔE00 综合色差</span><strong>--</strong><small>≤1 很小 / >3 明显</small></div>
                         </div>
                     </div>
-                    <p class="material-panel-note">纹理与屏幕颜色用于帮助理解变化，不等同于真实材质观感。当前内置项为工程参考模型；后续可加入 USGS/JPL 实测样本和用户实测 CSV。</p>
-                </section>
-
-                <section class="metric-group metric-group-health" aria-labelledby="health-metrics-title">
-                    <div class="section-heading">
+                    <details class="material-reflectance" id="material-reflectance-details">
+                        <summary>光谱反射率</summary>
                         <div>
-                            <span class="section-eyebrow">健康照明</span>
-                            <h2 id="health-metrics-title">健康照明参数</h2>
+                            <h3>光谱反射率 <span class="reflectance-source-tag" id="material-reflectance-source-tag"></span></h3>
+                            <p>横轴 380–780 nm，纵轴相对反射率。</p>
+                            <small id="material-reflectance-source">工程参考曲线</small>
                         </div>
-                        <p>非视觉效应与昼夜节律响应</p>
-                    </div>
-                    <div class="metric-group-grid health-grid">
+                        <canvas id="material-reflectance-canvas" width="720" height="150" aria-label="当前材质光谱反射率曲线"></canvas>
+                    </details>
+                    <details class="material-technical-details" id="material-technical-details" hidden>
+                        <summary>查看技术细节：光谱、光色参数与通道配方</summary>
+                        <section class="optimization-comparison" id="material-optimization-comparison" hidden aria-label="材质优化前后对比">
+                            <div class="optimization-comparison-header">
+                                <div><strong>优化前后光谱与参数</strong><span id="material-optimization-summary">完成优化后显示对比结果</span></div>
+                            </div>
+                            <canvas id="material-optimization-spd" width="960" height="220" aria-label="材质优化前后光谱对比"></canvas>
+                            <div class="optimization-comparison-metrics" id="material-optimization-metrics"></div>
+                            <div class="optimization-comparison-channels" id="material-optimization-channels"></div>
+                        </section>
+                    </details>
+                    <p class="material-panel-note">外观纹理与光谱反射率来源独立标注，不暗示同一块样品。准确还原以降低 ΔE00 为目标；偏好增强采用适度彩度提升模型，并控制色相、明度、最大色差和白点偏移。偏好受材质、照度、场景和观察者影响，模型结果用于配方比较，不代表统一审美结论。涉及产品验证时，可通过材质选择区的“导入材质”上传对应实物的反射率 CSV 与照片。</p>
 
-                <div class="metric-card glass-card" id="card-mel">
-                    <div class="metric-icon">MEL</div>
-                    <div class="metric-info">
-                        <span class="metric-label">Melanopic DER</span>
-                        <div class="metric-value-row">
-                            <span class="metric-value" id="val-mel">--</span>
-                            <span class="metric-unit">ratio</span>
-                        </div>
-                    </div>
-                    <div class="metric-bar" id="bar-mel"></div>
-                </div>
-
-                <div class="metric-card glass-card" id="card-cs">
-                    <div class="metric-icon">CS</div>
-                    <div class="metric-info">
-                        <span class="metric-label">昼夜节律刺激 CS</span>
-                        <div class="metric-value-row">
-                            <span class="metric-value" id="val-cs" aria-describedby="cla2-conditions">--</span>
-                            <span class="metric-unit">/0.7</span>
-                        </div>
-                    </div>
-                    <div class="metric-bar" id="bar-cs"></div>
-                    <div class="metric-secondary" id="val-cla2">Rea CLA 2.0 -- · 1.0 h · 中央视野</div>
-                    <span class="visually-hidden" id="cla2-conditions">Rea CLA 2.0 模型，暴露时长 1.0 h，中央视野。</span>
-                    <span class="visually-hidden" id="circadian-status" role="status" aria-live="polite" aria-atomic="true"></span>
-                </div>
-
-                <div class="metric-card glass-card" id="card-medi">
-                    <div class="metric-icon">EDI</div>
-                    <div class="metric-info">
-                        <span class="metric-label">Melanopic EDI</span>
-                        <div class="metric-value-row">
-                            <span class="metric-value" id="val-medi">--</span>
-                            <span class="metric-unit">lux</span>
-                        </div>
-                    </div>
-                    <div class="metric-bar" id="bar-medi"></div>
-                </div>
-                    </div>
+                    <!-- Hidden file inputs for material upload -->
+                    <input type="file" id="material-csv-input" accept=".csv,.txt,.tsv" hidden>
+                    <input type="file" id="material-photo-input" accept="image/png,image/jpeg,image/webp" hidden>
                 </section>
+
+                <section class="material-panel dining-panel glass-card" id="dining-panel" aria-labelledby="dining-panel-title">
+                    <div class="material-panel-header">
+                        <div>
+                            <h2 id="dining-panel-title">食材与餐饮光色</h2>
+                            <p>使用7种代表性食材比较光谱表现，并查看优化前后的色点、光谱和通道参数。</p>
+                        </div>
+                        <span class="material-reference" id="dining-reference">等待有效光谱</span>
+                    </div>
+                    <section class="dining-workflow-step" data-dining-step="conditions" aria-labelledby="dining-conditions-title">
+                        <div class="dining-step-heading"><span>1</span><div><h3 id="dining-conditions-title">设置场景与优化策略</h3><p>先确定使用环境和目标色点，再选择自然还原或食欲增强。</p></div></div>
+                        <div class="dining-light-bar" aria-label="餐饮光色场景">
+                            <label for="dining-light-profile"><span>餐饮场景</span><select id="dining-light-profile"></select></label>
+                            <label for="dining-target-mode"><span>色点模式</span><select id="dining-target-mode"><option value="current" selected>保持当前色点</option><option value="scene">采用场景推荐</option></select></label>
+                            <label for="dining-optimization-goal"><span>优化策略</span><select id="dining-optimization-goal"><option value="preference" selected>食欲增强</option><option value="fidelity">自然还原</option></select></label>
+                            <label for="dining-preference-level"><span>增强程度</span><select id="dining-preference-level"><option value="soft">柔和</option><option value="recommended" selected>推荐</option><option value="vivid">鲜明</option></select></label>
+                            <div class="dining-light-copy">
+                                <strong id="dining-light-recommendation">推荐 3000 K · Duv 0.0000</strong>
+                                <span id="dining-light-description">兼顾菜品、餐具和肤色，在目标色点下优化光谱配方。</span>
+                                <span id="dining-target-summary">当前目标色点等待计算</span>
+                            </div>
+                        </div>
+                    </section>
+                    <section class="dining-workflow-step" data-dining-step="foods" aria-labelledby="dining-foods-title">
+                        <div class="dining-step-heading dining-step-heading--action"><span>2</span><div><h3 id="dining-foods-title">确认参与优化的食材</h3><p>下列食材会进入配方计算；上传照片时需同时绑定反射率模板。</p></div><button type="button" id="dining-food-upload-open">添加自定义食材</button></div>
+                        <div class="material-selector dining-material-selector" id="dining-material-selector" role="group" aria-label="选择食材"></div>
+                    </section>
+                    <section class="dining-workflow-step dining-execute-step" data-dining-step="execute" aria-labelledby="dining-execute-title">
+                        <div class="dining-step-heading"><span>3</span><div><h3 id="dining-execute-title">运行并验证配方</h3><p>结果会统一使用目标参考光，并报告光谱、光色参数和食材误差。</p></div></div>
+                        <button type="button" id="dining-light-apply">开始餐饮优化</button>
+                        <span id="dining-optimization-status" class="dining-optimization-status" role="status" aria-live="polite">设置条件并确认食材后开始优化</span>
+                    </section>
+                    <section class="dining-results" data-dining-step="results" aria-label="餐饮优化结果">
+                        <div class="dining-result-strip"><strong>优化结果</strong><span id="dining-optimization-summary">运行优化后显示结论</span><span class="dining-baseline-summary" id="dining-baseline-summary">本次基线：等待优化</span></div>
+                        <section class="dining-food-validation" id="dining-food-validation" aria-labelledby="dining-detail-title">
+                            <div class="dining-validation-title">
+                                <div><span class="material-category">所选食材</span><h3 id="dining-detail-title">红棕熟肉</h3></div>
+                                <p id="dining-detail-description">用于餐饮场景的食材光色比较。</p>
+                                <small id="dining-photo-note">左图始终显示原始照片；右图按优化前与优化后材质 Lab 差异进行 ×3 增强预览。优化器修改的是 LED 通道，不会修改照片文件。</small>
+                            </div>
+                            <div class="dining-photo-compare" aria-label="食材优化前后图片对比">
+                                <figure><canvas class="dining-food-preview" id="dining-before-preview" width="420" height="260"></canvas><figcaption><strong>优化前</strong><span id="dining-before-caption">当前光谱</span></figcaption></figure>
+                                <figure><canvas class="dining-food-preview" id="dining-after-preview" width="420" height="260"></canvas><figcaption><strong>优化后</strong><span id="dining-after-caption">运行优化后显示</span></figcaption></figure>
+                            </div>
+                            <div class="material-metrics dining-material-metrics" id="dining-material-metrics"></div>
+                        </section>
+                        <details class="dining-technical-details" id="dining-technical-details">
+                            <summary>查看技术细节：光谱、通道与食材反射率</summary>
+                            <section class="optimization-comparison" id="dining-optimization-comparison" hidden aria-label="餐饮优化前后对比">
+                                <canvas id="dining-optimization-spd" width="960" height="220" aria-label="餐饮优化前后光谱对比"></canvas>
+                                <div class="optimization-comparison-metrics" id="dining-optimization-metrics"></div>
+                                <div class="optimization-comparison-channels" id="dining-optimization-channels"></div>
+                            </section>
+                            <div class="material-reflectance" id="dining-reflectance-details">
+                                <canvas id="dining-reflectance-canvas" width="720" height="150" aria-label="当前食材光谱反射率曲线"></canvas>
+                            </div>
+                        </details>
+                    </section>
+                </section>
+
+                <div class="material-preference-overlay" id="material-preference-dialog" hidden>
+                    <div class="material-preference-dialog" role="dialog" aria-modal="true" aria-labelledby="material-preference-dialog-title">
+                        <div class="material-preference-dialog__header">
+                            <div>
+                                <h2 id="material-preference-dialog-title">材质偏好参数</h2>
+                                <p id="material-preference-dialog-context">当前材质 · 推荐档</p>
+                            </div>
+                            <button type="button" id="material-preference-cancel" aria-label="关闭">×</button>
+                        </div>
+                        <div class="material-preference-form">
+                            <label>目标 ΔC*<input type="number" id="material-pref-target-dc" min="-5" max="12" step="0.1"></label>
+                            <label>目标 Δh°<input type="number" id="material-pref-target-dh" min="-10" max="10" step="0.1"></label>
+                            <label>目标 ΔL*<input type="number" id="material-pref-target-dl" min="-8" max="8" step="0.1"></label>
+                            <label>最大 |Δh|°<input type="number" id="material-pref-max-dh" min="0.5" max="15" step="0.1"></label>
+                            <label>最大 |ΔL*|<input type="number" id="material-pref-max-dl" min="0.5" max="12" step="0.1"></label>
+                            <label>最大 ΔE00<input type="number" id="material-pref-max-de" min="1" max="15" step="0.1"></label>
+                            <label>材质重要度<input type="number" id="material-pref-importance" min="0.1" max="5" step="0.1"></label>
+                        </div>
+                        <p class="material-preference-error" id="material-preference-error" role="alert" hidden></p>
+                        <p class="material-preference-help">参数仅作用于当前材质和当前偏好档。系统权重继续使用该材质的工程默认值。</p>
+                        <div class="material-preference-dialog__actions">
+                            <button type="button" id="material-preference-reset">恢复系统参数</button>
+                            <button type="button" id="material-preference-save">保存参数</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Material upload dialog (hidden by default) -->
+                <div class="material-upload-overlay dining-food-upload-overlay" id="dining-food-upload-overlay" hidden>
+                    <div class="material-upload-dialog dining-food-upload-dialog" role="dialog" aria-modal="true" aria-labelledby="dining-food-upload-title">
+                        <div class="upload-dialog-header">
+                            <div>
+                                <h3 id="dining-food-upload-title">上传食材图片</h3>
+                                <p>照片用于外观对比，光谱计算采用所选食材模板。</p>
+                            </div>
+                            <button type="button" id="dining-food-upload-cancel" aria-label="关闭">×</button>
+                        </div>
+                        <div class="upload-dialog-body">
+                            <label class="upload-field">
+                                <span>食材名称</span>
+                                <input type="text" id="dining-food-upload-name" maxlength="30" placeholder="例如：牛排切面">
+                            </label>
+                            <label class="upload-field">
+                                <span>光谱模板</span>
+                                <select id="dining-food-upload-template"></select>
+                                <small>模板提供反射率数据，照片RGB不会直接参与光谱计算。</small>
+                            </label>
+                            <label class="upload-field dining-photo-field">
+                                <span>高清局部照片</span>
+                                <input type="file" id="dining-food-photo-input" accept="image/jpeg,image/png,image/webp">
+                                <small>支持 JPG、PNG、WebP，文件不超过5 MB。建议使用中性光下拍摄的局部特写。</small>
+                            </label>
+                            <div class="dining-food-photo-preview" id="dining-food-photo-preview" hidden></div>
+                            <p class="upload-error" id="dining-food-upload-error" hidden></p>
+                        </div>
+                        <div class="upload-dialog-actions">
+                            <button type="button" id="dining-food-upload-secondary">取消</button>
+                            <button type="button" id="dining-food-upload-submit" disabled>加入食材对比</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="material-upload-overlay" id="material-upload-overlay" hidden>
+                    <div class="material-upload-dialog" role="dialog" aria-labelledby="upload-dialog-title">
+                        <h2 id="upload-dialog-title">导入材质</h2>
+                        <p>上传反射率 CSV 文件（波长 nm + 反射率），可选附带材质照片。</p>
+                        <div class="upload-field">
+                            <label for="upload-material-name">材质名称</label>
+                            <input type="text" id="upload-material-name" placeholder="例如：定制木饰面" maxlength="40">
+                        </div>
+                        <div class="upload-field">
+                            <label for="upload-material-category">材质分类</label>
+                            <select id="upload-material-category">
+                                <option value="wood">木材</option>
+                                <option value="stone">石材</option>
+                                <option value="fabric">织物</option>
+                                <option value="leather">皮革</option>
+                                <option value="metal">金属</option>
+                                <option value="paint">涂料</option>
+                                <option value="plant">绿植</option>
+                                <option value="neutral">中性</option>
+                                <option value="food">食材</option>
+                            </select>
+                        </div>
+                        <div class="upload-field">
+                            <label>反射率数据（CSV）</label>
+                            <div class="upload-drop-zone" id="upload-csv-zone">
+                                <strong>选择 CSV 文件</strong>
+                                <span>或拖入 · 两列：波长nm / 反射率0–1 · 至少5行</span>
+                            </div>
+                            <div class="upload-preview" id="upload-csv-preview" hidden></div>
+                        </div>
+                        <div class="upload-field">
+                            <label>材质照片（可选）</label>
+                            <div class="upload-drop-zone" id="upload-photo-zone">
+                                <strong>选择照片</strong>
+                                <span>PNG / JPEG / WebP · 最大 2 MB</span>
+                            </div>
+                            <div class="upload-preview" id="upload-photo-preview" hidden></div>
+                        </div>
+                        <div id="upload-error" style="color:#c9342c;font-size:11px;margin-top:8px" hidden></div>
+                        <div class="upload-dialog-actions">
+                            <button type="button" class="upload-dialog-cancel" id="upload-dialog-cancel">取消</button>
+                            <button type="button" class="upload-dialog-submit" id="upload-dialog-submit" disabled>确认添加</button>
+                        </div>
+                    </div>
+                </div>
+
         </section>
         </div>
     </main>
 
     <footer id="app-footer">
         <p>采用 CIE 标准光谱数据与相关评价方法。</p>
-        <p class="footer-cn">显色指标使用 14 个 CIE TCS 与 99 个 CES 计算；CLA 2.0 / CS 使用 Rea 模型，Melanopic 指标遵循 CIE S 026。</p>
+        <p class="footer-cn">显色指标使用 15 个 CIE TCS 与 99 个 CES 计算；CLA 2.0 / CS 使用 Rea 模型，Melanopic 指标遵循 CIE S 026。<span id="build-version" class="build-version"></span></p>
     </footer>
 
-    <script src="spectral-data.js?v=20260717-rg2"></script>
-    <script src="spectral-math.js?v=20260717-emitter1"></script>
-    <script src="colour-quality-data.js?v=20260717-rg2"></script>
-    <script src="colour-quality.js?v=20260721-diagram1"></script>
-    <script src="material-reflectance-data.js?v=20260724-material1"></script>
-    <script src="material-color.js?v=20260724-material2"></script>
-    <script src="material-panel.js?v=20260724-material2"></script>
-    <script src="pastel-palette.js?v=20260721-pastel1"></script>
-    <script src="metamer-optimizer.js?v=20260722-saturation3"></script>
-    <script src="circadian-data.js?v=20260717-cla2"></script>
-    <script src="circadian-math.js?v=20260717-cla2"></script>
-    <script src="cct-journey.js?v=20260722-presets1"></script>
-    <script src="circadian-schedule.js?v=20260722-simulation2"></script>
-    <script src="default-rgbw-data.js?v=20260717-rgbw1"></script>
-    <script src="default-rgbcla-data.js?v=20260718-rgbcla1"></script>
-    <script src="app.js?v=20260722-profile1"></script>
+    <script src="app-readiness.js?v=20260804-material-target-lock"></script>
+    <script src="workspace-state.js?v=20260804-material-target-lock"></script>
+    <script src="workbench-layout.js?v=20260804-material-target-lock"></script>
+    <script src="workbench-summary.js?v=20260804-material-target-lock"></script>
+    <script src="analysis-workspace.js?v=20260804-material-target-lock"></script>
+    <script src="spectral-data.js?v=20260804-material-target-lock"></script>
+    <script src="spectral-math.js?v=20260804-material-target-lock"></script>
+    <script src="spd-import.js?v=20260804-material-target-lock"></script>
+    <script src="chromaticity-diagram.js?v=20260804-material-target-lock"></script>
+    <script src="colour-quality-data.js?v=20260804-material-target-lock"></script>
+    <script src="colour-quality.js?v=20260804-material-target-lock"></script>
+    <script src="material-reflectance-data.js?v=20260804-material-target-lock"></script>
+    <script src="dining-light-data.js?v=20260804-material-target-lock"></script>
+    <script src="material-color.js?v=20260804-material-target-lock"></script>
+    <script src="material-preview-color.js?v=20260804-material-target-lock"></script>
+    <script src="material-upload.js?v=20260804-material-target-lock"></script>
+    <script src="material-preference-profiles.js?v=20260804-material-target-lock"></script>
+    <script src="material-optimizer.js?v=20260804-material-target-lock"></script>
+    <script src="optimization-comparison.js?v=20260804-material-target-lock"></script>
+    <script src="material-panel.js?v=20260804-material-target-lock"></script>
+    <script src="dining-panel.js?v=20260804-material-target-lock"></script>
+    <script src="pastel-palette.js?v=20260804-material-target-lock"></script>
+    <script src="candidate-shortlist.js?v=20260804-material-target-lock"></script>
+    <script src="metamer-optimizer.js?v=20260804-material-target-lock"></script>
+    <script src="metamer-worker-client.js?v=20260804-material-target-lock"></script>
+    <script src="scene-optimizer-core.js?v=20260804-material-target-lock"></script>
+    <script src="scene-optimizer-worker-client.js?v=20260804-material-target-lock"></script>
+    <script src="circadian-data.js?v=20260804-material-target-lock"></script>
+    <script src="circadian-math.js?v=20260804-material-target-lock"></script>
+    <script src="cct-journey.js?v=20260804-material-target-lock"></script>
+    <script src="circadian-schedule.js?v=20260804-material-target-lock"></script>
+    <script src="default-rgbw-data.js?v=20260804-material-target-lock"></script>
+    <script src="default-rgbcla-data.js?v=20260804-material-target-lock"></script>
+    <script src="professional-data-loader.js?v=20260804-material-target-lock"></script>
+    <script src="professional-analysis.js?v=20260804-material-target-lock"></script>
+    <script src="chromaticity-panel.js?v=20260804-material-target-lock"></script>
+    <script src="build-info.js?v=20260804-material-target-lock"></script>
+    <script src="recipe-export.js?v=20260804-material-target-lock"></script>
+    <script src="xlsx-workbook.js?v=20260804-material-target-lock"></script>
+    <script src="batch-recipe-export.js?v=20260804-material-target-lock"></script>
+    <script src="recipe-batch-export.js?v=20260804-material-target-lock"></script>
+    <script src="render-pipeline.js?v=20260804-material-target-lock"></script>
+    <script src="app.js?v=20260804-material-target-lock"></script>
 </body>
 </html>

@@ -7,6 +7,22 @@
 
     const CAT02 = [[0.7328, 0.4296, -0.1624], [-0.7036, 1.6975, 0.0061], [0.0030, 0.0136, 0.9834]];
     const CAT02_TO_HPE = [[0.7409792, 0.2180250, 0.0410058], [0.2853532, 0.6242014, 0.0904454], [-0.0096280, -0.0056980, 1.0153260]];
+    // CIE 253:2024, test-colour sample R15 (Japanese skin complexion), 380-780 nm at 5 nm.
+    const TCS15_CIE2024 = Object.freeze([
+        0.131,0.139,0.147,0.153,0.158,0.162,0.164,0.167,0.170,0.175,
+        0.182,0.192,0.203,0.212,0.221,0.229,0.236,0.243,0.249,0.254,
+        0.259,0.264,0.269,0.276,0.284,0.291,0.296,0.298,0.296,0.289,
+        0.282,0.276,0.274,0.276,0.281,0.286,0.291,0.289,0.286,0.280,
+        0.285,0.314,0.354,0.398,0.440,0.470,0.494,0.511,0.524,0.535,
+        0.544,0.552,0.559,0.565,0.571,0.576,0.581,0.586,0.590,0.594,
+        0.599,0.603,0.606,0.610,0.612,0.614,0.616,0.616,0.616,0.616,
+        0.615,0.613,0.612,0.610,0.609,0.608,0.607,0.607,0.609,0.610,
+        0.611
+    ]);
+
+    function getTcsSamples() {
+        return [...DATA.tcs14, TCS15_CIE2024];
+    }
 
     function dot(matrix, vector) {
         return matrix.map(row => row[0] * vector[0] + row[1] * vector[1] + row[2] * vector[2]);
@@ -101,7 +117,7 @@
 
     function calculateCri(spd, cct) {
         const reference = referenceSpd(cct, DATA.cmf2, false);
-        const indexes = DATA.tcs14.map(sample => {
+        const indexes = getTcsSamples().map(sample => {
             const test = criSampleData(spd, reference, sample, true);
             const ref = criSampleData(reference, reference, sample, false);
             return 100 - 4.6 * Math.hypot(test[0] - ref[0], test[1] - ref[1], test[2] - ref[2]);
@@ -215,6 +231,92 @@
         };
     }
 
+    function interpolateSpectrum(wavelengths, values, wavelength) {
+        if (wavelength < wavelengths[0] || wavelength > wavelengths[wavelengths.length - 1]) return 0;
+        let low = 0;
+        let high = wavelengths.length - 1;
+        while (high - low > 1) {
+            const middle = (low + high) >> 1;
+            if (wavelengths[middle] <= wavelength) low = middle;
+            else high = middle;
+        }
+        if (wavelength === wavelengths[low] || low === high) return values[low];
+        const span = wavelengths[high] - wavelengths[low];
+        if (!(span > 0)) return values[low];
+        const amount = (wavelength - wavelengths[low]) / span;
+        return values[low] + (values[high] - values[low]) * amount;
+    }
+
+    function resampleSpectrumTo5nm(wavelengths, values) {
+        if (SpectralMath && typeof SpectralMath.resampleSpectrumTo5nm === 'function') {
+            return SpectralMath.resampleSpectrumTo5nm(wavelengths, values);
+        }
+        if (!Array.isArray(wavelengths) && !ArrayBuffer.isView(wavelengths)) return [];
+        if (!Array.isArray(values) && !ArrayBuffer.isView(values)) return [];
+        if (wavelengths.length !== values.length || wavelengths.length < 2) return [];
+        let isStandardOneNanometreGrid = wavelengths.length === 401;
+        for (let index = 0; index < wavelengths.length; index++) {
+            if (!Number.isFinite(wavelengths[index]) || !Number.isFinite(values[index])) return [];
+            if (index > 0 && wavelengths[index] <= wavelengths[index - 1]) return [];
+            if (isStandardOneNanometreGrid && Math.abs(wavelengths[index] - (380 + index)) > 1e-9) {
+                isStandardOneNanometreGrid = false;
+            }
+        }
+
+        if (isStandardOneNanometreGrid) {
+            const resampled = new Array(81);
+            resampled[0] = values[0];
+            resampled[80] = values[400];
+            for (let targetIndex = 1; targetIndex < 80; targetIndex++) {
+                const center = targetIndex * 5;
+                const leftBoundary = (values[center - 3] + values[center - 2]) * 0.5;
+                const rightBoundary = (values[center + 2] + values[center + 3]) * 0.5;
+                const area =
+                    (leftBoundary + values[center - 2]) * 0.25 +
+                    (values[center - 2] + values[center - 1]) * 0.5 +
+                    (values[center - 1] + values[center]) * 0.5 +
+                    (values[center] + values[center + 1]) * 0.5 +
+                    (values[center + 1] + values[center + 2]) * 0.5 +
+                    (values[center + 2] + rightBoundary) * 0.25;
+                resampled[targetIndex] = area / 5;
+            }
+            return resampled;
+        }
+
+        return DATA.wavelengths.map(function (target, targetIndex) {
+            const nominalStart = targetIndex === 0 ? target : target - 2.5;
+            const nominalEnd = targetIndex === DATA.wavelengths.length - 1 ? target : target + 2.5;
+            const start = Math.max(nominalStart, wavelengths[0]);
+            const end = Math.min(nominalEnd, wavelengths[wavelengths.length - 1]);
+            if (targetIndex === 0 || targetIndex === DATA.wavelengths.length - 1) {
+                return interpolateSpectrum(wavelengths, values, target);
+            }
+            if (!(end > start)) return 0;
+            const points = [start];
+            for (let index = 0; index < wavelengths.length; index++) {
+                const wavelength = wavelengths[index];
+                if (wavelength > start && wavelength < end) points.push(wavelength);
+            }
+            points.push(end);
+            let area = 0;
+            for (let index = 0; index < points.length - 1; index++) {
+                const a = points[index];
+                const b = points[index + 1];
+                area += (interpolateSpectrum(wavelengths, values, a) +
+                    interpolateSpectrum(wavelengths, values, b)) * 0.5 * (b - a);
+            }
+            return area / (end - start);
+        });
+    }
+
+    function calculateColourQualityFromSpectrum(spectrum) {
+        if (!spectrum || !spectrum.wavelengths || !spectrum.values) {
+            return { ra: 0, r9: 0, rf: 0, rg: 0 };
+        }
+        const resampled = resampleSpectrumTo5nm(spectrum.wavelengths, spectrum.values);
+        return calculateColourQuality(resampled);
+    }
+
     function calculateColourQuality(spd) {
         if (!DATA || !SpectralMath || !spd || spd.length !== 81) return { ra: 0, r9: 0, rf: 0, rg: 0 };
         if (!spd.some(value => Number.isFinite(value) && value > 1e-12)) {
@@ -295,7 +397,7 @@
     }
 
     function calculateSampleColors(spd) {
-        if (!DATA) return { tcs14: [], cesSubset: [] };
+        if (!DATA) return { tcs15: [], tcs14: [], cesSubset: [] };
         const suppliedSpd = spd && spd.length === 81 ? spd : null;
         const suppliedCct = suppliedSpd ? cctFromSpd(suppliedSpd) : NaN;
         const hasTestSpectrum = Number.isFinite(suppliedCct) && suppliedCct > 0;
@@ -333,11 +435,19 @@
         const cesIndices = [3, 9, 15, 21, 27, 34, 40, 46, 52, 58, 64, 71, 77, 83, 89, 95]; // 16 samples for 16 hue bins
         const cesSubset = cesIndices.map(i => DATA.ces99[i]);
 
+        const tcsSamples = getTcsSamples();
+        const tcs15 = getColors(tcsSamples, tcsSamples.map((sample, index) => `TCS${String(index + 1).padStart(2, '0')}`));
         return {
-            tcs14: getColors(DATA.tcs14, DATA.tcs14.map((sample, index) => `TCS${String(index + 1).padStart(2, '0')}`)),
+            tcs15,
+            tcs14: tcs15,
             cesSubset: getColors(cesSubset, cesIndices.map(index => `CES${String(index + 1).padStart(2, '0')}`))
         };
     }
 
-    return { calculateColourQuality, calculateSampleColors };
+    return {
+        calculateColourQuality,
+        calculateColourQualityFromSpectrum,
+        resampleSpectrumTo5nm,
+        calculateSampleColors
+    };
 });

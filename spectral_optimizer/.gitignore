@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+
+# Generated build and validation outputs
+dist/
+dist-*/
+release/
+out/
+
+# Local test and coverage outputs
+coverage/
+*.log
+*.tmp
+*.bak
+
+# Local workspace helpers
+.workbuddy/
+.worktrees/
+
+# QA captures generated during layout checks
+qa-*.png
+food-debug*.png
+cloudflare-membership/qa-*.png
+
+# Generated deployment copies
+cloudflare-membership/public/
+
+# Rebuildable legacy texture assets
+assets/textures/
+assets/textures-png/
+
+# Local cleanup quarantine and GitHub synchronization helpers
+cleanup-quarantine-manifest.json
+cleanup-quarantine-plan.md
+quarantine-unused-files.ps1
+restore-quarantined-files.ps1
+run-cleanup-quarantine.bat
+run-restore-quarantine.bat
+sync-spectral-optimizer-to-github.ps1
+run-sync-spectral-optimizer-to-github.bat
+
+# Operating-system files
+.DS_Store
+Thumbs.db
+NUL

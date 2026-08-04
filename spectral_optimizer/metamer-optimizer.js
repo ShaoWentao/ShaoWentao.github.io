@@ -3,15 +3,24 @@
     if (typeof module === 'object' && module.exports) module.exports = api;
     if (root) root.METAMER_OPTIMIZER = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function() {
-    const CHROMATICITY_TOLERANCE = 0.002;
+    const CHROMATICITY_TOLERANCE = 0.0005;
     const SATURATION_CHROMATICITY_TOLERANCE = 0.0005;
     const RF_FLOOR = 80;
+    const SATURATION_QUALITY_LIMITS = Object.freeze({
+        softRfFloor: 75,
+        softRaFloor: 80,
+        softR9Floor: 20,
+        hardRfFloor: 60,
+        hardRaFloor: 65,
+        rgPriorityBand: 1
+    });
     const TARGET_RG_MIN = 80;
     const TARGET_RG_MAX = 130;
     const MAX_CORNER_SEEDS = 64;
     const INTERIOR_LEVELS = [25, 75];
     const MAX_REFINEMENT_SEEDS = 16;
     const STEP_SIZES = [48, 24, 12, 6, 3, 1, 0.5];
+    const BATCH_STEP_SIZES = [24, 12, 6, 3, 1, 0.5];
     const EPSILON = 1e-10;
 
     function clampPercentage(value) {
@@ -54,6 +63,35 @@
         const delta = Math.round(value - baselineValue);
         if (delta === 0) return '(0)';
         return `(${delta > 0 ? '+' : ''}${delta})`;
+    }
+
+    function saturationQualityPenalty(metrics) {
+        const source = metrics || {};
+        let penalty = 0;
+        if (Number.isFinite(source.rf)) {
+            penalty += Math.max(0, SATURATION_QUALITY_LIMITS.softRfFloor - source.rf);
+        }
+        if (Number.isFinite(source.ra)) {
+            penalty += Math.max(0, SATURATION_QUALITY_LIMITS.softRaFloor - source.ra) * 0.5;
+        }
+        if (Number.isFinite(source.r9)) {
+            penalty += Math.max(0, SATURATION_QUALITY_LIMITS.softR9Floor - source.r9) * 0.25;
+        }
+        return penalty;
+    }
+
+    function classifySaturationQuality(metrics) {
+        const source = metrics || {};
+        if ((Number.isFinite(source.rf) && source.rf < SATURATION_QUALITY_LIMITS.hardRfFloor) ||
+            (Number.isFinite(source.ra) && source.ra < SATURATION_QUALITY_LIMITS.hardRaFloor)) {
+            return 'rejected';
+        }
+        if ((Number.isFinite(source.rf) && source.rf < SATURATION_QUALITY_LIMITS.softRfFloor) ||
+            (Number.isFinite(source.ra) && source.ra < SATURATION_QUALITY_LIMITS.softRaFloor) ||
+            (Number.isFinite(source.r9) && source.r9 < SATURATION_QUALITY_LIMITS.softR9Floor)) {
+            return 'warning';
+        }
+        return 'acceptable';
     }
 
     function combineSpd(channels, values) {
@@ -111,24 +149,47 @@
     function isBetterColourCandidate(candidate, current, options) {
         if (!current) return true;
         const mode = options && options.mode === 'vitality' ? 'vitality' : 'fidelity';
+        if (mode === 'fidelity') {
+            if (Math.abs(candidate.rf - current.rf) > EPSILON) return candidate.rf > current.rf;
+            if (Math.abs(candidate.r9 - current.r9) > EPSILON) return candidate.r9 > current.r9;
+            if (Math.abs(candidate.ra - current.ra) > EPSILON) return candidate.ra > current.ra;
+            if (Number.isFinite(candidate.deltaUv) && Number.isFinite(current.deltaUv) &&
+                Math.abs(candidate.deltaUv - current.deltaUv) > EPSILON) {
+                return candidate.deltaUv < current.deltaUv;
+            }
+            return false;
+        }
+
         const r9Floor = Number.isFinite(options && options.r9Floor) ? options.r9Floor : 50;
         const candidateMeetsR9 = Number.isFinite(candidate.r9) && candidate.r9 >= r9Floor;
         const currentMeetsR9 = Number.isFinite(current.r9) && current.r9 >= r9Floor;
         if (candidateMeetsR9 !== currentMeetsR9) return candidateMeetsR9;
-
         if (!candidateMeetsR9 && Math.abs(candidate.r9 - current.r9) > EPSILON) {
             return candidate.r9 > current.r9;
         }
-        if (mode === 'vitality' && Math.abs(candidate.rgError - current.rgError) > EPSILON) {
-            return candidate.rgError < current.rgError;
-        }
+        if (Math.abs(candidate.rgError - current.rgError) > EPSILON) return candidate.rgError < current.rgError;
         if (Math.abs(candidate.ra - current.ra) > EPSILON) return candidate.ra > current.ra;
         if (Math.abs(candidate.r9 - current.r9) > EPSILON) return candidate.r9 > current.r9;
         if (Math.abs(candidate.rf - current.rf) > EPSILON) return candidate.rf > current.rf;
         return false;
     }
 
-    function buildSeeds(baselineValues) {
+    function buildSeeds(baselineValues, options) {
+        const config = options || {};
+        if (config.searchProfile === 'batch') {
+            const seeds = [];
+            const continuitySeed = Array.isArray(config.seedValues) && config.seedValues.length === baselineValues.length
+                ? config.seedValues.map(clampPercentage)
+                : null;
+            if (continuitySeed) seeds.push(continuitySeed);
+            seeds.push(baselineValues);
+            if (continuitySeed) {
+                seeds.push(baselineValues.map((value, index) => (value + continuitySeed[index]) / 2));
+            }
+            const unique = new Map();
+            seeds.forEach(seed => unique.set(seed.map(value => value.toFixed(4)).join(','), seed));
+            return [...unique.values()];
+        }
         const seeds = [baselineValues];
         const variedChannels = Math.min(baselineValues.length, Math.log2(MAX_CORNER_SEEDS));
         const cornerCount = 2 ** variedChannels;
@@ -160,6 +221,8 @@
         const objective = options.objective === 'fidelity' || options.objective === 'saturation'
             ? options.objective
             : 'target';
+        const searchProfile = options.searchProfile === 'batch' ? 'batch' : 'full';
+        const stepSizes = searchProfile === 'batch' ? BATCH_STEP_SIZES : STEP_SIZES;
         const suppliedBaseline = options.baselineValues || options.baselinePercentages;
 
         if (!Array.isArray(channels) || channels.length === 0 ||
@@ -195,6 +258,10 @@
                 deltaUv > chromaticityTolerance) return null;
             if (objective === 'saturation' && metrics.rg > targetRg + EPSILON) return null;
 
+            const qualityLevel = classifySaturationQuality(metrics);
+            if (objective === 'saturation' && qualityLevel === 'rejected') return null;
+            const rgError = Math.abs(metrics.rg - targetRg);
+
             const candidate = {
                 values: boundedValues,
                 achievedRg: metrics.rg,
@@ -202,8 +269,11 @@
                 achievedRa: Number.isFinite(metrics.ra) ? metrics.ra : 0,
                 achievedR9: Number.isFinite(metrics.r9) ? metrics.r9 : 0,
                 deltaUv,
-                rgError: Math.abs(metrics.rg - targetRg),
+                rgError,
+                rgPriorityBand: Math.floor((rgError + EPSILON) / SATURATION_QUALITY_LIMITS.rgPriorityBand),
                 rfPenalty: Math.max(0, RF_FLOOR - metrics.rf),
+                qualityPenalty: saturationQualityPenalty(metrics),
+                qualityLevel,
                 distance: distanceFromBaseline(boundedValues, baselineValues)
             };
             candidates.set(key, candidate);
@@ -216,14 +286,25 @@
                 if (Math.abs(candidate.achievedRf - current.achievedRf) > EPSILON) {
                     return candidate.achievedRf > current.achievedRf;
                 }
-                if (Math.abs(candidate.achievedRa - current.achievedRa) > EPSILON) {
-                    return candidate.achievedRa > current.achievedRa;
-                }
                 if (Math.abs(candidate.achievedR9 - current.achievedR9) > EPSILON) {
                     return candidate.achievedR9 > current.achievedR9;
                 }
-            } else if (objective === 'saturation' && Math.abs(candidate.achievedRg - current.achievedRg) > EPSILON) {
-                return candidate.achievedRg > current.achievedRg;
+                if (Math.abs(candidate.achievedRa - current.achievedRa) > EPSILON) {
+                    return candidate.achievedRa > current.achievedRa;
+                }
+            } else if (objective === 'saturation') {
+                if (candidate.rgPriorityBand !== current.rgPriorityBand) {
+                    return candidate.rgPriorityBand < current.rgPriorityBand;
+                }
+                if (Math.abs(candidate.qualityPenalty - current.qualityPenalty) > EPSILON) {
+                    return candidate.qualityPenalty < current.qualityPenalty;
+                }
+                if (Math.abs(candidate.rgError - current.rgError) > EPSILON) {
+                    return candidate.rgError < current.rgError;
+                }
+                if (Math.abs(candidate.achievedRf - current.achievedRf) > EPSILON) {
+                    return candidate.achievedRf > current.achievedRf;
+                }
             } else if (objective === 'target') {
                 return isBetter(candidate, current);
             }
@@ -239,7 +320,7 @@
         function exploreSeed(seed, requireRfFloor) {
             let current = seed.slice();
             addCandidate(current);
-            for (const step of STEP_SIZES) {
+            for (const step of stepSizes) {
                 for (let channelIndex = 0; channelIndex < current.length; channelIndex++) {
                     const lower = current.slice();
                     lower[channelIndex] -= step;
@@ -270,7 +351,7 @@
                         let bestMove = isAllowed(currentCandidate) ? currentCandidate : null;
 
                         const compensationRatios = objective === 'saturation'
-                            ? [0.25, 0.5, 0.75, 1, 1.5, 2, 3, 4]
+                            ? (searchProfile === 'batch' ? [0.5, 1, 2] : [0.25, 0.5, 0.75, 1, 1.5, 2, 3, 4])
                             : [1];
                         for (const firstDirection of [-1, 1]) {
                             for (const secondDirection of [-1, 1]) {
@@ -291,7 +372,8 @@
                 // high-saturation move commonly needs three channels to move
                 // together. Solve the two compensating moves from the local
                 // u'v' Jacobian instead of relying on equal paired steps.
-                if (objective === 'saturation' && current.length >= 3) {
+                if (objective === 'saturation' && current.length >= 3 &&
+                    (searchProfile !== 'batch' || step <= 6)) {
                     const probe = 0.25;
                     const baseMetrics = evaluateSpd(combineSpd(channels, current));
                     const baseXy = readXy(baseMetrics || {});
@@ -342,7 +424,10 @@
         }
 
         const promisingSeeds = [];
-        for (const seed of buildSeeds(baselineValues)) {
+        for (const seed of buildSeeds(baselineValues, {
+            searchProfile,
+            seedValues: options.seedValues
+        })) {
             const candidate = addCandidate(seed);
             if (candidate && (objective === 'saturation' || candidate.achievedRf >= RF_FLOOR)) promisingSeeds.push(candidate);
         }
@@ -351,11 +436,27 @@
             if (isBetterForObjective(right, left)) return 1;
             return 0;
         });
-        if (objective === 'saturation') exploreSeed(baselineValues, false);
-        const refinementSeedLimit = objective === 'saturation' ? 4 : MAX_REFINEMENT_SEEDS;
-        for (const candidate of promisingSeeds.slice(0, refinementSeedLimit)) {
-            exploreSeed(candidate.values, false);
-            exploreSeed(candidate.values, true);
+        if (searchProfile === 'batch') {
+            const batchSeeds = [];
+            const continuitySeed = Array.isArray(options.seedValues) && options.seedValues.length === baselineValues.length
+                ? options.seedValues.map(clampPercentage)
+                : null;
+            if (continuitySeed) batchSeeds.push(continuitySeed);
+            batchSeeds.push(baselineValues);
+            const uniqueBatchSeeds = new Map();
+            batchSeeds.forEach(seed => uniqueBatchSeeds.set(seed.map(value => value.toFixed(4)).join(','), seed));
+            for (const seed of uniqueBatchSeeds.values()) exploreSeed(seed, false);
+            const refinementSeedLimit = objective === 'saturation' ? 1 : 2;
+            for (const candidate of promisingSeeds.slice(0, refinementSeedLimit)) {
+                exploreSeed(candidate.values, objective !== 'saturation');
+            }
+        } else {
+            if (objective === 'saturation') exploreSeed(baselineValues, false);
+            const refinementSeedLimit = objective === 'saturation' ? 4 : MAX_REFINEMENT_SEEDS;
+            for (const candidate of promisingSeeds.slice(0, refinementSeedLimit)) {
+                exploreSeed(candidate.values, false);
+                exploreSeed(candidate.values, true);
+            }
         }
 
         let best = null;
@@ -369,7 +470,11 @@
                 values: null,
                 achievedRg: null,
                 achievedRf: null,
+                achievedRa: null,
+                achievedR9: null,
                 deltaUv: null,
+                qualityLevel: null,
+                qualityPenalty: null,
                 exact: false,
                 feasible: false
             };
@@ -382,6 +487,8 @@
             achievedRa: best.achievedRa,
             achievedR9: best.achievedR9,
             deltaUv: best.deltaUv,
+            qualityLevel: objective === 'saturation' ? best.qualityLevel : 'acceptable',
+            qualityPenalty: objective === 'saturation' ? best.qualityPenalty : 0,
             exact: best.rgError <= EPSILON,
             feasible: true
         };
@@ -393,6 +500,9 @@
         getBaselineTargetXy,
         deltaUvBetween,
         formatRoundedMetricDelta,
-        isBetterColourCandidate
+        isBetterColourCandidate,
+        saturationQualityPenalty,
+        classifySaturationQuality,
+        SATURATION_QUALITY_LIMITS
     };
 });

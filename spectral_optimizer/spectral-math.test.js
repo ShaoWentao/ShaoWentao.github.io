@@ -4,8 +4,10 @@ globalThis.window = {};
 require('./spectral-data.js');
 const cieData = globalThis.window.CIE_SPECTRAL_DATA;
 delete globalThis.window;
+globalThis.CIE_SPECTRAL_DATA = cieData;
 
 const {
+    planckianXy,
     blackbodySpd,
     blackbodyXy,
     estimateCctAndDuvFromXy,
@@ -58,6 +60,14 @@ for (const reference of blackbodyReferences) {
     );
     close(xy.x, reference.x, 1e-9, `${reference.temperature} K x`);
     close(xy.y, reference.y, 1e-9, `${reference.temperature} K y`);
+
+    const locusXy = planckianXy(reference.temperature);
+    close(locusXy.x, reference.x, 1e-9, `${reference.temperature} K integrated locus x`);
+    close(locusXy.y, reference.y, 1e-9, `${reference.temperature} K integrated locus y`);
+
+    const recovered = estimateCctAndDuvFromXy(locusXy.x, locusXy.y);
+    close(recovered.cct, reference.temperature, 0.5, `${reference.temperature} K locus round-trip CCT`);
+    close(recovered.duv, 0, 1e-6, `${reference.temperature} K locus round-trip Duv`);
 }
 
 for (const invalidTemperature of [0, -1, NaN, Infinity, '6500']) {

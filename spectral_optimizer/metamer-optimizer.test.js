@@ -5,7 +5,9 @@ const {
     getBaselineTargetXy,
     deltaUvBetween,
     formatRoundedMetricDelta,
-    isBetterColourCandidate
+    isBetterColourCandidate,
+    saturationQualityPenalty,
+    classifySaturationQuality
 } = require('./metamer-optimizer.js');
 
 const targetXy = { x: 0.3127, y: 0.3290 };
@@ -45,7 +47,7 @@ function optimize(targetRg) {
 const first = optimize(110);
 const second = optimize(110);
 assert.deepEqual(first, second, 'identical inputs produce identical outputs');
-assert.ok(first.deltaUv <= 0.002, `accepted delta u\'v\' was ${first.deltaUv}`);
+assert.ok(first.deltaUv <= 0.0005, `accepted delta u\'v\' was ${first.deltaUv}`);
 assert.ok(first.achievedRf >= 80, `Rf floor was violated: ${first.achievedRf}`);
 assert.equal(first.exact, true, 'reachable target is marked exact');
 assert.equal(first.achievedRg, 110, 'reachable target Rg is achieved');
@@ -56,12 +58,12 @@ assert.ok(fidelityLimited.achievedRf >= 80,
 
 const unreachable = optimize(130);
 assert.equal(unreachable.exact, false, 'unreachable target is marked inexact');
-assert.ok(unreachable.deltaUv <= 0.002,
+assert.ok(unreachable.deltaUv <= 0.0005,
     `unreachable target exceeded chromaticity tolerance: ${unreachable.deltaUv}`);
 assert.ok(unreachable.achievedRf >= 80,
     `unreachable target violated Rf floor: ${unreachable.achievedRf}`);
-assert.equal(unreachable.achievedRg, 115,
-    `unreachable target did not return the nearest feasible Rg: ${unreachable.achievedRg}`);
+assert.ok(unreachable.achievedRg > first.achievedRg && unreachable.achievedRg < 130,
+    `unreachable target did not return the highest colour-point-compliant Rg: ${unreachable.achievedRg}`);
 
 const fidelityProfile = optimizeMetamer({
     channels, baselineValues, targetXy, targetRg: 100, evaluateSpd, xyToUv, objective: 'fidelity'
@@ -71,6 +73,31 @@ const saturationProfile = optimizeMetamer({
 });
 assert.equal(fidelityProfile.achievedRf, 95, 'high-fidelity profile maximises Rf at the locked colour point');
 assert.equal(fidelityProfile.achievedRg, 100, 'high-fidelity profile keeps the neutral-gamut solution when it has best Rf');
+
+const fidelityTie = optimizeMetamer({
+    channels: [
+        { id: 'r9-channel', spd: [1, 0] },
+        { id: 'ra-channel', spd: [0, 1] }
+    ],
+    baselineValues: [50, 50],
+    targetXy,
+    targetRg: 100,
+    objective: 'fidelity',
+    xyToUv,
+    evaluateSpd(spd) {
+        return {
+            x: targetXy.x,
+            y: targetXy.y,
+            rg: 100,
+            rf: 90,
+            r9: spd[0] * 100,
+            ra: (1 - spd[0]) * 100
+        };
+    }
+});
+assert.ok(fidelityTie.achievedR9 > fidelityTie.achievedRa,
+    'high-fidelity search must rank R9 before Ra when Rf is equal');
+
 assert.ok(saturationProfile.achievedRg <= 120,
     'high-saturation profile respects the Rg 120 cap when chromaticity limits the reachable result');
 
@@ -85,12 +112,70 @@ const unrestrictedSaturation = optimizeMetamer({
     objective: 'saturation',
     evaluateSpd(spd) {
         const total = spd[0] + spd[1];
-        return { x: targetXy.x, y: targetXy.y, rg: 100 + total * 10, rf: 95 - total * 55 };
+        return {
+            x: targetXy.x,
+            y: targetXy.y,
+            rg: 100 + total * 10,
+            rf: 90 - total * 10,
+            ra: 85 - total * 5,
+            r9: 30 - total * 10
+        };
     },
     xyToUv
 });
-assert.equal(unrestrictedSaturation.achievedRg, 120, 'high-saturation profile stops at the Rg 120 cap');
-assert.ok(unrestrictedSaturation.achievedRf < 80, 'high-saturation profile does not impose an Rf floor');
+assert.ok(unrestrictedSaturation.achievedRg >= 119 && unrestrictedSaturation.achievedRg <= 120,
+    'high-saturation profile stays within the top 1 Rg priority band below the cap');
+assert.ok(unrestrictedSaturation.achievedRf < 80, 'high-saturation profile permits controlled fidelity loss');
+assert.equal(unrestrictedSaturation.qualityLevel, 'warning', 'controlled fidelity loss is reported as a warning');
+
+const hardLimitedSaturation = optimizeMetamer({
+    channels: [
+        { id: 'first', spd: [1, 0] },
+        { id: 'second', spd: [0, 1] }
+    ],
+    baselineValues: [50, 50],
+    targetXy,
+    targetRg: 120,
+    objective: 'saturation',
+    evaluateSpd(spd) {
+        const total = spd[0] + spd[1];
+        return {
+            x: targetXy.x,
+            y: targetXy.y,
+            rg: 100 + total * 10,
+            rf: 100 - total * 25,
+            ra: 95 - total * 16,
+            r9: 40 - total * 10
+        };
+    },
+    xyToUv
+});
+assert.ok(hardLimitedSaturation.achievedRf >= 60, 'high-saturation profile rejects candidates below the Rf hard floor');
+assert.ok(hardLimitedSaturation.achievedRa >= 65, 'high-saturation profile rejects candidates below the Ra hard floor');
+assert.ok(hardLimitedSaturation.achievedRg < 120, 'hard quality limits may prevent reaching the requested Rg');
+
+const softPreferredSaturation = optimizeMetamer({
+    channels: [
+        { id: 'first', spd: [1, 0] },
+        { id: 'second', spd: [0, 1] }
+    ],
+    baselineValues: [50, 50],
+    targetXy,
+    targetRg: 120,
+    objective: 'saturation',
+    evaluateSpd(spd) {
+        const total = spd[0] + spd[1];
+        const aggressive = total > 1.25;
+        return aggressive
+            ? { x: targetXy.x, y: targetXy.y, rg: 119.8, rf: 68, ra: 72, r9: 8 }
+            : { x: targetXy.x, y: targetXy.y, rg: 119.2, rf: 82, ra: 88, r9: 28 };
+    },
+    xyToUv
+});
+assert.equal(softPreferredSaturation.achievedRg, 119.2,
+    'within the same 1 Rg priority band, the lower-distortion candidate is preferred');
+assert.equal(softPreferredSaturation.qualityLevel, 'acceptable',
+    'a result above all soft floors is reported as acceptable');
 
 const unequalCompensationSaturation = optimizeMetamer({
     channels: [
@@ -107,7 +192,9 @@ const unequalCompensationSaturation = optimizeMetamer({
             x: targetXy.x + colourError * 0.02,
             y: targetXy.y,
             rg: 100 + (spd[0] + spd[1] - 0.3) * 20,
-            rf: 20
+            rf: 65,
+            ra: 70,
+            r9: 10
         };
     },
     xyToUv(x, y) { return { u: x, v: y }; }
@@ -259,24 +346,37 @@ assert.equal(formatRoundedMetricDelta(98, 100), '(-2)', 'negative delta has a mi
 assert.equal(formatRoundedMetricDelta(NaN, 100), '', 'invalid metric delta is omitted');
 
 assert.equal(isBetterColourCandidate(
-    { ra: 93, r9: 55, rf: 88 },
-    { ra: 96, r9: 20, rf: 92 },
+    { ra: 90, r9: 30, rf: 92 },
+    { ra: 99, r9: 80, rf: 90 },
     { mode: 'fidelity', r9Floor: 50 }
-), true, 'standard optimisation prefers an R9-valid candidate over higher Ra');
+), true, 'high-fidelity optimisation ranks Rf before R9 and Ra');
 assert.equal(isBetterColourCandidate(
-    { ra: 94, r9: 52, rf: 87 },
-    { ra: 93, r9: 70, rf: 90 },
+    { ra: 90, r9: 55, rf: 92 },
+    { ra: 99, r9: 50, rf: 92 },
     { mode: 'fidelity', r9Floor: 50 }
-), true, 'standard optimisation maximises Ra after both candidates satisfy R9');
+), true, 'high-fidelity optimisation ranks R9 after equal Rf');
 assert.equal(isBetterColourCandidate(
-    { ra: 90, r9: 42, rf: 87 },
-    { ra: 95, r9: 30, rf: 92 },
+    { ra: 95, r9: 55, rf: 92 },
+    { ra: 90, r9: 55, rf: 92 },
     { mode: 'fidelity', r9Floor: 50 }
-), true, 'standard optimisation maximises reachable R9 when neither candidate reaches the floor');
+), true, 'high-fidelity optimisation ranks Ra after equal Rf and R9');
 assert.equal(isBetterColourCandidate(
     { rgError: 2, ra: 88, r9: 45, rf: 84 },
     { rgError: 0, ra: 91, r9: 20, rf: 90 },
     { mode: 'vitality', r9Floor: 40 }
 ), true, 'colour vitality keeps R9 acceptable before pursuing the exact Rg target');
+
+assert.equal(saturationQualityPenalty({ rf: 75, ra: 80, r9: 20 }), 0,
+    'soft floors carry no saturation quality penalty');
+assert.ok(saturationQualityPenalty({ rf: 70, ra: 75, r9: 10 }) > 0,
+    'falling below soft floors adds a saturation quality penalty');
+assert.equal(classifySaturationQuality({ rf: 59.9, ra: 90, r9: 30 }), 'rejected',
+    'Rf below the hard floor is rejected');
+assert.equal(classifySaturationQuality({ rf: 80, ra: 64.9, r9: 30 }), 'rejected',
+    'Ra below the hard floor is rejected');
+assert.equal(classifySaturationQuality({ rf: 70, ra: 75, r9: 10 }), 'warning',
+    'controlled saturation distortion is surfaced as a warning');
+assert.equal(classifySaturationQuality({ rf: 80, ra: 85, r9: 30 }), 'acceptable',
+    'results meeting all soft floors are acceptable');
 
 console.log('metamer-optimizer tests passed');

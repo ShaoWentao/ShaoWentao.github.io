@@ -25,8 +25,9 @@
         if (!DATA || !Array.isArray(DATA.wavelengths) || !Array.isArray(DATA.cmf2)) {
             throw new Error('CIE_COLOUR_QUALITY_DATA is required before material-color.js');
         }
-        if (!SpectralMath || typeof SpectralMath.blackbodySpd !== 'function') {
-            throw new Error('SpectralMath.blackbodySpd is required before material-color.js');
+        if (!SpectralMath || typeof SpectralMath.blackbodySpd !== 'function' ||
+            typeof SpectralMath.resampleSpectrumTo5nm !== 'function') {
+            throw new Error('SpectralMath blackbody and energy-preserving resampling functions are required before material-color.js');
         }
         if (!MATERIAL_DATA || typeof MATERIAL_DATA.getMaterial !== 'function') {
             throw new Error('MATERIAL_REFLECTANCE_DATA is required before material-color.js');
@@ -75,15 +76,22 @@
             : null;
 
         if (Array.isArray(inputSpd) && inputSpd.length > 0 && Array.isArray(inputSpd[0])) {
-            return interpolatePairs(inputSpd, targetWavelengths);
+            const pairs = inputSpd.map(pair => [Number(pair[0]), Number(pair[1])]);
+            return SpectralMath.resampleSpectrumTo5nm(
+                pairs.map(pair => pair[0]),
+                pairs.map(pair => pair[1])
+            );
         }
         const values = Array.from(inputSpd);
         if (values.length === targetWavelengths.length) return values.map(value => Number(value) || 0);
         if (sourceWavelengths && sourceWavelengths.length === values.length) {
-            return interpolatePairs(sourceWavelengths.map((wavelength, index) => [wavelength, values[index]]), targetWavelengths);
+            return SpectralMath.resampleSpectrumTo5nm(sourceWavelengths, values);
         }
         if (values.length === 401) {
-            return targetWavelengths.map(wavelength => values[Math.round(wavelength - 380)] || 0);
+            return SpectralMath.resampleSpectrumTo5nm(
+                Array.from({ length: 401 }, (_, index) => 380 + index),
+                values
+            );
         }
         throw new RangeError('Unsupported SPD length. Use 81 samples, 401 samples, [wavelength,value] pairs, or pass sourceWavelengths.');
     }
@@ -124,7 +132,8 @@
 
     function normalizeToY(spd, targetY) {
         const white = xyzFromSpd(spd, null);
-        const scale = white[1] > 0 ? targetY / white[1] : 0;
+        if (!(white[1] > 0)) throw new RangeError('SPD has no positive photopic power');
+        const scale = targetY / white[1];
         return spd.map(value => value * scale);
     }
 
@@ -150,6 +159,15 @@
         if (mode === 'd65' && Array.isArray(DATA.d65) && DATA.d65.length === DATA.wavelengths.length) return DATA.d65.slice();
         if (Array.isArray(options && options.referenceSpd)) return resampleSpd(options.referenceSpd, options.referenceSpdOptions || {});
         if (mode === 'daylight' || (mode === 'auto' && Number(cct) >= 5000)) return daylightSpd(cct);
+        if (mode === 'auto' && Number(cct) > 4000) {
+            // Avoid a hard reference-family jump at 5000 K. Blend normalized
+            // blackbody and daylight shapes through the transition band.
+            const temperature = Math.min(5000, Number(cct));
+            const blend = (temperature - 4000) / 1000;
+            const blackbody = normalizeToY(SpectralMath.blackbodySpd(temperature, DATA.wavelengths), 1);
+            const daylight = normalizeToY(daylightSpd(temperature), 1);
+            return blackbody.map((value, index) => value * (1 - blend) + daylight[index] * blend);
+        }
         return SpectralMath.blackbodySpd(cct || 3000, DATA.wavelengths);
     }
 

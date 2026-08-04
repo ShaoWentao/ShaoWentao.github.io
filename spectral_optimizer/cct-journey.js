@@ -26,33 +26,6 @@
         }
     }
 
-    function setupPresetOptimizerSync() {
-        if (typeof document === 'undefined') return;
-
-        document.addEventListener('click', function (event) {
-            const target = event.target;
-            const button = target && target.closest
-                ? target.closest('.presets-section .preset-btn[data-preset^="cct-"]')
-                : null;
-            if (!button) return;
-
-            const cct = parseInt(button.dataset.preset.replace('cct-', ''), 10);
-            if (!Number.isFinite(cct)) return;
-
-            const cctSlider = document.getElementById('target-cct-slider');
-            const duvSlider = document.getElementById('target-duv-slider');
-
-            if (cctSlider) {
-                cctSlider.value = String(cct);
-                cctSlider.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-            if (duvSlider) {
-                duvSlider.value = '0';
-                duvSlider.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-        });
-    }
-
     function setupPresetsToggle() {
         if (typeof document === 'undefined') return;
 
@@ -75,6 +48,11 @@
 
     function loadVisitorCounter() {
         if (typeof document === 'undefined' || document.querySelector('script[data-visitor-counter-loader]')) return;
+        const location = document.defaultView && document.defaultView.location;
+        const hostname = location && location.hostname ? location.hostname : '';
+        const isHostedPage = location && (location.protocol === 'https:' || location.protocol === 'http:') &&
+            hostname !== 'localhost' && hostname !== '127.0.0.1';
+        if (!isHostedPage) return;
         const script = document.createElement('script');
         script.defer = true;
         script.dataset.visitorCounterLoader = 'true';
@@ -225,7 +203,6 @@
     }
 
     setupPresetTemperatures();
-    setupPresetOptimizerSync();
     setupPresetsToggle();
     loadVisitorCounter();
     setupSceneOptimizationAdapter();

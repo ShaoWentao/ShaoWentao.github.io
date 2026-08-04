@@ -1,310 +1,1666 @@
-@media (min-width: 1500px) {
-    .page-hero,
-    #app-main,
-    #app-footer {
-        width: calc(100% - clamp(40px, 3vw, 80px));
-        max-width: none;
-    }
+/* ==========================================================================
+ * Scheme A — research workbench layout
+ * This file is the sole owner of final page geometry and responsive layout.
+ * Component appearance remains in styles.css and material-panel.css.
+ * ========================================================================= */
 
-    #app-main {
-        grid-template-columns: clamp(340px, 19vw, 400px) minmax(0, 1fr);
-    }
+[hidden] {
+    display: none !important;
 }
 
-.charts-row {
+.page-hero,
+#app-footer {
+    width: min(1600px, calc(100% - 40px));
+    max-width: none;
+}
+
+#app-footer {
+    display: block;
+}
+
+.page-hero h1,
+.title-main {
+    display: flex;
+    min-height: 42px;
+    align-items: center;
+    line-height: 1.3;
+}
+
+#visual-field-factor {
+    min-height: 36px;
+}
+
+#app-main.workbench-shell {
     display: grid;
-    grid-template-columns: minmax(0, 1.55fr) minmax(340px, 1fr);
-    grid-template-areas:
-        "spd cie"
-        "combo combo";
+    grid-template-columns: minmax(300px, 340px) minmax(0, 1fr);
     gap: 14px;
+    width: min(1600px, calc(100% - 40px));
+    max-width: none;
+    margin: 0 auto;
+    padding: 0 0 24px;
     align-items: start;
 }
 
-.charts-row > .spd-panel { grid-area: spd; }
-.charts-row > .cie-panel { grid-area: cie; }
-
-.charts-row > .spd-panel,
-.charts-row > .cie-panel {
-    height: 360px;
-    box-sizing: border-box;
-}
-
-.charts-row > .spd-panel .canvas-wrapper {
-    height: 292px;
-    aspect-ratio: auto;
-}
-
-.charts-row > .cie-panel .canvas-wrapper,
-.charts-row > .cie-panel #cie-canvas-wrapper {
-    width: min(100%, 292px);
-    height: 292px;
-    margin-inline: auto;
-    aspect-ratio: 1;
-}
-
-.charts-row > .emitter-preview {
-    grid-area: combo;
+.workbench-sidebar,
+.workbench-results {
     display: grid;
-    grid-template-columns: minmax(250px, 0.72fr) minmax(0, 1.8fr);
-    grid-template-rows: auto minmax(0, 1fr) auto;
-    column-gap: 18px;
+    gap: 14px;
+    min-width: 0;
+    align-items: start;
+}
+
+.workbench-sidebar > *,
+.workbench-results > * {
+    min-width: 0;
+}
+
+.workbench-control-card,
+.workbench-current-light,
+.analysis-workspace,
+#material-panel {
     width: 100%;
-    height: auto;
-    padding: 12px;
+    min-width: 0;
+    margin: 0;
     box-sizing: border-box;
+}
+
+/* --------------------------------------------------------------------------
+ * Sidebar
+ * ----------------------------------------------------------------------- */
+
+.workbench-sidebar .controls-panel,
+.workbench-sidebar .tuning-group {
+    position: static;
+    width: 100%;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.workbench-sidebar .controls-panel {
+    padding: 14px;
+}
+
+.workbench-sidebar .tuning-group {
+    padding: 13px;
+}
+
+.workbench-sidebar .panel-header,
+.workbench-sidebar .section-heading {
+    margin-bottom: 10px;
+}
+
+.workbench-sidebar .panel-header {
+    padding-bottom: 9px;
+}
+
+.workbench-sidebar .data-note {
+    margin-top: 10px;
+    padding: 9px 10px;
+    font-size: 0.66rem;
+    line-height: 1.45;
+}
+
+.workbench-sidebar .spd-import {
+    margin-top: 10px;
+}
+
+.workbench-sidebar .channels-container {
+    margin-top: 12px;
+}
+
+.workbench-sidebar .presets-section {
+    padding: 12px;
+    border: 1px solid var(--divider);
+    border-radius: 8px;
+    background: var(--surface);
+    box-shadow: var(--panel-shadow);
+}
+
+.workbench-sidebar .presets-section h3 {
+    margin: 0 0 9px;
+    color: var(--text-primary);
+    font-size: 0.82rem;
+}
+
+.workbench-sidebar .preset-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.workbench-sidebar .preset-btn.compact {
+    min-width: 0;
+    min-height: 34px;
+    padding: 5px 3px;
+    font-size: 0.66rem;
+}
+
+.workbench-sidebar .target-controls,
+.workbench-sidebar .health-condition-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+
+.workbench-sidebar .target-row {
+    min-width: 0;
+    padding: 9px 10px;
+}
+
+.workbench-sidebar .sidebar-details {
+    margin-top: 10px;
+    border: 1px solid var(--divider);
+    border-radius: 7px;
+    background: var(--surface-secondary);
+}
+
+.workbench-sidebar .sidebar-details > summary {
+    display: flex;
+    min-height: 36px;
+    align-items: center;
+    padding: 7px 10px;
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.workbench-sidebar .sidebar-details[open] {
+    padding-bottom: 10px;
+}
+
+.workbench-sidebar .sidebar-details .pastel-palette-grid,
+.workbench-sidebar .sidebar-details .pastel-fit-status {
+    margin-inline: 10px;
+}
+
+.workbench-sidebar .pastel-palette-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 5px;
+}
+
+.workbench-sidebar .pastel-color-card {
+    min-width: 0;
+    height: 38px;
+}
+
+.workbench-sidebar #circadian-condition-panel .section-heading {
+    margin-bottom: 8px;
+}
+
+.workbench-sidebar #circadian-condition-panel .preset-action-container:empty {
+    display: none !important;
+}
+
+.workbench-sidebar-actions {
+    display: grid;
+}
+
+.workbench-sidebar-actions .export-recipe-btn {
+    width: 100%;
+    min-height: 42px;
+}
+
+/* --------------------------------------------------------------------------
+ * Key metric summary
+ * ----------------------------------------------------------------------- */
+
+.workbench-summary {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.summary-card {
+    min-width: 0;
+    padding: 12px 13px;
+    border: 1px solid var(--divider);
+    border-radius: 8px;
+    background: var(--surface);
+    box-shadow: var(--panel-shadow);
+    box-sizing: border-box;
+}
+
+.summary-card span,
+.summary-card small {
+    display: block;
+    min-width: 0;
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.summary-card span {
+    font-size: 0.65rem;
+    font-weight: 650;
+}
+
+.summary-card small {
+    font-size: 0.6rem;
+}
+
+.summary-card strong {
+    display: block;
+    min-width: 0;
+    margin: 5px 0 3px;
+    color: var(--text-primary);
+    font-size: clamp(1rem, 1.35vw, 1.34rem);
+    line-height: 1.1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+ * Core charts
+ * ----------------------------------------------------------------------- */
+
+.workbench-core-charts {
+    display: grid;
+    grid-template-columns: minmax(0, 1.65fr) minmax(350px, 1fr);
+    gap: 14px;
     align-items: stretch;
 }
 
-.charts-row > .emitter-preview > .emitter-preview-heading {
-    grid-column: 1;
-    grid-row: 1;
-}
-
-.charts-row > .emitter-preview > .emitter-preview-stage {
-    grid-column: 1;
-    grid-row: 2;
-    width: 100%;
-    min-height: 210px;
-    margin-top: 12px;
-    aspect-ratio: auto;
-    flex-direction: row;
-    box-sizing: border-box;
-}
-
-.charts-row > .emitter-preview > .emitter-metamer-controls {
-    grid-column: 1;
-    grid-row: 3;
-}
-
-.charts-row > .emitter-preview > .tuning-group-health {
-    grid-column: 2;
-    grid-row: 1 / 4;
+.workbench-core-charts > .spd-panel,
+.workbench-core-charts > .chromaticity-panel {
+    display: flex;
     min-width: 0;
     width: 100%;
     margin: 0;
-    padding: 0 0 0 18px;
-    border: 0;
-    border-left: 1px solid var(--divider);
-    border-radius: 0;
-    background: transparent;
+    padding: 12px;
+    flex-direction: column;
+    overflow: hidden;
     box-sizing: border-box;
-    align-self: stretch;
 }
 
-.charts-row > .emitter-preview .health-condition-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+.workbench-core-charts > .spd-panel {
+    min-height: 476px;
 }
 
-.charts-row > .emitter-preview .preset-action-container,
-.charts-row > .emitter-preview .schedule-mode-panel {
+.workbench-core-charts > .chromaticity-panel {
+    min-height: 476px;
+}
+
+.workbench-core-charts .spd-header {
+    display: flex;
+    min-height: 42px;
+    padding-bottom: 10px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.workbench-core-charts .spd-panel > .canvas-wrapper {
+    position: relative;
     width: 100%;
-    box-sizing: border-box;
+    height: 410px;
+    min-height: 260px;
+    margin-top: 10px;
+    flex: none;
+    aspect-ratio: auto;
+    overflow: hidden;
 }
 
-.charts-row > .emitter-preview .schedule-stage-list {
+.workbench-core-charts .spd-panel #spd-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.panel-loading-state {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+}
+
+/* Unified chromaticity card. */
+.chromaticity-panel-header {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 6px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+        "title controls"
+        "summary controls";
+    gap: 8px 10px;
+    align-items: start;
+    min-height: 86px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--divider);
+}
+
+.chromaticity-panel-title {
+    grid-area: title;
+}
+
+.chromaticity-panel-title h2 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 0.98rem;
+}
+
+.chromaticity-summary {
+    grid-area: summary;
+    display: grid;
     width: 100%;
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr);
+    justify-content: stretch;
+    align-content: start;
+    gap: 3px;
+    color: var(--text-secondary);
+    font: 600 9px/1.35 "JetBrains Mono", monospace;
+}
+
+.chromaticity-summary span {
+    min-width: 0;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+}
+
+#chromaticity-summary-xy { grid-column: 1; grid-row: 1; }
+#chromaticity-summary-upvp { grid-column: 1; grid-row: 2; }
+#professional-xyz { grid-column: 1; grid-row: 3; }
+#professional-dominant { grid-column: 1; grid-row: 4; }
+#professional-purity { grid-column: 1; grid-row: 5; }
+
+.spd-controls {
+    display: flex;
+    min-width: 0;
+    width: auto;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.spd-controls > * {
+    flex: 0 0 auto;
+}
+
+.chromaticity-controls {
+    grid-area: controls;
+    display: grid;
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px;
+    align-items: center;
+    justify-items: end;
+}
+
+.chromaticity-controls .chromaticity-tabs {
+    grid-column: 1 / -1;
+}
+
+.chromaticity-tabs {
+    display: inline-flex;
+    gap: 3px;
+    padding: 3px;
+    border: 1px solid var(--divider);
+    border-radius: 8px;
+    background: var(--surface-control);
+}
+
+.chromaticity-tabs button {
+    min-height: 40px;
+    padding: 0 9px;
+    border: 0;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    background: transparent;
+    font: inherit;
+    font-size: 0.67rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.chromaticity-tabs button.is-selected,
+.chromaticity-tabs button[aria-selected="true"],
+.chromaticity-tabs button:focus-visible {
+    color: var(--text-primary);
+    background: var(--surface);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    outline: none;
+}
+
+.chromaticity-channel-toggle {
+    display: inline-flex;
+    min-height: 28px;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-secondary);
+    font-size: 0.66rem;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.chromaticity-channel-toggle input {
+    margin: 0;
+}
+
+.chromaticity-pane {
+    padding-top: 8px;
+}
+
+.chromaticity-pane-heading {
+    display: flex;
+    min-height: 24px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    color: var(--text-secondary);
+    font-size: 0.68rem;
+}
+
+.chromaticity-panel .chromaticity-canvas-wrapper,
+#chromaticity-panel #cie-canvas-wrapper,
+#chromaticity-panel #cie1976-canvas-wrapper {
+    width: min(100%, 350px);
+    height: auto;
+    min-height: 0;
+    margin: 4px auto 0;
+    aspect-ratio: 1;
+}
+
+.chromaticity-panel #cie-canvas,
+.chromaticity-panel #professional-cie1976 {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* --------------------------------------------------------------------------
+ * Current-light result strip
+ * ----------------------------------------------------------------------- */
+
+.workbench-current-light {
+    display: grid;
+    grid-template-columns: minmax(235px, .5fr) minmax(340px, .9fr) minmax(0, 1.35fr);
+    grid-template-areas: "summary controls scenes";
+    gap: 14px;
+    align-items: stretch;
+    justify-items: stretch;
+    min-height: 146px;
     max-height: none;
+    padding: 12px 14px;
     overflow: visible;
 }
 
-.charts-row > .emitter-preview .schedule-stage-row {
+.current-light-summary {
+    grid-area: summary;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 28px;
+    width: 100%;
+    justify-self: stretch;
+    grid-template-rows: auto 1fr;
+    gap: 10px;
+    min-width: 0;
+    padding-right: 14px;
+    border-right: 1px solid var(--divider);
+    align-items: center;
+}
+
+.current-light-summary > .emitter-preview-heading {
+    display: flex;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 9px;
+}
+
+.current-light-summary > .emitter-preview-stage {
+    display: grid;
+    min-width: 0;
+    min-height: 0;
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+    grid-template-columns: 60px minmax(0, 1fr);
     grid-template-rows: auto auto;
+    grid-template-areas:
+        "disc values"
+        "disc journey";
+    column-gap: 10px;
+    row-gap: 5px;
+    align-items: center;
+    justify-content: flex-start;
+    background: transparent;
+    aspect-ratio: auto;
+}
+
+.workbench-current-light .emitter-disc {
+    grid-area: disc;
+    width: 60px;
+    height: 60px;
+    min-width: 60px;
+    min-height: 60px;
+    border-radius: 50%;
+}
+
+.workbench-current-light .emitter-preview-values {
+    grid-area: values;
+    width: 69px;
+    min-width: 69px;
+    justify-self: start;
+    align-items: center;
+    gap: 3px;
+    text-align: center;
+    line-height: 1.25;
+}
+
+.workbench-current-light .emitter-preview-values strong {
+    white-space: nowrap;
+}
+
+.workbench-current-light > .emitter-metamer-controls {
+    grid-area: controls;
+    display: grid;
+    width: 100%;
+    justify-self: stretch;
+    grid-template-columns: 108px minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    gap: 7px 10px;
+    min-width: 0;
+    margin: 0;
+    padding: 4px 14px 4px 0;
+    border: 0;
+    border-right: 1px solid var(--divider);
+    align-content: center;
+    background: transparent;
+}
+
+.workbench-current-light .metamer-profile-options {
+    display: grid;
+    grid-column: 1;
+    grid-row: 1 / 3;
+    grid-template-columns: 1fr;
     gap: 5px;
     min-width: 0;
+    min-height: 0;
 }
 
-.charts-row > .emitter-preview .schedule-stage-row input[type="time"] {
-    grid-column: 1;
-    grid-row: 1;
+.workbench-current-light .metamer-profile-button {
+    min-height: 34px;
+    height: 34px;
+}
+
+.workbench-current-light .metamer-status,
+.workbench-current-light .metamer-colour-delta {
+    grid-column: 2;
+    min-width: 0;
+    margin: 0;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    line-height: 1.35;
+}
+
+.workbench-current-light .metamer-status { grid-row: 1; }
+.workbench-current-light .metamer-colour-delta { grid-row: 2; }
+
+.current-light-scenes {
+    grid-area: scenes;
     width: 100%;
     min-width: 0;
+    justify-self: stretch;
 }
 
-.charts-row > .emitter-preview .schedule-stage-label {
-    grid-column: 1;
+.current-light-scenes .schedule-mode-panel {
+    display: grid;
+    height: 100%;
+    grid-template-rows: auto 1fr;
+    gap: 9px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+.current-light-scenes .schedule-clock-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+}
+
+.current-light-scenes #schedule-clock {
+    font-size: .9rem;
+}
+
+.current-light-scenes .schedule-stage-list {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 7px;
+}
+
+.current-light-scenes .schedule-stage-row {
+    display: block;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+.current-light-scenes .schedule-preview-btn {
+    display: flex;
+    width: 100%;
+    height: 58px;
+    min-width: 0;
+    padding: 8px 6px;
+    border-radius: 7px;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 3px;
+    line-height: 1.2;
+}
+
+.current-light-scenes .schedule-preview-btn strong,
+.current-light-scenes .schedule-preview-btn small {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.current-light-scenes .schedule-preview-btn strong {
+    font-size: .68rem;
+}
+
+.current-light-scenes .schedule-preview-btn small {
+    color: var(--text-muted);
+    font-size: .56rem;
+}
+
+.current-light-scenes .schedule-stage-row.is-active .schedule-preview-btn {
+    border-color: var(--accent);
+    background: var(--action-soft);
+}
+
+.current-light-preview-controls {
+    grid-area: journey;
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+}
+
+.current-light-scenes .schedule-auto-toggle {
+    min-height: 34px;
+    padding: 6px 9px;
+    border: 1px solid var(--divider);
+    border-radius: 7px;
+    background: var(--surface-control);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.current-light-scenes .schedule-auto-toggle:has(input:checked) {
+    color: var(--action);
+    border-color: var(--action);
+    background: var(--action-soft);
+}
+
+.current-light-preview-controls .journey-controls {
+    display: inline-grid;
+    width: auto;
+    min-width: 0;
+    min-height: 0;
+    grid-template-columns: repeat(2, 32px);
+    grid-template-rows: 32px auto;
+    column-gap: 5px;
+    row-gap: 3px;
+    align-items: center;
+}
+
+.current-light-preview-controls .journey-icon-btn {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+}
+
+.current-light-preview-controls .journey-status {
+    grid-column: 1 / -1;
     grid-row: 2;
+    min-width: 0;
+    font-size: .64rem;
+    line-height: 1.2;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.current-light-scenes .schedule-note {
+    display: none;
+}
+
+/* --------------------------------------------------------------------------
+ * Unified analysis workspace
+ * ----------------------------------------------------------------------- */
+
+.analysis-workspace {
+    padding: 0;
+    overflow: hidden;
+}
+
+.analysis-workspace-tabs {
+    display: flex;
+    gap: 6px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--divider);
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.analysis-workspace-tabs button {
+    flex: 0 0 auto;
+    min-height: 36px;
+    padding: 7px 12px;
+    border: 0;
+    border-radius: 7px;
+    color: var(--text-secondary);
+    background: var(--surface-control);
+    font: inherit;
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.analysis-workspace-tabs button[aria-selected="true"] {
+    color: var(--action);
+    background: var(--action-soft);
+}
+
+.analysis-workspace-pane {
+    display: grid;
+    gap: 14px;
+    min-width: 0;
+    padding: 14px;
+}
+
+.analysis-workspace-pane[hidden] {
+    display: none;
+}
+
+#analysis-pane-colour {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+#analysis-pane-colour > .analysis-support-metrics {
+    display: none !important;
+}
+
+#analysis-pane-colour > .color-samples-panel {
+    grid-area: auto;
+    grid-column: auto;
+    grid-row: auto;
+    width: 100%;
+    max-width: none;
+    justify-self: stretch;
+}
+
+#analysis-pane-material {
+    padding: 0;
+}
+
+#analysis-pane-material > #material-panel {
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.analysis-workspace-pane > .metric-group,
+.analysis-workspace-pane > .color-samples-panel,
+.analysis-workspace-pane > .schedule-mode-panel,
+.analysis-workspace-pane > .journey-controls {
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.analysis-workspace-pane .metric-group {
+    padding: 14px;
+}
+
+.analysis-workspace-pane .metric-group-grid {
+    display: grid;
+    gap: 8px;
+}
+
+.analysis-workspace-pane .quality-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.analysis-workspace-pane .health-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.analysis-workspace-pane .metric-card {
+    min-width: 0;
+    min-height: 104px;
+}
+
+.analysis-workspace-pane .color-samples-panel {
+    padding: 14px;
+}
+
+.analysis-workspace-pane .schedule-mode-panel {
+    padding: 12px;
+}
+
+.analysis-workspace-pane .schedule-stage-list {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 6px;
+}
+
+#analysis-pane-health {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+#analysis-pane-health > .metric-group-health,
+#analysis-pane-health > .schedule-mode-panel {
+    grid-area: auto;
+    grid-column: auto;
+    grid-row: auto;
+    align-self: stretch;
+}
+
+#analysis-pane-health > .metric-group-health {
+    padding: 12px 14px;
+}
+
+#analysis-pane-health .metric-group-health .section-heading {
+    display: flex;
+    min-height: 38px;
+    margin-bottom: 8px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+#analysis-pane-health .metric-group-health .section-heading > div {
     min-width: 0;
 }
 
-.charts-row > .emitter-preview .schedule-preview-btn {
-    grid-column: 2;
-    grid-row: 1 / 3;
-    align-self: center;
+#analysis-pane-health .metric-group-health .section-heading p {
+    flex: 0 0 auto;
+    margin: 0;
+    white-space: nowrap;
 }
 
-@media (max-width: 1000px) {
-    .charts-row {
+#analysis-pane-health .metric-group-health .health-grid {
+    gap: 10px;
+}
+
+#analysis-pane-health .metric-group-health .metric-card {
+    min-height: 86px;
+    padding: 9px 12px;
+}
+
+#analysis-pane-health .metric-group-health .metric-icon {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+}
+
+#analysis-pane-health #health-professional-details {
+    margin-top: 8px;
+}
+
+#analysis-pane-health #health-professional-details > summary {
+    min-height: 28px;
+    padding-block: 3px;
+}
+
+#analysis-pane-health .schedule-clock-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-areas: "clock journey simulation";
+    align-items: center;
+    gap: 10px;
+}
+
+#analysis-pane-health .schedule-clock-row > div:first-child {
+    grid-area: clock;
+}
+
+#analysis-pane-health .schedule-clock-row > .journey-controls {
+    grid-area: journey;
+    display: inline-flex;
+    width: auto;
+    min-width: 0;
+    min-height: 36px;
+    align-items: center;
+    justify-content: flex-start;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 6px;
+}
+
+#analysis-pane-health .schedule-clock-row > .schedule-auto-toggle {
+    grid-area: simulation;
+}
+
+#analysis-pane-health .journey-icon-btn {
+    flex: 0 0 34px;
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+}
+
+#analysis-pane-health .journey-status {
+    min-width: 62px;
+    color: var(--text-secondary);
+    font: 600 0.68rem "JetBrains Mono", monospace;
+    white-space: nowrap;
+}
+
+.analysis-jump-button {
+    min-height: 30px;
+    margin: 0;
+    padding: 5px 8px;
+    border: 1px solid var(--divider);
+    border-radius: 7px;
+    color: var(--text-secondary);
+    background: var(--surface-control);
+    font-size: 0.66rem;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.spd-controls .analysis-jump-button,
+.chromaticity-controls .analysis-jump-button {
+    flex: 0 0 auto;
+}
+
+.analysis-workspace-pane .section-heading .analysis-jump-button {
+    margin-left: auto;
+}
+
+/* Professional details remain with their owning analysis modules. */
+.embedded-analysis-details {
+    min-width: 0;
+    margin: 0;
+    border-top: 1px solid var(--divider);
+    box-sizing: border-box;
+}
+
+.embedded-analysis-details > summary {
+    display: flex;
+    min-height: 36px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 2px;
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+}
+
+.embedded-analysis-details > summary::-webkit-details-marker {
+    display: none;
+}
+
+.embedded-analysis-details > summary::after {
+    content: "展开";
+    font-size: 0.66rem;
+    font-weight: 500;
+}
+
+.embedded-analysis-details[open] > summary::after {
+    content: "收起";
+}
+
+.analysis-advanced-section {
+    padding: 0 0 12px;
+}
+
+.embedded-analysis-details .professional-coordinate-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding-top: 8px;
+}
+
+.embedded-analysis-details .professional-coordinate-grid > div {
+    min-width: 0;
+    border: 1px solid var(--divider);
+    background: var(--surface-control);
+}
+
+.embedded-analysis-details .professional-subhead {
+    padding-top: 8px;
+}
+
+.embedded-analysis-details .professional-subhead select {
+    min-height: 36px;
+    color: var(--text-primary);
+    background: var(--surface);
+}
+
+.embedded-analysis-note {
+    margin: 10px 0 0;
+    color: var(--text-secondary);
+    font-size: 0.68rem;
+    line-height: 1.5;
+}
+
+/* --------------------------------------------------------------------------
+ * Material section integration
+ * ----------------------------------------------------------------------- */
+
+#material-panel {
+    padding: 14px;
+    overflow: hidden;
+}
+
+.material-panel.is-updating .material-detail,
+.material-panel.is-updating .material-selector,
+.material-panel.is-updating .material-reflectance {
+    opacity: 0.72;
+}
+
+/* --------------------------------------------------------------------------
+ * Responsive layout
+ * ----------------------------------------------------------------------- */
+
+@media (min-width: 1500px) {
+    .workbench-sidebar {
+        position: static;
+        max-height: none;
+        overflow: visible;
+    }
+}
+
+@media (max-width: 1499px) {
+    .page-hero,
+    #app-footer,
+    #app-main.workbench-shell {
+        width: calc(100% - 28px);
+    }
+
+    #app-main.workbench-shell {
+        grid-template-columns: minmax(292px, 318px) minmax(0, 1fr);
+    }
+
+    .workbench-summary {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .workbench-core-charts {
+        grid-template-columns: minmax(0, 1.45fr) minmax(330px, .95fr);
+    }
+
+    .workbench-core-charts > .spd-panel,
+    .workbench-core-charts > .chromaticity-panel {
+        min-height: 458px;
+    }
+
+    .workbench-core-charts .spd-panel > .canvas-wrapper {
+        height: 392px;
+    }
+
+    .workbench-current-light {
+        grid-template-columns: minmax(235px, .5fr) minmax(340px, .9fr) minmax(0, 1.3fr);
+    }
+
+    .analysis-workspace-pane .quality-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 1179px) {
+    #app-main.workbench-shell {
+        grid-template-columns: minmax(282px, 306px) minmax(0, 1fr);
+    }
+
+    .workbench-core-charts {
         grid-template-columns: 1fr;
+    }
+
+    .workbench-core-charts > .spd-panel,
+    .workbench-core-charts > .chromaticity-panel {
+        min-height: 0;
+    }
+
+    .workbench-core-charts .spd-panel > .canvas-wrapper {
+        height: clamp(300px, 42vw, 390px);
+    }
+
+    .chromaticity-panel .chromaticity-canvas-wrapper,
+    #chromaticity-panel #cie-canvas-wrapper,
+    #chromaticity-panel #cie1976-canvas-wrapper {
+        width: min(100%, 390px);
+    }
+
+    .workbench-current-light {
+        grid-template-columns: minmax(230px, .55fr) minmax(320px, 1.15fr);
         grid-template-areas:
-            "spd"
-            "cie"
-            "combo";
+            "summary controls"
+            "scenes scenes";
+        gap: 12px;
     }
 
-    .charts-row > .emitter-preview {
+    .current-light-summary,
+    .workbench-current-light > .emitter-metamer-controls {
+        border-right: 0;
+    }
+
+    .current-light-scenes {
+        padding-top: 10px;
+        border-top: 1px solid var(--divider);
+    }
+}
+
+@media (max-width: 899px) {
+    .page-hero,
+    #app-footer,
+    #app-main.workbench-shell {
+        width: calc(100% - 24px);
+    }
+
+    #app-main.workbench-shell {
         grid-template-columns: 1fr;
     }
 
-    .charts-row > .spd-panel,
-    .charts-row > .cie-panel {
-        height: auto;
+    .workbench-sidebar {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: start;
     }
 
-    .charts-row > .spd-panel .canvas-wrapper,
-    .charts-row > .cie-panel .canvas-wrapper,
-    .charts-row > .cie-panel #cie-canvas-wrapper {
-        height: auto;
+    .workbench-sidebar > .controls-panel {
+        grid-row: span 2;
     }
 
-    .charts-row > .emitter-preview > .emitter-preview-heading,
-    .charts-row > .emitter-preview > .emitter-preview-stage,
-    .charts-row > .emitter-preview > .emitter-metamer-controls,
-    .charts-row > .emitter-preview > .tuning-group-health {
-        grid-column: 1;
-        grid-row: auto;
+    .workbench-sidebar-actions {
+        grid-column: 1 / -1;
     }
 
-    .charts-row > .emitter-preview > .tuning-group-health {
-        margin-top: 14px;
-        padding: 14px 0 0;
-        border-top: 1px solid var(--divider);
-        border-left: 0;
+    .workbench-current-light {
+        grid-template-columns: minmax(230px, .55fr) minmax(320px, 1.15fr);
+        grid-template-areas:
+            "summary controls"
+            "scenes scenes";
     }
 }
 
 @media (max-width: 720px) {
-    .charts-row > .emitter-preview .health-condition-grid,
-    .charts-row > .emitter-preview .schedule-stage-list {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* Tablet layout: preserve the dashboard composition on iPad-sized screens. */
-@media (min-width: 1001px) and (max-width: 1499px) {
     .page-hero,
-    #app-main,
-    #app-footer {
-        width: calc(100% - 28px);
-        max-width: none;
-    }
-
-    #app-main {
-        grid-template-columns: minmax(285px, 31vw) minmax(0, 1fr);
-    }
-
-    .charts-row {
-        grid-template-columns: minmax(0, 1.45fr) minmax(250px, 0.9fr);
-    }
-}
-
-@media (min-width: 721px) and (max-width: 1000px) {
-    .page-hero,
-    #app-main,
-    #app-footer {
+    #app-footer,
+    #app-main.workbench-shell {
         width: calc(100% - 24px);
-        max-width: none;
     }
 
-    #app-main {
+    .page-hero {
+        min-height: 0;
+        padding-block: 13px 10px;
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .page-hero p {
+        text-align: left;
+    }
+
+    .workbench-sidebar {
         grid-template-columns: 1fr;
     }
 
-    .left-column {
-        display: grid;
-        grid-template-columns: minmax(280px, 0.82fr) minmax(0, 1.18fr);
-        gap: 12px;
+    .workbench-sidebar > .controls-panel {
+        grid-row: auto;
+    }
+
+    .workbench-sidebar .preset-buttons {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .workbench-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .summary-card {
+        padding: 10px;
+    }
+
+    .summary-card strong {
+        font-size: 1rem;
+    }
+
+    .workbench-core-charts > .spd-panel,
+    .workbench-core-charts > .chromaticity-panel {
+        padding: 10px;
+    }
+
+    .workbench-core-charts .spd-panel > .canvas-wrapper {
+        height: 300px;
+    }
+
+    .chromaticity-panel-header {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "title"
+            "controls"
+            "summary";
+    }
+
+    .chromaticity-controls {
+        width: 100%;
+        align-items: stretch;
+    }
+
+    .chromaticity-tabs {
+        display: flex;
+        width: 100%;
+    }
+
+    .chromaticity-tabs button {
+        flex: 1 1 0;
+        min-width: 0;
+        padding-inline: 5px;
+    }
+
+    .chromaticity-channel-toggle {
+        justify-content: flex-end;
+    }
+
+    .chromaticity-summary {
+        grid-template-columns: 1fr;
+    }
+
+    #chromaticity-summary-xy { grid-column: 1; grid-row: 1; }
+    #chromaticity-summary-upvp { grid-column: 1; grid-row: 2; }
+    #professional-xyz { grid-column: 1; grid-row: 3; }
+    #professional-dominant { grid-column: 1; grid-row: 4; }
+    #professional-purity { grid-column: 1; grid-row: 5; }
+
+    .workbench-current-light {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "summary"
+            "controls"
+            "scenes";
+        min-height: 0;
+        max-height: none;
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .current-light-summary {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+        gap: 10px;
+        padding-right: 0;
+        padding-bottom: 10px;
+        border-right: 0;
+        border-bottom: 1px solid var(--divider);
+    }
+
+    .workbench-current-light .emitter-disc {
+        width: 52px;
+        height: 52px;
+        min-width: 52px;
+        min-height: 52px;
+    }
+
+    .current-light-summary > .emitter-preview-stage {
+        grid-template-columns: 52px minmax(0, 1fr);
+        column-gap: 9px;
+        row-gap: 4px;
+    }
+
+    .workbench-current-light > .emitter-metamer-controls {
+        grid-template-columns: minmax(108px, .42fr) minmax(0, 1fr);
+        grid-template-rows: auto 1fr;
+        gap: 7px 10px;
+        padding: 0 0 10px;
+        border-right: 0;
+        border-bottom: 1px solid var(--divider);
         align-items: start;
     }
 
-    .charts-row {
-        grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.85fr);
-        grid-template-areas:
-            "spd cie"
-            "combo combo";
-    }
-
-    .charts-row > .spd-panel,
-    .charts-row > .cie-panel {
-        height: 310px;
-    }
-
-    .charts-row > .spd-panel .canvas-wrapper {
-        height: 242px;
-        aspect-ratio: auto;
-    }
-
-    .charts-row > .cie-panel .canvas-wrapper,
-    .charts-row > .cie-panel #cie-canvas-wrapper {
-        width: min(100%, 242px);
-        height: 242px;
-        aspect-ratio: 1;
-    }
-
-    .charts-row > .emitter-preview {
-        grid-template-columns: minmax(220px, 0.7fr) minmax(0, 1.6fr);
-    }
-
-    .charts-row > .emitter-preview > .emitter-preview-heading,
-    .charts-row > .emitter-preview > .emitter-preview-stage,
-    .charts-row > .emitter-preview > .emitter-metamer-controls {
+    .workbench-current-light .metamer-profile-options {
+        display: grid;
         grid-column: 1;
+        grid-row: 1 / 3;
+        grid-template-columns: 1fr;
     }
 
-    .charts-row > .emitter-preview > .tuning-group-health {
+    .workbench-current-light .metamer-status {
         grid-column: 2;
-        grid-row: 1 / 4;
-        margin-top: 0;
-        padding: 0 0 0 14px;
-        border-top: 0;
-        border-left: 1px solid var(--divider);
+        grid-row: 1;
     }
 
-    .charts-row > .emitter-preview .health-condition-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+    .workbench-current-light .metamer-colour-delta {
+        grid-column: 2;
+        grid-row: 2;
     }
 
-    .charts-row > .emitter-preview .schedule-stage-list {
-        grid-template-columns: repeat(5, minmax(0, 1fr));
+    .workbench-current-light .metamer-profile-button {
+        min-width: 0;
+        padding-inline: 4px;
+        font-size: 0.66rem;
+    }
+
+    .analysis-workspace-pane {
+        padding: 10px;
+    }
+
+    .analysis-workspace-pane .quality-grid,
+    .analysis-workspace-pane .health-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .current-light-scenes .schedule-clock-row {
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-rows: auto;
+        gap: 6px;
+    }
+
+    .current-light-scenes .schedule-clock-row > div:first-child {
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .current-light-scenes #schedule-current-stage {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .current-light-preview-controls {
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+    }
+
+    .current-light-scenes .schedule-stage-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .current-light-scenes .schedule-preview-btn {
+        height: 48px;
+        padding: 5px 4px;
+    }
+
+    .embedded-analysis-details .professional-coordinate-grid,
+    .embedded-analysis-details .alpha-opic-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .embedded-analysis-details .professional-subhead {
+        align-items: stretch;
+        flex-direction: column;
     }
 }
 
-@media (min-width: 721px) and (max-width: 1499px) {
-    .quality-grid,
-    .health-grid {
+@media (max-width: 430px) {
+    .workbench-sidebar .preset-buttons {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
-    .metric-card {
-        height: auto;
-        min-height: 116px;
-        padding: 10px 9px;
+    .workbench-core-charts .spd-panel > .canvas-wrapper {
+        height: 280px;
     }
 
-    .metric-label {
-        min-height: 2.5em;
-        white-space: normal;
-        line-height: 1.25;
+    .current-light-summary {
+        grid-template-columns: 1fr;
     }
 
-    .metric-value-row {
-        width: 100%;
-        min-width: 0;
-        justify-content: center;
-        flex-wrap: wrap;
-        row-gap: 1px;
+    .current-light-scenes .schedule-stage-list {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
-    .metric-value {
-        font-size: 1.18rem;
+}
+
+.recipe-export-dialog {
+    width: min(560px, calc(100vw - 32px));
+    max-height: min(760px, calc(100vh - 32px));
+    padding: 0;
+    border: 0;
+    border-radius: 18px;
+    background: transparent;
+    color: var(--text-primary, #272421);
+    overflow: visible;
+}
+
+.recipe-export-dialog::backdrop {
+    background: rgba(18, 24, 29, .48);
+    backdrop-filter: blur(5px);
+}
+
+.recipe-export-dialog__panel {
+    display: grid;
+    gap: 16px;
+    max-height: min(760px, calc(100vh - 32px));
+    padding: 22px;
+    overflow: auto;
+    border: 1px solid rgba(83, 103, 118, .22);
+    border-radius: 18px;
+    background: var(--panel-bg, #f8f6f1);
+    box-shadow: 0 28px 70px rgba(25, 36, 44, .28);
+}
+
+.recipe-export-dialog__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.recipe-export-dialog__header h2 {
+    margin: 0;
+    font-size: 1.05rem;
+}
+
+.recipe-export-dialog__header p {
+    margin: 5px 0 0;
+    color: var(--text-secondary, #6f6a64);
+    font-size: .78rem;
+    line-height: 1.5;
+}
+
+.recipe-export-dialog__close {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    border: 1px solid rgba(83, 103, 118, .22);
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.recipe-export-dialog__close:disabled {
+    opacity: .35;
+    cursor: default;
+}
+
+.recipe-export-options {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.recipe-export-options legend {
+    margin-bottom: 8px;
+    color: var(--text-secondary, #6f6a64);
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+}
+
+.recipe-export-option {
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr);
+    gap: 11px;
+    align-items: start;
+    padding: 13px 14px;
+    border: 1px solid rgba(83, 103, 118, .2);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .45);
+    cursor: pointer;
+}
+
+.recipe-export-option.is-selected {
+    border-color: rgba(49, 94, 125, .58);
+    background: rgba(49, 94, 125, .08);
+    box-shadow: inset 0 0 0 1px rgba(49, 94, 125, .1);
+}
+
+.recipe-export-option input {
+    margin: 3px 0 0;
+}
+
+.recipe-export-option span {
+    display: grid;
+    gap: 4px;
+}
+
+.recipe-export-option strong {
+    font-size: .84rem;
+}
+
+.recipe-export-option small {
+    color: var(--text-secondary, #6f6a64);
+    font-size: .7rem;
+    line-height: 1.5;
+}
+
+.recipe-export-summary {
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(49, 94, 125, .07);
+    color: var(--text-secondary, #625e58);
+    font-size: .72rem;
+    line-height: 1.55;
+}
+
+.recipe-export-progress {
+    display: grid;
+    gap: 8px;
+}
+
+.recipe-export-progress[hidden] {
+    display: none;
+}
+
+.recipe-export-progress__line {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    color: var(--text-secondary, #625e58);
+    font-size: .72rem;
+}
+
+.recipe-export-progress progress {
+    width: 100%;
+    height: 9px;
+    overflow: hidden;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(83, 103, 118, .13);
+}
+
+.recipe-export-progress progress::-webkit-progress-bar {
+    border-radius: 999px;
+    background: rgba(83, 103, 118, .13);
+}
+
+.recipe-export-progress progress::-webkit-progress-value {
+    border-radius: 999px;
+    background: #315e7d;
+}
+
+.recipe-export-progress progress::-moz-progress-bar {
+    border-radius: 999px;
+    background: #315e7d;
+}
+
+.recipe-export-status {
+    min-height: 18px;
+    margin: -4px 0 0;
+    color: var(--text-secondary, #625e58);
+    font-size: .72rem;
+    line-height: 1.5;
+}
+
+.recipe-export-status.is-error {
+    color: #b2362f;
+}
+
+.recipe-export-status.is-success {
+    color: #26704d;
+}
+
+.recipe-export-dialog__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.recipe-export-cancel,
+.recipe-export-start {
+    min-height: 38px;
+    padding: 0 18px;
+    border-radius: 10px;
+    font-size: .76rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.recipe-export-cancel {
+    border: 1px solid rgba(83, 103, 118, .25);
+    background: transparent;
+    color: inherit;
+}
+
+.recipe-export-start {
+    border: 1px solid #315e7d;
+    background: #315e7d;
+    color: #fff;
+}
+
+.recipe-export-cancel:disabled,
+.recipe-export-start:disabled {
+    opacity: .45;
+    cursor: default;
+}
+
+@media (max-width: 520px) {
+    .recipe-export-dialog {
+        width: calc(100vw - 20px);
+        max-height: calc(100vh - 20px);
     }
 
-    .metric-unit {
-        font-size: 0.6rem;
+    .recipe-export-dialog__panel {
+        gap: 13px;
+        max-height: calc(100vh - 20px);
+        padding: 17px;
+        border-radius: 15px;
+    }
+
+    .recipe-export-dialog__actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
     }
 }

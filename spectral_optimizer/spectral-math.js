@@ -1,8 +1,8 @@
 (function (root, factory) {
-    const api = factory();
+    const api = factory(root.CIE_SPECTRAL_DATA || (root.window && root.window.CIE_SPECTRAL_DATA));
     if (typeof module === 'object' && module.exports) module.exports = api;
     root.SpectralMath = api;
-})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+})(typeof globalThis !== 'undefined' ? globalThis : this, function (CIE_DATA) {
     'use strict';
 
     function xyToUv(x, y) {
@@ -21,7 +21,16 @@
         };
     }
 
-    function planckianXy(temperature) {
+    const PLANCKIAN_MIN_K = 1000;
+    const PLANCKIAN_MAX_K = 25000;
+    const PLANCKIAN_MIN_MIRED = 1e6 / PLANCKIAN_MAX_K;
+    const PLANCKIAN_MAX_MIRED = 1e6 / PLANCKIAN_MIN_K;
+    const PLANCKIAN_MIRED_STEP = 2;
+    const planckianXyCache = new Map();
+    let planckianObserverCache = null;
+    let planckianLocusCache = null;
+
+    function polynomialPlanckianXy(temperature) {
         const t = Math.max(1667, Math.min(25000, temperature));
         let x;
         if (t <= 4000) {
@@ -38,6 +47,37 @@
             y = 3.0817580 * x ** 3 - 5.87338670 * x ** 2 + 3.75112997 * x - 0.37001483;
         }
         return { x, y };
+    }
+
+    function planckianObserverData() {
+        if (planckianObserverCache) return planckianObserverCache;
+        if (!CIE_DATA || !CIE_DATA.xBar || !CIE_DATA.yBar || !CIE_DATA.zBar) return null;
+        const length = Math.min(CIE_DATA.xBar.length, CIE_DATA.yBar.length, CIE_DATA.zBar.length);
+        if (length < 2) return null;
+        const lambdaMin = Number.isFinite(CIE_DATA.lambdaMin) ? CIE_DATA.lambdaMin : 380;
+        const step = Number.isFinite(CIE_DATA.step) && CIE_DATA.step > 0 ? CIE_DATA.step : 1;
+        planckianObserverCache = Object.freeze({
+            wavelengths: Object.freeze(Array.from({ length }, (_, index) => lambdaMin + index * step)),
+            xBar: CIE_DATA.xBar,
+            yBar: CIE_DATA.yBar,
+            zBar: CIE_DATA.zBar
+        });
+        return planckianObserverCache;
+    }
+
+    function planckianXy(temperature) {
+        const numeric = Number(temperature);
+        if (!Number.isFinite(numeric) || numeric <= 0) return { x: 0, y: 0 };
+        const t = Math.max(PLANCKIAN_MIN_K, Math.min(PLANCKIAN_MAX_K, numeric));
+        const key = t.toFixed(6);
+        if (planckianXyCache.has(key)) return planckianXyCache.get(key);
+        const observer = planckianObserverData();
+        const xy = observer
+            ? blackbodyXy(t, observer.wavelengths, observer.xBar, observer.yBar, observer.zBar)
+            : polynomialPlanckianXy(t);
+        const frozen = Object.freeze({ x: xy.x, y: xy.y });
+        planckianXyCache.set(key, frozen);
+        return frozen;
     }
 
     const SECOND_RADIATION_CONSTANT_NM_K = 1.438776877e7;
@@ -128,62 +168,159 @@
         return { x: X / total, y: Y / total };
     }
 
-    function distanceSquaredToLocus(mired, targetUv) {
-        const temperature = 1e6 / mired;
-        const xy = planckianXy(temperature);
-        const uv = xyToUv(xy.x, xy.y);
-        return (uv.u - targetUv.u) ** 2 + (uv.v - targetUv.v) ** 2;
+    function interpolateSpectrum(wavelengths, values, wavelength) {
+        if (wavelength < wavelengths[0] || wavelength > wavelengths[wavelengths.length - 1]) return 0;
+        let low = 0;
+        let high = wavelengths.length - 1;
+        while (high - low > 1) {
+            const middle = (low + high) >> 1;
+            if (wavelengths[middle] <= wavelength) low = middle;
+            else high = middle;
+        }
+        if (wavelength === wavelengths[low] || low === high) return values[low];
+        const span = wavelengths[high] - wavelengths[low];
+        if (!(span > 0)) return values[low];
+        const amount = (wavelength - wavelengths[low]) / span;
+        return values[low] + (values[high] - values[low]) * amount;
+    }
+
+    function resampleSpectrumTo5nm(wavelengths, values) {
+        if (!isSpectralArray(wavelengths) || !isSpectralArray(values) ||
+            wavelengths.length !== values.length || wavelengths.length < 2) return [];
+        let standardOneNanometreGrid = wavelengths.length === 401;
+        for (let index = 0; index < wavelengths.length; index++) {
+            if (!Number.isFinite(wavelengths[index]) || !Number.isFinite(values[index])) return [];
+            if (index > 0 && wavelengths[index] <= wavelengths[index - 1]) return [];
+            if (standardOneNanometreGrid && Math.abs(wavelengths[index] - (380 + index)) > 1e-9) {
+                standardOneNanometreGrid = false;
+            }
+        }
+
+        if (standardOneNanometreGrid) {
+            const resampled = new Array(81);
+            resampled[0] = values[0];
+            resampled[80] = values[400];
+            for (let targetIndex = 1; targetIndex < 80; targetIndex++) {
+                const center = targetIndex * 5;
+                const leftBoundary = (values[center - 3] + values[center - 2]) * 0.5;
+                const rightBoundary = (values[center + 2] + values[center + 3]) * 0.5;
+                const area =
+                    (leftBoundary + values[center - 2]) * 0.25 +
+                    (values[center - 2] + values[center - 1]) * 0.5 +
+                    (values[center - 1] + values[center]) * 0.5 +
+                    (values[center] + values[center + 1]) * 0.5 +
+                    (values[center + 1] + values[center + 2]) * 0.5 +
+                    (values[center + 2] + rightBoundary) * 0.25;
+                resampled[targetIndex] = area / 5;
+            }
+            return resampled;
+        }
+
+        const targets = Array.from({ length: 81 }, (_, index) => 380 + index * 5);
+        return targets.map(function (target, targetIndex) {
+            if (targetIndex === 0 || targetIndex === targets.length - 1) {
+                return interpolateSpectrum(wavelengths, values, target);
+            }
+            const start = Math.max(target - 2.5, wavelengths[0]);
+            const end = Math.min(target + 2.5, wavelengths[wavelengths.length - 1]);
+            if (!(end > start)) return 0;
+            const points = [start];
+            for (let index = 0; index < wavelengths.length; index++) {
+                const wavelength = wavelengths[index];
+                if (wavelength > start && wavelength < end) points.push(wavelength);
+            }
+            points.push(end);
+            let area = 0;
+            for (let index = 0; index < points.length - 1; index++) {
+                const left = points[index];
+                const right = points[index + 1];
+                area += (interpolateSpectrum(wavelengths, values, left) +
+                    interpolateSpectrum(wavelengths, values, right)) * 0.5 * (right - left);
+            }
+            return area / (end - start);
+        });
+    }
+
+    function planckianLocus() {
+        if (planckianLocusCache) return planckianLocusCache;
+        const points = [];
+        for (let mired = PLANCKIAN_MIN_MIRED; mired <= PLANCKIAN_MAX_MIRED + 1e-9; mired += PLANCKIAN_MIRED_STEP) {
+            const temperature = 1e6 / mired;
+            const xy = planckianXy(temperature);
+            const uv = xyToUv(xy.x, xy.y);
+            points.push(Object.freeze({ mired, u: uv.u, v: uv.v }));
+        }
+        const last = points[points.length - 1];
+        if (!last || last.mired < PLANCKIAN_MAX_MIRED - 1e-9) {
+            const xy = planckianXy(PLANCKIAN_MIN_K);
+            const uv = xyToUv(xy.x, xy.y);
+            points.push(Object.freeze({ mired: PLANCKIAN_MAX_MIRED, u: uv.u, v: uv.v }));
+        }
+        planckianLocusCache = Object.freeze(points);
+        return planckianLocusCache;
+    }
+
+    function nearestPlanckianPoint(targetUv) {
+        const locus = planckianLocus();
+        let best = null;
+        for (let index = 0; index < locus.length - 1; index++) {
+            const start = locus[index];
+            const end = locus[index + 1];
+            const tangentU = end.u - start.u;
+            const tangentV = end.v - start.v;
+            const lengthSquared = tangentU * tangentU + tangentV * tangentV;
+            let amount = lengthSquared > 0
+                ? ((targetUv.u - start.u) * tangentU + (targetUv.v - start.v) * tangentV) / lengthSquared
+                : 0;
+            amount = Math.max(0, Math.min(1, amount));
+            const u = start.u + amount * tangentU;
+            const v = start.v + amount * tangentV;
+            const offsetU = targetUv.u - u;
+            const offsetV = targetUv.v - v;
+            const distanceSquared = offsetU * offsetU + offsetV * offsetV;
+            if (!best || distanceSquared < best.distanceSquared) {
+                best = {
+                    mired: start.mired + amount * (end.mired - start.mired),
+                    u,
+                    v,
+                    tangentU,
+                    tangentV,
+                    offsetU,
+                    offsetV,
+                    distanceSquared
+                };
+            }
+        }
+        return best;
     }
 
     function estimateCctAndDuvFromXy(x, y) {
         if (!(x > 0) || !(y > 0) || x + y >= 1) return { cct: 0, duv: 0 };
         const targetUv = xyToUv(x, y);
-        let bestMired = 40;
-        let bestDistance = Infinity;
-        for (let mired = 40; mired <= 600; mired += 1) {
-            const distance = distanceSquaredToLocus(mired, targetUv);
-            if (distance < bestDistance) {
-                bestDistance = distance;
-                bestMired = mired;
-            }
-        }
-        let low = Math.max(40, bestMired - 2);
-        let high = Math.min(600, bestMired + 2);
-        for (let iteration = 0; iteration < 32; iteration++) {
-            const oneThird = (high - low) / 3;
-            const left = low + oneThird;
-            const right = high - oneThird;
-            if (distanceSquaredToLocus(left, targetUv) < distanceSquaredToLocus(right, targetUv)) high = right;
-            else low = left;
-        }
-        const mired = (low + high) / 2;
-        const cct = 1e6 / mired;
-        const locusXy = planckianXy(cct);
-        const locusUv = xyToUv(locusXy.x, locusXy.y);
-        const lowerUv = xyToUv(...Object.values(planckianXy(Math.max(1667, cct - 5))));
-        const upperUv = xyToUv(...Object.values(planckianXy(Math.min(25000, cct + 5))));
-        const tangentU = upperUv.u - lowerUv.u;
-        const tangentV = upperUv.v - lowerUv.v;
-        const offsetU = targetUv.u - locusUv.u;
-        const offsetV = targetUv.v - locusUv.v;
-        const cross = tangentU * offsetV - tangentV * offsetU;
-        const duv = -Math.sign(cross || 1) * Math.hypot(offsetU, offsetV);
+        const nearest = nearestPlanckianPoint(targetUv);
+        if (!nearest || !(nearest.mired > 0)) return { cct: 0, duv: 0 };
+        const cct = 1e6 / nearest.mired;
+        const cross = nearest.tangentU * nearest.offsetV - nearest.tangentV * nearest.offsetU;
+        const duv = Math.sign(cross || 1) * Math.sqrt(nearest.distanceSquared);
         return { cct, duv };
     }
 
     function targetXyFromCctDuv(cct, duv) {
-        const locusXy = planckianXy(cct);
+        const temperature = Math.max(PLANCKIAN_MIN_K, Math.min(PLANCKIAN_MAX_K, Number(cct) || 4000));
+        const offset = Number.isFinite(Number(duv)) ? Number(duv) : 0;
+        const locusXy = planckianXy(temperature);
         const locusUv = xyToUv(locusXy.x, locusXy.y);
-        const lowerXy = planckianXy(Math.max(1667, cct - 5));
-        const upperXy = planckianXy(Math.min(25000, cct + 5));
+        const delta = Math.max(0.5, temperature * 0.001);
+        const lowerXy = planckianXy(Math.max(PLANCKIAN_MIN_K, temperature - delta));
+        const upperXy = planckianXy(Math.min(PLANCKIAN_MAX_K, temperature + delta));
         const lowerUv = xyToUv(lowerXy.x, lowerXy.y);
         const upperUv = xyToUv(upperXy.x, upperXy.y);
         const tangentU = upperUv.u - lowerUv.u;
         const tangentV = upperUv.v - lowerUv.v;
         const length = Math.hypot(tangentU, tangentV) || 1;
         return uvToXy(
-            locusUv.u + duv * tangentV / length,
-            locusUv.v - duv * tangentU / length
+            locusUv.u + offset * tangentV / length,
+            locusUv.v - offset * tangentU / length
         );
     }
 
@@ -225,6 +362,7 @@
         planckianXy,
         blackbodySpd,
         blackbodyXy,
+        resampleSpectrumTo5nm,
         estimateCctAndDuvFromXy,
         targetXyFromCctDuv,
         normalizeImportedChannels,
