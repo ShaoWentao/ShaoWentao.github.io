@@ -111,6 +111,18 @@
         food_red_wine: materialProfile(1.2, [2.5, 4, 5.5], [0, 0.1, 0.2], { chroma: 1.25, hue: 2.1 }, { maxAbsDeltaH: [3, 3.5, 4], maxDeltaE00: [5.5, 7.5, 9] }),
         food_skin_warm: materialProfile(1.4, [0.4, 1, 1.5], [0, 0.1, 0.2], { chroma: 1.4, hue: 2.5, lightness: 1, deltaE: 0.22 }, { maxAbsDeltaH: [2, 2.5, 3], maxAbsDeltaL: [2.5, 3, 3.5], maxDeltaE00: [3.2, 4.2, 5.2] }),
         food_white_porcelain: materialProfile(1.5, [0, 0, 0.3], [0, 0, 0.1], { chroma: 1.7, hue: 2.6, lightness: 1.2, deltaE: 0.28 }, { maxAbsDeltaH: [1.5, 2, 2.5], maxAbsDeltaL: [1.8, 2.2, 2.8], maxDeltaE00: [2.5, 3.2, 4] }),
+        dish_red_braised_meat: materialProfile(1.4, [3.5, 5, 6.5], [0, 0.2, 0.4], { chroma: 1.35, hue: 2 }, { maxAbsDeltaH: [3, 3.5, 4], maxDeltaE00: [6, 8, 10] }),
+        dish_red_chili_oil: materialProfile(1.45, [4.5, 6.5, 8.5], [0, 0.2, 0.4], { chroma: 1.4, hue: 2 }, { maxAbsDeltaH: [3, 3.5, 4], maxDeltaE00: [7, 9, 11] }),
+        dish_golden_fried: materialProfile(1.3, [3.5, 5, 6.5], [0.1, 0.3, 0.5], { chroma: 1.3, hue: 1.9 }, { maxAbsDeltaH: [3, 3.5, 4], maxDeltaE00: [5.5, 7.5, 9] }),
+        dish_dark_roasted_meat: materialProfile(1.25, [2.5, 4, 5.5], [0, 0.2, 0.3], { chroma: 1.2, hue: 2, lightness: 0.9 }, { maxAbsDeltaH: [3, 3.5, 4], maxDeltaE00: [5, 7, 8.5] }),
+        dish_orange_pink_seafood: materialProfile(1.35, [3.2, 4.8, 6.2], [0.1, 0.3, 0.5], { chroma: 1.35, hue: 2 }, { maxAbsDeltaH: [3, 3.5, 4], maxDeltaE00: [6, 8, 9.5] }),
+        dish_silver_steamed_seafood: materialProfile(1.4, [0, 0.2, 0.5], [0, 0.1, 0.2], { chroma: 1.6, hue: 2.4, lightness: 1.1, deltaE: 0.24 }, { maxAbsDeltaH: [1.8, 2, 2.5], maxAbsDeltaL: [2, 2.5, 3], maxDeltaE00: [2.8, 3.5, 4.2] }),
+        dish_pale_poultry: materialProfile(1.35, [0.2, 0.5, 0.8], [0, 0.1, 0.2], { chroma: 1.5, hue: 2.3, lightness: 1.05, deltaE: 0.22 }, { maxAbsDeltaH: [2, 2.2, 2.8], maxAbsDeltaL: [2.2, 2.8, 3.2], maxDeltaE00: [3, 4, 5] }),
+        dish_green_vegetable: materialProfile(1.25, [3, 4.5, 6], [0, 0.2, 0.4], { chroma: 1.3, hue: 1.8 }, { maxAbsDeltaH: [3, 3.5, 4], maxDeltaE00: [5.5, 7.5, 9] }),
+        dish_pale_tofu_mushroom: materialProfile(1.4, [0, 0.2, 0.5], [0, 0.1, 0.2], { chroma: 1.6, hue: 2.4, lightness: 1.1, deltaE: 0.24 }, { maxAbsDeltaH: [1.8, 2, 2.5], maxAbsDeltaL: [2, 2.5, 3], maxDeltaE00: [2.8, 3.5, 4.2] }),
+        dish_dark_sauce_mushroom: materialProfile(1.15, [1.5, 2.8, 4], [0, 0.1, 0.2], { chroma: 1.15, hue: 2, lightness: 0.9 }, { maxAbsDeltaH: [3, 3.5, 4], maxDeltaE00: [4.5, 6.5, 8] }),
+        dish_multicolor_plating: materialProfile(1.25, [2, 3.5, 5], [0, 0.2, 0.3], { chroma: 1.25, hue: 2, lightness: 0.8 }, { maxAbsDeltaH: [3, 3.5, 4], maxDeltaE00: [5, 7, 8.5] }),
+        dish_soup_hotpot: materialProfile(1.3, [2.8, 4.5, 6.2], [0, 0.2, 0.4], { chroma: 1.3, hue: 1.9 }, { maxAbsDeltaH: [3, 3.5, 4], maxDeltaE00: [5.5, 7.5, 9] }),
         neutral_wall_matte: materialProfile(1.35, [0, 0, 0.4], [0, 0, 0.1], { chroma: 1.6, hue: 2.4, lightness: 1.2, deltaE: 0.25 }, { maxAbsDeltaH: [2, 2, 2.5], maxAbsDeltaL: [2, 2, 2.5], maxDeltaE00: [2.5, 3, 3.5] })
     });
 

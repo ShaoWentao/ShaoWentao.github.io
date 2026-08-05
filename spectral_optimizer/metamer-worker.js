@@ -2,11 +2,11 @@
 
 self.window = self;
 importScripts(
-    'spectral-data.js?v=20260804-dining-condition-baseline',
-    'spectral-math.js?v=20260804-dining-condition-baseline',
-    'colour-quality-data.js?v=20260804-dining-condition-baseline',
-    'colour-quality.js?v=20260804-dining-condition-baseline',
-    'metamer-optimizer.js?v=20260804-dining-condition-baseline'
+    'spectral-data.js?v=20260804-dining-cuisine-only',
+    'spectral-math.js?v=20260804-dining-cuisine-only',
+    'colour-quality-data.js?v=20260804-dining-cuisine-only',
+    'colour-quality.js?v=20260804-dining-cuisine-only',
+    'metamer-optimizer.js?v=20260804-dining-cuisine-only'
 );
 
 function xyFromSpd(spd) {

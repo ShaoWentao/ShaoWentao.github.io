@@ -25,15 +25,15 @@ function assertChannelsClose(actual, expected, message) {
     const browser = await puppeteer.launch({ headless: true });
     const page = await browser.newPage();
 
-    async function run({ mode, profile, level = 'recommended', goal = 'preference' }) {
+    async function run({ mode, cuisine, level = 'recommended', goal = 'preference' }) {
         await page.select('#dining-target-mode', mode);
-        await page.select('#dining-light-profile', profile);
+        await page.select('#dining-cuisine-profile', cuisine);
         await page.select('#dining-optimization-goal', goal);
         if (goal === 'preference') await page.select('#dining-preference-level', level);
         await page.evaluate(() => {
             window.__conditionSwitchResult = null;
             const listener = event => {
-                if (!event.detail?.diningProfileId) return;
+                if (!event.detail?.cuisineProfileId) return;
                 window.__conditionSwitchResult = event.detail;
                 document.removeEventListener('spectral-material-optimization-result', listener);
             };
@@ -52,38 +52,50 @@ function assertChannelsClose(actual, expected, message) {
         await page.click('#analysis-tab-dining');
         await page.waitForFunction(() => !document.getElementById('analysis-pane-dining').hidden);
 
-        const balanced = await run({ mode: 'scene', profile: 'balanced_dining', level: 'recommended' });
-        const sourceChannels = channelValues(balanced.beforeSnapshot);
-        const sourceCct = Number(balanced.beforeSnapshot.metrics.cct);
-        const sourceY = Number(balanced.beforeSnapshot.metrics.photopicY);
+        assert.equal(await page.$('#dining-light-profile'), null,
+            'application-scene selector must be removed from the dining workbench');
 
-        const bar = await run({ mode: 'scene', profile: 'bar_atmosphere', level: 'vivid' });
-        const seafood = await run({ mode: 'scene', profile: 'japanese_seafood', level: 'soft' });
-        const current = await run({ mode: 'current', profile: 'hotpot_barbecue', level: 'vivid' });
-        const balancedAgain = await run({ mode: 'scene', profile: 'balanced_dining', level: 'recommended' });
+        const comprehensive = await run({ mode: 'recommended', cuisine: 'comprehensive', level: 'recommended' });
+        const sourceChannels = channelValues(comprehensive.beforeSnapshot);
+        const sourceCct = Number(comprehensive.beforeSnapshot.metrics.cct);
+        const sourceY = Number(comprehensive.beforeSnapshot.metrics.photopicY);
 
-        [bar, seafood, current, balancedAgain].forEach((result, index) => {
+        const western = await run({ mode: 'recommended', cuisine: 'western', level: 'vivid' });
+        const japanese = await run({ mode: 'recommended', cuisine: 'japanese', level: 'soft' });
+        const current = await run({ mode: 'current', cuisine: 'sichuan_hunan', level: 'vivid' });
+        const comprehensiveAgain = await run({ mode: 'recommended', cuisine: 'comprehensive', level: 'recommended' });
+
+        assert.equal(western.cuisineProfileId, 'western');
+        assert.equal(japanese.cuisineProfileId, 'japanese');
+        assert.equal(current.cuisineProfileId, 'sichuan_hunan');
+        assert.equal(comprehensiveAgain.cuisineProfileId, 'comprehensive');
+
+        [western, japanese, current, comprehensiveAgain].forEach((result, index) => {
             assertChannelsClose(channelValues(result.beforeSnapshot), sourceChannels,
                 `condition switch run ${index + 2} must reuse the original dining source recipe`);
         });
 
         assert.ok(Math.abs(Number(current.referenceCct) - sourceCct) <= 5,
-            'switching back to current-colour-point mode must use the original dining source colour point');
+            'current-colour-point mode must use the original dining source colour point');
 
-        [balanced, bar, seafood, balancedAgain].forEach(result => {
+        assert.ok(Math.abs(Number(comprehensive.referenceCct) - 3500) <= 1);
+        assert.ok(Math.abs(Number(western.referenceCct) - 2700) <= 1);
+        assert.ok(Math.abs(Number(japanese.referenceCct) - 4000) <= 1);
+
+        [comprehensive, western, japanese, comprehensiveAgain].forEach(result => {
             assert.ok(Math.abs(Number(result.afterSnapshot.metrics.cct) - Number(result.referenceCct)) <= 100,
-                `${result.diningProfileId} must stay near its selected scene CCT`);
+                `${result.cuisineProfileId} must stay near its cuisine-recommended CCT`);
             assert.ok(Math.abs(Number(result.afterSnapshot.metrics.duv) - Number(result.referenceDuv)) <= 0.0015,
-                `${result.diningProfileId} must stay within the selected scene Duv tolerance`);
+                `${result.cuisineProfileId} must stay within the cuisine-recommended Duv tolerance`);
             const expectedChange = (Number(result.afterSnapshot.metrics.photopicY) / sourceY - 1) * 100;
             assert.ok(Math.abs(Number(result.relativeOutputChangePercent) - expectedChange) <= 0.05,
-                `${result.diningProfileId} output change must be measured from the common source baseline`);
+                `${result.cuisineProfileId} output change must be measured from the common source baseline`);
         });
 
         assertChannelsClose(
-            channelValues(balancedAgain.afterSnapshot),
-            channelValues(balanced.afterSnapshot),
-            'returning to the same scene and level must reproduce the same recipe'
+            channelValues(comprehensiveAgain.afterSnapshot),
+            channelValues(comprehensive.afterSnapshot),
+            'returning to the same cuisine and level must reproduce the same recipe'
         );
 
         console.log('dining condition-switch regression tests passed');

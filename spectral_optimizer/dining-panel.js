@@ -14,6 +14,7 @@
     var uploadImageDataUrl = '';
     var previewRenderToken = 0;
     var PREVIEW_GAIN = 3;
+    var BEFORE_PREVIEW_SATURATION = 0.72;
 
     function byId(id) { return document.getElementById(id); }
     function escapeHtml(value) {
@@ -30,19 +31,30 @@
     function materialById(id) {
         return allMaterials().find(function (material) { return material.id === id; }) || null;
     }
+    function materialDisplayName(id, fallback) {
+        var material = materialById(id);
+        return material && material.nameCN ? material.nameCN : (fallback || id || '—');
+    }
     function resultById(results, id) {
         return (results || []).find(function (result) { return result.materialId === id; }) || null;
     }
 
     function appearanceUrl(material) {
         var source = material && material.appearanceSource || {};
-        return source.dataUrl || source.file || '';
+        return source.dataUrl || source.file || source.fallbackFile || '';
+    }
+
+    function fallbackAppearanceUrl(material) {
+        var source = material && material.appearanceSource || {};
+        return source.dataUrl ? '' : (source.fallbackFile || '');
     }
 
     function appearanceStyle(material, filter) {
         var url = appearanceUrl(material);
+        var fallback = fallbackAppearanceUrl(material);
         if (!url) return '--texture-url:none;--texture-x:50%;--texture-y:50%;--texture-size:cover;--appearance-filter:none;';
-        return "--texture-url:url('" + url + "');--texture-x:50%;--texture-y:50%;--texture-size:cover;--appearance-filter:" + (filter || 'none') + ';';
+        var layers = "url('" + url + "')" + (fallback && fallback !== url ? ",url('" + fallback + "')" : '');
+        return '--texture-url:' + layers + ';--texture-x:50%;--texture-y:50%;--texture-size:cover;--appearance-filter:' + (filter || 'none') + ';';
     }
 
     function setAppearance(id, material, filter) {
@@ -67,12 +79,13 @@
         }).filter(Boolean);
     }
 
-    function populateProfiles() {
-        var select = byId('dining-light-profile');
-        if (!select || !DINING) return;
-        select.innerHTML = DINING.listProfiles().map(function (profile) {
+    function populateCuisineProfiles() {
+        var select = byId('dining-cuisine-profile');
+        if (!select || !DINING || typeof DINING.listCuisineProfiles !== 'function') return;
+        select.innerHTML = DINING.listCuisineProfiles().map(function (profile) {
             return '<option value="' + profile.id + '">' + escapeHtml(profile.nameCN) + '</option>';
         }).join('');
+        if (select.options.length) select.value = 'comprehensive';
     }
 
     function populateUploadTemplates() {
@@ -84,8 +97,10 @@
         if (select.options.length) select.value = builtInMaterials[0].id;
     }
 
-    function selectedProfile() {
-        return DINING && DINING.getProfile(byId('dining-light-profile') ? byId('dining-light-profile').value : 'balanced_dining');
+    function selectedCuisineProfile() {
+        return DINING && typeof DINING.getCuisineProfile === 'function'
+            ? DINING.getCuisineProfile(byId('dining-cuisine-profile') ? byId('dining-cuisine-profile').value : 'comprehensive')
+            : null;
     }
 
     function selectedLevel() {
@@ -100,52 +115,71 @@
         return byId('dining-optimization-goal') ? byId('dining-optimization-goal').value : 'preference';
     }
 
-    function optimizationMaterialIds(profile) {
-        return profile.materialIds.concat(uploadedFoods.map(function (food) { return food.id; }));
+    function activeBuiltInMaterialIds(cuisineProfile) {
+        if (!cuisineProfile) return [];
+        if (DINING && typeof DINING.resolveMaterialIds === 'function') {
+            return DINING.resolveMaterialIds(cuisineProfile.id);
+        }
+        return cuisineProfile.dishTypeIds.slice();
+    }
+
+    function optimizationMaterialIds(cuisineProfile) {
+        var activeIds = activeBuiltInMaterialIds(cuisineProfile);
+        var activeSet = new Set(activeIds);
+        return activeIds.concat(uploadedFoods.filter(function (food) {
+            return activeSet.has(DINING && typeof DINING.migrateTemplateId === 'function'
+                ? DINING.migrateTemplateId(food.templateId) : food.templateId);
+        }).map(function (food) { return food.id; }));
     }
 
     function updateProfileCopy() {
-        var profile = selectedProfile();
-        if (!profile) return;
+        var cuisineProfile = selectedCuisineProfile();
+        if (!cuisineProfile) return;
+        var activeCount = activeBuiltInMaterialIds(cuisineProfile).length;
         var recommendation = byId('dining-light-recommendation');
         var description = byId('dining-light-description');
         var target = byId('dining-target-summary');
-        if (recommendation) recommendation.textContent = '标准单色温推荐 ' + profile.recommendedCct + ' K · 适用范围 ' +
-            profile.cctRange[0] + '–' + profile.cctRange[1] + ' K · Duv ' + Number(profile.recommendedDuv).toFixed(4);
-        if (description) description.textContent = profile.descriptionCN + (profile.cameraProxy
-            ? ' 拍照友好仍为实验标签，当前不模拟相机传感器或白平衡。' : '') +
-            (profile.id === 'fine_dining' || profile.id === 'bar_atmosphere'
-                ? ' 当前不含低照度视觉适应、杆状细胞或颜色外观模型。' : '');
+        if (recommendation) recommendation.textContent = '推荐 ' + cuisineProfile.recommendedCct + ' K · 适用范围 ' +
+            cuisineProfile.cctRange[0] + '–' + cuisineProfile.cctRange[1] + ' K · Duv ' + Number(cuisineProfile.recommendedDuv).toFixed(4);
+        if (description) description.textContent = cuisineProfile.nameCN + ' · ' + cuisineProfile.descriptionCN +
+            ' 当前有' + activeCount + '类菜式参与优化。' + (cuisineProfile.cameraProxy
+                ? ' 当前推荐同时考虑手机拍摄下的浅色稳定性。' : '');
         if (target) {
             var currentCctValue = metricCct(latestMetrics);
             var currentCct = currentCctValue > 0 ? Math.round(currentCctValue) + ' K' : '等待计算';
-            target.textContent = selectedTargetMode() === 'scene'
-                ? '将采用标准场景色点 ' + profile.recommendedCct + ' K · Duv ' + Number(profile.recommendedDuv).toFixed(4)
+            target.textContent = selectedTargetMode() === 'recommended'
+                ? '将采用菜系推荐色点 ' + cuisineProfile.recommendedCct + ' K · Duv ' + Number(cuisineProfile.recommendedDuv).toFixed(4)
                 : '将保持当前色点 ' + currentCct;
         }
     }
 
-    function thumbnailCaption(material, result) {
-        if (material.isUserFood) return '自定义照片 · ' + material.templateNameCN;
-        return result ? 'ΔE00 ' + result.deltaE00.toFixed(2) : '等待计算';
+    function thumbnailCaption(material, result, participating) {
+        if (material.isUserFood) return (participating ? '参与优化' : '当前菜系不参与') + ' · ' + material.templateNameCN;
+        var dishes = material.representativeDishesCN || '';
+        if (!participating) return '当前菜系不参与 · ' + dishes;
+        return (result ? 'ΔE00 ' + result.deltaE00.toFixed(2) : '参与优化') + (dishes ? ' · ' + dishes : '');
     }
 
     function renderSelector() {
         var selector = byId('dining-material-selector');
         if (!selector) return;
         selector.innerHTML = '';
+        var cuisineProfile = selectedCuisineProfile();
+        var activeSet = new Set(optimizationMaterialIds(cuisineProfile));
         allMaterials().forEach(function (material) {
             var item = document.createElement('div');
             item.className = 'dining-food-selector-item';
             var button = document.createElement('button');
             button.type = 'button';
+            var participating = activeSet.has(material.id);
             button.dataset.materialId = material.id;
-            button.className = material.id === selectedId ? 'is-selected' : '';
+            button.dataset.participating = participating ? 'true' : 'false';
+            button.className = (material.id === selectedId ? 'is-selected ' : '') + (participating ? '' : 'is-inactive');
             button.setAttribute('aria-pressed', material.id === selectedId ? 'true' : 'false');
             var result = resultById(latestResults, material.id);
             button.innerHTML = '<span class="material-thumb' + (appearanceUrl(material) ? '' : ' is-placeholder') + '" style="' + appearanceStyle(material, 'none') + '"></span>' +
                 '<span class="material-selector-copy"><strong>' + escapeHtml(material.nameCN) + '</strong><small>' +
-                escapeHtml(thumbnailCaption(material, result)) + '</small></span>';
+                escapeHtml(thumbnailCaption(material, result, participating)) + '</small></span>';
             button.addEventListener('click', function () {
                 selectedId = material.id;
                 renderSelector();
@@ -193,14 +227,31 @@
         });
     }
 
-    function drawPreviewImage(canvasId, material, deltaLab, token) {
+    function drawPreviewImage(canvasId, material, deltaLab, token, saturation) {
         var canvas = byId(canvasId);
         var source = appearanceUrl(material);
-        if (!canvas || !source) return;
-        canvas.dataset.imageSource = source;
+        if (!canvas) return;
+        var previewSaturation = clamp(Number.isFinite(Number(saturation)) ? Number(saturation) : 1, 0, 2);
+        canvas.dataset.previewSaturation = String(previewSaturation);
+        if (!source) {
+            var emptyContext = canvas.getContext('2d');
+            emptyContext.clearRect(0, 0, canvas.width, canvas.height);
+            emptyContext.fillStyle = '#ece9e3';
+            emptyContext.fillRect(0, 0, canvas.width, canvas.height);
+            emptyContext.fillStyle = '#77716a';
+            emptyContext.font = '16px sans-serif';
+            emptyContext.textAlign = 'center';
+            emptyContext.fillText('完整菜式照片待补齐', canvas.width / 2, canvas.height / 2);
+            canvas.dataset.imageSource = '';
+            canvas.dataset.rendered = String(token);
+            return;
+        }
+        var fallbackSource = fallbackAppearanceUrl(material);
+        var triedFallback = false;
         var image = new Image();
         image.onload = function () {
             if (token !== previewRenderToken) return;
+            canvas.dataset.imageSource = image.currentSrc || image.src;
             var context = canvas.getContext('2d', { willReadFrequently: true });
             var scale = Math.max(canvas.width / image.naturalWidth, canvas.height / image.naturalHeight);
             var width = image.naturalWidth * scale;
@@ -209,37 +260,70 @@
             context.drawImage(image, (canvas.width - width) / 2, (canvas.height - height) / 2, width, height);
             var delta = Array.isArray(deltaLab) ? deltaLab : [0, 0, 0];
             var hasDelta = delta.some(function (value) { return Math.abs(Number(value) || 0) > 1e-9; });
-            if (PREVIEW && hasDelta) {
+            var needsPixelMapping = Math.abs(previewSaturation - 1) > 1e-9 || (PREVIEW && hasDelta);
+            if (needsPixelMapping) {
                 try {
                     var pixels = context.getImageData(0, 0, canvas.width, canvas.height);
-                    var cornerSamples = [
-                        [4, 4], [canvas.width - 5, 4],
-                        [4, canvas.height - 5], [canvas.width - 5, canvas.height - 5]
-                    ];
-                    var background = [0, 1, 2].map(function (channel) {
-                        return cornerSamples.reduce(function (sum, point) {
-                            var offset = (point[1] * canvas.width + point[0]) * 4;
-                            return sum + pixels.data[offset + channel];
-                        }, 0) / cornerSamples.length;
-                    });
-                    for (var index = 0; index < pixels.data.length; index += 4) {
-                        var mapped = PREVIEW.mapRgbWithBackground(
-                            [pixels.data[index], pixels.data[index + 1], pixels.data[index + 2]],
-                            delta,
-                            background
-                        );
-                        pixels.data[index] = mapped[0];
-                        pixels.data[index + 1] = mapped[1];
-                        pixels.data[index + 2] = mapped[2];
+                    if (Math.abs(previewSaturation - 1) > 1e-9) {
+                        for (var saturationIndex = 0; saturationIndex < pixels.data.length; saturationIndex += 4) {
+                            var red = pixels.data[saturationIndex];
+                            var green = pixels.data[saturationIndex + 1];
+                            var blue = pixels.data[saturationIndex + 2];
+                            var luminance = red * 0.2126 + green * 0.7152 + blue * 0.0722;
+                            pixels.data[saturationIndex] = clamp(Math.round(luminance + (red - luminance) * previewSaturation), 0, 255);
+                            pixels.data[saturationIndex + 1] = clamp(Math.round(luminance + (green - luminance) * previewSaturation), 0, 255);
+                            pixels.data[saturationIndex + 2] = clamp(Math.round(luminance + (blue - luminance) * previewSaturation), 0, 255);
+                        }
+                    }
+                    if (PREVIEW && hasDelta) {
+                        var cornerSamples = [
+                            [4, 4], [canvas.width - 5, 4],
+                            [4, canvas.height - 5], [canvas.width - 5, canvas.height - 5]
+                        ];
+                        var background = [0, 1, 2].map(function (channel) {
+                            return cornerSamples.reduce(function (sum, point) {
+                                var offset = (point[1] * canvas.width + point[0]) * 4;
+                                return sum + pixels.data[offset + channel];
+                            }, 0) / cornerSamples.length;
+                        });
+                        for (var index = 0; index < pixels.data.length; index += 4) {
+                            var mapped = PREVIEW.mapRgbWithBackground(
+                                [pixels.data[index], pixels.data[index + 1], pixels.data[index + 2]],
+                                delta,
+                                background
+                            );
+                            pixels.data[index] = mapped[0];
+                            pixels.data[index + 1] = mapped[1];
+                            pixels.data[index + 2] = mapped[2];
+                        }
                     }
                     context.putImageData(pixels, 0, 0);
                 } catch (error) {
                     // Local file:// pages taint canvases loaded from sibling files.
-                    // Keep the unmodified photo; the HTTP app path renders the Lab mapping.
+                    // Keep the source photo when pixel access is unavailable.
                 }
             }
             canvas.dataset.rendered = String(token);
         };
+        image.onerror = function () {
+            if (!triedFallback && fallbackSource && fallbackSource !== source) {
+                triedFallback = true;
+                image.removeAttribute('crossorigin');
+                image.src = fallbackSource;
+                return;
+            }
+            var context = canvas.getContext('2d');
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.fillStyle = '#ece9e3';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            context.fillStyle = '#77716a';
+            context.font = '16px sans-serif';
+            context.textAlign = 'center';
+            context.fillText('菜式照片加载失败', canvas.width / 2, canvas.height / 2);
+            canvas.dataset.imageSource = '';
+            canvas.dataset.rendered = String(token);
+        };
+        if (/^https?:\/\//i.test(source)) image.crossOrigin = 'anonymous';
         image.src = source;
     }
 
@@ -293,20 +377,27 @@
         var comparisonMode = Boolean(lastOptimization && lastOptimization.beforeSnapshot && lastOptimization.afterSnapshot);
         var appliedComparison = comparisonMode && lastOptimization.applied === true;
         previewRenderToken += 1;
-        drawPreviewImage('dining-before-preview', material, [0, 0, 0], previewRenderToken);
+        drawPreviewImage(
+            'dining-before-preview',
+            material,
+            [0, 0, 0],
+            previewRenderToken,
+            BEFORE_PREVIEW_SATURATION
+        );
         drawPreviewImage(
             'dining-after-preview',
             material,
             appliedComparison ? previewDelta(before, after) : [0, 0, 0],
-            previewRenderToken
+            previewRenderToken,
+            appliedComparison ? 1 : BEFORE_PREVIEW_SATURATION
         );
         var beforeCaption = byId('dining-before-caption');
         var afterCaption = byId('dining-after-caption');
         if (beforeCaption) beforeCaption.textContent = before
-            ? '原始图片 · 优化前 ΔE00 ' + before.deltaE00.toFixed(2)
-            : '原始图片';
+            ? '低饱和基线 · 优化前 ΔE00 ' + before.deltaE00.toFixed(2)
+            : '低饱和基线';
         if (afterCaption) afterCaption.textContent = appliedComparison && after
-            ? (lastOptimization.sceneTargetApplied && !lastOptimization.improved ? '场景色点配方' : '优化后配方') +
+            ? (lastOptimization.recommendedTargetApplied && !lastOptimization.improved ? '菜系推荐色点配方' : '优化后配方') +
                 ' · ΔE00 ' + after.deltaE00.toFixed(2)
             : comparisonMode ? '未采用 · 与原图相同' : '运行优化后显示';
         var baselineSummary = byId('dining-baseline-summary');
@@ -354,16 +445,17 @@
     }
 
     function summarizeProfile() {
-        var profile = selectedProfile();
-        if (!profile || !latestResults.length) return;
-        var selectedResults = optimizationMaterialIds(profile).map(function (id) { return resultById(latestResults, id); }).filter(Boolean);
+        var cuisineProfile = selectedCuisineProfile();
+        if (!cuisineProfile || !latestResults.length) return;
+        var selectedResults = optimizationMaterialIds(cuisineProfile).map(function (id) { return resultById(latestResults, id); }).filter(Boolean);
         if (!selectedResults.length) return;
         var worst = selectedResults.reduce(function (current, item) { return !current || item.deltaE00 > current.deltaE00 ? item : current; }, null);
         var reference = byId('dining-reference');
         if (reference) {
             var score = lastOptimization && lastOptimization.applied && lastOptimization.after;
             reference.textContent = score && Number.isFinite(score.weightedMeanPreferenceError)
-                ? '场景加权得分 ' + score.weightedMeanPreferenceError.toFixed(2) + ' · 最差食材 ' + (score.worstMaterialId || worst.materialNameCN)
+                ? '菜系加权得分 ' + score.weightedMeanPreferenceError.toFixed(2) + ' · 最差菜式 ' +
+                    materialDisplayName(score.worstMaterialId, worst.materialNameCN)
                 : '待优化 · 当前最大 ΔE00 ' + worst.deltaE00.toFixed(2) + '（' + worst.materialNameCN + '）';
         }
     }
@@ -371,7 +463,7 @@
     function setBusy(busy, message, tone) {
         var button = byId('dining-light-apply');
         var controls = [
-            byId('dining-light-profile'),
+            byId('dining-cuisine-profile'),
             byId('dining-target-mode'),
             byId('dining-optimization-goal'),
             byId('dining-preference-level')
@@ -403,17 +495,19 @@
     }
 
     function applyOptimization() {
-        var profile = selectedProfile();
-        if (!profile || !latestSpd || !root.dispatchEvent) return;
+        var cuisineProfile = selectedCuisineProfile();
+        if (!cuisineProfile || !latestSpd || !root.dispatchEvent) return;
         var goal = selectedGoal();
         var targetMode = selectedTargetMode();
-        var materialIds = optimizationMaterialIds(profile);
-        var overrides = DINING.profileOverrides(profile.id, selectedLevel());
+        var materialIds = optimizationMaterialIds(cuisineProfile);
+        var overrides = DINING.profileOverrides(cuisineProfile.id, selectedLevel());
         uploadedFoods.forEach(function (food) {
-            var templateOverride = overrides[food.templateId];
-            if (templateOverride) overrides[food.id] = JSON.parse(JSON.stringify(templateOverride));
+            var migratedTemplateId = DINING && typeof DINING.migrateTemplateId === 'function'
+                ? DINING.migrateTemplateId(food.templateId) : food.templateId;
+            var templateOverride = overrides[migratedTemplateId];
+            if (templateOverride && materialIds.includes(food.id)) overrides[food.id] = JSON.parse(JSON.stringify(templateOverride));
         });
-        setBusy(true, profile.nameCN + ' · 正在搜索餐饮光谱配方…', 'working');
+        setBusy(true, cuisineProfile.nameCN + ' · 正在搜索餐饮光谱配方…', 'working');
         document.dispatchEvent(new CustomEvent('spectral-material-optimization-request', {
             detail: {
                 goal: goal,
@@ -424,15 +518,15 @@
                 materialIds: materialIds,
                 materialModels: uploadedFoods.map(function (food) { return food; }),
                 profileOverridesByMaterialId: overrides,
-                diningProfileId: profile.id,
-                diningProfileName: profile.nameCN,
-                recommendedCct: profile.recommendedCct,
-                recommendedDuv: profile.recommendedDuv,
-                cameraProxy: profile.cameraProxy,
+                cuisineProfileId: cuisineProfile.id,
+                cuisineProfileName: cuisineProfile.nameCN,
+                recommendedCct: cuisineProfile.recommendedCct,
+                recommendedDuv: cuisineProfile.recommendedDuv,
+                cameraProxy: cuisineProfile.cameraProxy,
                 targetMode: targetMode,
-                targetCct: profile.recommendedCct,
-                targetDuv: profile.recommendedDuv,
-                cctRange: profile.cctRange.slice(),
+                targetCct: cuisineProfile.recommendedCct,
+                targetDuv: cuisineProfile.recommendedDuv,
+                cctRange: cuisineProfile.cctRange.slice(),
                 cct: metricCct(latestMetrics)
             }
         }));
@@ -503,7 +597,10 @@
 
     function addUploadedFood() {
         var name = byId('dining-food-upload-name').value.trim();
-        var template = DINING.getMaterial(byId('dining-food-upload-template').value);
+        var templateId = DINING && typeof DINING.migrateTemplateId === 'function'
+            ? DINING.migrateTemplateId(byId('dining-food-upload-template').value)
+            : byId('dining-food-upload-template').value;
+        var template = DINING.getMaterial(templateId);
         if (!name || !template || !uploadImageDataUrl) return;
         var food = {
             id: 'user_food_' + Date.now().toString(36),
@@ -524,7 +621,8 @@
             anchors: template.anchors.map(function (pair) { return pair.slice(); }),
             isUserFood: true,
             templateId: template.id,
-            templateNameCN: template.nameCN
+            templateNameCN: template.nameCN,
+            representativeDishesCN: template.representativeDishesCN
         };
         uploadedFoods.push(food);
         selectedId = food.id;
@@ -571,11 +669,13 @@
     function bind() {
         function conditionsChanged(message) {
             updateProfileCopy();
+            renderSelector();
+            renderDetail();
             if (lastOptimization) invalidateOptimizationResult(message);
             else summarizeProfile();
         }
-        if (byId('dining-light-profile')) byId('dining-light-profile').addEventListener('change', function () {
-            conditionsChanged('餐饮场景已改变，请重新运行优化。');
+        if (byId('dining-cuisine-profile')) byId('dining-cuisine-profile').addEventListener('change', function () {
+            conditionsChanged('菜系或餐饮类型已改变，请重新运行优化。');
         });
         if (byId('dining-target-mode')) byId('dining-target-mode').addEventListener('change', function () {
             conditionsChanged('色点模式已改变，请重新运行优化。');
@@ -592,9 +692,9 @@
 
         document.addEventListener('spectral-material-optimization-result', function (event) {
             var detail = event.detail || {};
-            if (!detail.diningProfileId) return;
+            if (!detail.cuisineProfileId) return;
             if (detail.error) {
-                setBusy(false, detail.diningProfileName + ' · ' + detail.error, 'error');
+                setBusy(false, detail.cuisineProfileName + ' · ' + detail.error, 'error');
                 return;
             }
             var after = detail.after || null;
@@ -604,27 +704,29 @@
             var outputMessage = outputWarning
                 ? '相对照度 Y ' + signed(outputChange, 1) + '%，受当前通道输出上限影响。'
                 : '';
+            var resultTitle = detail.cuisineProfileName || '餐饮光色';
             var statusMessage = detail.message || (applied
-                ? detail.diningProfileName + ' · 配方已应用。'
-                : detail.diningProfileName + ' · 没有应用新配方。');
+                ? resultTitle + ' · 配方已应用。'
+                : resultTitle + ' · 没有应用新配方。');
             if (outputMessage) statusMessage += ' ' + outputMessage;
             setBusy(false, statusMessage, outputWarning ? 'warning' : applied ? 'success' : 'warning');
             lastOptimization = Object.assign({}, detail, {
                 improved: Boolean(detail.improved),
                 applied: applied,
-                sceneTargetApplied: detail.sceneTargetApplied === true
+                recommendedTargetApplied: detail.recommendedTargetApplied === true
             });
             var summaryParts = [
-                detail.diningProfileName,
-                '参考 ' + Math.round(detail.referenceCct || 0) + ' K'
-            ];
-            if (detail.sceneTargetApplied) summaryParts.push('场景推荐色点已应用');
-            if (Number.isFinite(outputChange) && (detail.sceneTargetApplied || Math.abs(outputChange) >= 0.05)) {
+                detail.cuisineProfileName || '',
+                '参考 ' + Math.round(detail.referenceCct || 0) + ' K',
+                detail.materialCount + '类菜式'
+            ].filter(Boolean);
+            if (detail.recommendedTargetApplied) summaryParts.push('菜系推荐色点已应用');
+            if (Number.isFinite(outputChange) && (detail.recommendedTargetApplied || Math.abs(outputChange) >= 0.05)) {
                 summaryParts.push('相对照度 Y ' + signed(outputChange, 1) + '%');
             }
             if (after && Number.isFinite(after.weightedMeanPreferenceError)) {
-                summaryParts.push('场景加权得分 ' + after.weightedMeanPreferenceError.toFixed(2));
-                summaryParts.push('最差 ' + (after.worstMaterialId || '--'));
+                summaryParts.push('菜系加权得分 ' + after.weightedMeanPreferenceError.toFixed(2));
+                summaryParts.push('最差 ' + materialDisplayName(after.worstMaterialId, '—'));
             }
             if (!applied) summaryParts.push(detail.message || '没有应用新配方');
             if (root.OptimizationComparison && detail.beforeSnapshot && detail.afterSnapshot) {
@@ -658,7 +760,7 @@
 
     function init() {
         if (!DINING || !COLOR || !byId('dining-panel')) return;
-        populateProfiles();
+        populateCuisineProfiles();
         populateUploadTemplates();
         updateProfileCopy();
         renderSelector();

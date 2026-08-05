@@ -6,9 +6,9 @@
     <title>光谱优化器</title>
     <meta name="description" content="用于多通道 LED 光谱调试、光品质分析与健康照明评估的光谱优化工具。">
     <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="styles.css?v=20260804-dining-condition-baseline">
-    <link rel="stylesheet" href="layout-final.css?v=20260804-dining-condition-baseline">
-    <link rel="stylesheet" href="material-panel.css?v=20260804-dining-condition-baseline">
+    <link rel="stylesheet" href="styles.css?v=20260804-dining-cuisine-only">
+    <link rel="stylesheet" href="layout-final.css?v=20260804-dining-cuisine-only">
+    <link rel="stylesheet" href="material-panel.css?v=20260804-dining-cuisine-only">
 </head>
 <body>
     <aside class="local-file-warning" id="local-file-warning" hidden>
@@ -455,16 +455,16 @@
                 <section class="material-panel dining-panel glass-card" id="dining-panel" aria-labelledby="dining-panel-title">
                     <div class="material-panel-header">
                         <div>
-                            <h2 id="dining-panel-title">食材与餐饮光色</h2>
-                            <p>使用7种代表性食材比较光谱表现，并查看优化前后的色点、光谱和通道参数。</p>
+                            <h2 id="dining-panel-title">菜式与餐饮光色</h2>
+                            <p>使用12类完整菜式视觉类型比较光谱表现，并按菜系或餐饮类型生成配方。</p>
                         </div>
                         <span class="material-reference" id="dining-reference">等待有效光谱</span>
                     </div>
                     <section class="dining-workflow-step" data-dining-step="conditions" aria-labelledby="dining-conditions-title">
-                        <div class="dining-step-heading"><span>1</span><div><h3 id="dining-conditions-title">设置场景与优化策略</h3><p>先确定使用环境和目标色点，再选择自然还原或食欲增强。</p></div></div>
-                        <div class="dining-light-bar" aria-label="餐饮光色场景">
-                            <label for="dining-light-profile"><span>餐饮场景</span><select id="dining-light-profile"></select></label>
-                            <label for="dining-target-mode"><span>色点模式</span><select id="dining-target-mode"><option value="current" selected>保持当前色点</option><option value="scene">采用场景推荐</option></select></label>
+                        <div class="dining-step-heading"><span>1</span><div><h3 id="dining-conditions-title">设置菜系与优化策略</h3><p>菜系或餐饮类型直接确定参与菜式、推荐色温和光色目标。</p></div></div>
+                        <div class="dining-light-bar" aria-label="餐饮光色条件">
+                            <label for="dining-cuisine-profile"><span>菜系/餐饮类型</span><select id="dining-cuisine-profile"></select></label>
+                            <label for="dining-target-mode"><span>色点模式</span><select id="dining-target-mode"><option value="current" selected>保持当前色点</option><option value="recommended">采用菜系推荐</option></select></label>
                             <label for="dining-optimization-goal"><span>优化策略</span><select id="dining-optimization-goal"><option value="preference" selected>食欲增强</option><option value="fidelity">自然还原</option></select></label>
                             <label for="dining-preference-level"><span>增强程度</span><select id="dining-preference-level"><option value="soft">柔和</option><option value="recommended" selected>推荐</option><option value="vivid">鲜明</option></select></label>
                             <div class="dining-light-copy">
@@ -475,8 +475,8 @@
                         </div>
                     </section>
                     <section class="dining-workflow-step" data-dining-step="foods" aria-labelledby="dining-foods-title">
-                        <div class="dining-step-heading dining-step-heading--action"><span>2</span><div><h3 id="dining-foods-title">确认参与优化的食材</h3><p>下列食材会进入配方计算；上传照片时需同时绑定反射率模板。</p></div><button type="button" id="dining-food-upload-open">添加自定义食材</button></div>
-                        <div class="material-selector dining-material-selector" id="dining-material-selector" role="group" aria-label="选择食材"></div>
+                        <div class="dining-step-heading dining-step-heading--action"><span>2</span><div><h3 id="dining-foods-title">确认参与优化的菜式</h3><p>当前菜系参与计算的类型保持正常显示；其余类型仍可查看。上传照片时需绑定菜式反射率模板。</p></div><button type="button" id="dining-food-upload-open">添加自定义菜式</button></div>
+                        <div class="material-selector dining-material-selector" id="dining-material-selector" role="group" aria-label="选择菜式视觉类型"></div>
                     </section>
                     <section class="dining-workflow-step dining-execute-step" data-dining-step="execute" aria-labelledby="dining-execute-title">
                         <div class="dining-step-heading"><span>3</span><div><h3 id="dining-execute-title">运行并验证配方</h3><p>结果会统一使用目标参考光，并报告光谱、光色参数和食材误差。</p></div></div>
@@ -487,9 +487,9 @@
                         <div class="dining-result-strip"><strong>优化结果</strong><span id="dining-optimization-summary">运行优化后显示结论</span><span class="dining-baseline-summary" id="dining-baseline-summary">本次基线：等待优化</span></div>
                         <section class="dining-food-validation" id="dining-food-validation" aria-labelledby="dining-detail-title">
                             <div class="dining-validation-title">
-                                <div><span class="material-category">所选食材</span><h3 id="dining-detail-title">红棕熟肉</h3></div>
-                                <p id="dining-detail-description">用于餐饮场景的食材光色比较。</p>
-                                <small id="dining-photo-note">左图始终显示原始照片；右图按优化前与优化后材质 Lab 差异进行 ×3 增强预览。优化器修改的是 LED 通道，不会修改照片文件。</small>
+                                <div><span class="material-category">所选菜式类型</span><h3 id="dining-detail-title">红褐酱烧肉菜</h3></div>
+                                <p id="dining-detail-description">用于餐饮场景的菜式光色比较。</p>
+                                <small id="dining-photo-note">优化前预览统一降低饱和度；配方应用后，优化后预览恢复原始饱和度，并按优化前与优化后材质 Lab 差异进行 ×3 增强。该画面用于观察辨识度变化，优化器修改的是 LED 通道，不会修改照片文件。</small>
                             </div>
                             <div class="dining-photo-compare" aria-label="食材优化前后图片对比">
                                 <figure><canvas class="dining-food-preview" id="dining-before-preview" width="420" height="260"></canvas><figcaption><strong>优化前</strong><span id="dining-before-caption">当前光谱</span></figcaption></figure>
@@ -543,32 +543,32 @@
                     <div class="material-upload-dialog dining-food-upload-dialog" role="dialog" aria-modal="true" aria-labelledby="dining-food-upload-title">
                         <div class="upload-dialog-header">
                             <div>
-                                <h3 id="dining-food-upload-title">上传食材图片</h3>
-                                <p>照片用于外观对比，光谱计算采用所选食材模板。</p>
+                                <h3 id="dining-food-upload-title">上传菜式图片</h3>
+                                <p>照片用于外观对比，光谱计算采用所选菜式模板。</p>
                             </div>
                             <button type="button" id="dining-food-upload-cancel" aria-label="关闭">×</button>
                         </div>
                         <div class="upload-dialog-body">
                             <label class="upload-field">
-                                <span>食材名称</span>
-                                <input type="text" id="dining-food-upload-name" maxlength="30" placeholder="例如：牛排切面">
+                                <span>菜式名称</span>
+                                <input type="text" id="dining-food-upload-name" maxlength="30" placeholder="例如：红烧排骨">
                             </label>
                             <label class="upload-field">
-                                <span>光谱模板</span>
+                                <span>菜式视觉模板</span>
                                 <select id="dining-food-upload-template"></select>
-                                <small>模板提供反射率数据，照片RGB不会直接参与光谱计算。</small>
+                                <small>模板提供工程反射率数据，照片RGB不会直接参与光谱计算。</small>
                             </label>
                             <label class="upload-field dining-photo-field">
-                                <span>高清局部照片</span>
+                                <span>完整菜式照片</span>
                                 <input type="file" id="dining-food-photo-input" accept="image/jpeg,image/png,image/webp">
-                                <small>支持 JPG、PNG、WebP，文件不超过5 MB。建议使用中性光下拍摄的局部特写。</small>
+                                <small>支持 JPG、PNG、WebP，文件不超过5 MB。建议主体占画面70%—90%，保留少量盘子与配菜。</small>
                             </label>
                             <div class="dining-food-photo-preview" id="dining-food-photo-preview" hidden></div>
                             <p class="upload-error" id="dining-food-upload-error" hidden></p>
                         </div>
                         <div class="upload-dialog-actions">
                             <button type="button" id="dining-food-upload-secondary">取消</button>
-                            <button type="button" id="dining-food-upload-submit" disabled>加入食材对比</button>
+                            <button type="button" id="dining-food-upload-submit" disabled>加入菜式对比</button>
                         </div>
                     </div>
                 </div>
@@ -628,48 +628,48 @@
         <p class="footer-cn">显色指标使用 15 个 CIE TCS 与 99 个 CES 计算；CLA 2.0 / CS 使用 Rea 模型，Melanopic 指标遵循 CIE S 026。<span id="build-version" class="build-version"></span></p>
     </footer>
 
-    <script src="app-readiness.js?v=20260804-dining-condition-baseline"></script>
-    <script src="workspace-state.js?v=20260804-dining-condition-baseline"></script>
-    <script src="workbench-layout.js?v=20260804-dining-condition-baseline"></script>
-    <script src="workbench-summary.js?v=20260804-dining-condition-baseline"></script>
-    <script src="analysis-workspace.js?v=20260804-dining-condition-baseline"></script>
-    <script src="spectral-data.js?v=20260804-dining-condition-baseline"></script>
-    <script src="spectral-math.js?v=20260804-dining-condition-baseline"></script>
-    <script src="spd-import.js?v=20260804-dining-condition-baseline"></script>
-    <script src="chromaticity-diagram.js?v=20260804-dining-condition-baseline"></script>
-    <script src="colour-quality-data.js?v=20260804-dining-condition-baseline"></script>
-    <script src="colour-quality.js?v=20260804-dining-condition-baseline"></script>
-    <script src="material-reflectance-data.js?v=20260804-dining-condition-baseline"></script>
-    <script src="dining-light-data.js?v=20260804-dining-condition-baseline"></script>
-    <script src="material-color.js?v=20260804-dining-condition-baseline"></script>
-    <script src="material-preview-color.js?v=20260804-dining-condition-baseline"></script>
-    <script src="material-upload.js?v=20260804-dining-condition-baseline"></script>
-    <script src="material-preference-profiles.js?v=20260804-dining-condition-baseline"></script>
-    <script src="material-optimizer.js?v=20260804-dining-condition-baseline"></script>
-    <script src="optimization-comparison.js?v=20260804-dining-condition-baseline"></script>
-    <script src="material-panel.js?v=20260804-dining-condition-baseline"></script>
-    <script src="dining-panel.js?v=20260804-dining-condition-baseline"></script>
-    <script src="pastel-palette.js?v=20260804-dining-condition-baseline"></script>
-    <script src="candidate-shortlist.js?v=20260804-dining-condition-baseline"></script>
-    <script src="metamer-optimizer.js?v=20260804-dining-condition-baseline"></script>
-    <script src="metamer-worker-client.js?v=20260804-dining-condition-baseline"></script>
-    <script src="scene-optimizer-core.js?v=20260804-dining-condition-baseline"></script>
-    <script src="scene-optimizer-worker-client.js?v=20260804-dining-condition-baseline"></script>
-    <script src="circadian-data.js?v=20260804-dining-condition-baseline"></script>
-    <script src="circadian-math.js?v=20260804-dining-condition-baseline"></script>
-    <script src="cct-journey.js?v=20260804-dining-condition-baseline"></script>
-    <script src="circadian-schedule.js?v=20260804-dining-condition-baseline"></script>
-    <script src="default-rgbw-data.js?v=20260804-dining-condition-baseline"></script>
-    <script src="default-rgbcla-data.js?v=20260804-dining-condition-baseline"></script>
-    <script src="professional-data-loader.js?v=20260804-dining-condition-baseline"></script>
-    <script src="professional-analysis.js?v=20260804-dining-condition-baseline"></script>
-    <script src="chromaticity-panel.js?v=20260804-dining-condition-baseline"></script>
-    <script src="build-info.js?v=20260804-dining-condition-baseline"></script>
-    <script src="recipe-export.js?v=20260804-dining-condition-baseline"></script>
-    <script src="xlsx-workbook.js?v=20260804-dining-condition-baseline"></script>
-    <script src="batch-recipe-export.js?v=20260804-dining-condition-baseline"></script>
-    <script src="recipe-batch-export.js?v=20260804-dining-condition-baseline"></script>
-    <script src="render-pipeline.js?v=20260804-dining-condition-baseline"></script>
-    <script src="app.js?v=20260804-dining-condition-baseline"></script>
+    <script src="app-readiness.js?v=20260804-dining-cuisine-only"></script>
+    <script src="workspace-state.js?v=20260804-dining-cuisine-only"></script>
+    <script src="workbench-layout.js?v=20260804-dining-cuisine-only"></script>
+    <script src="workbench-summary.js?v=20260804-dining-cuisine-only"></script>
+    <script src="analysis-workspace.js?v=20260804-dining-cuisine-only"></script>
+    <script src="spectral-data.js?v=20260804-dining-cuisine-only"></script>
+    <script src="spectral-math.js?v=20260804-dining-cuisine-only"></script>
+    <script src="spd-import.js?v=20260804-dining-cuisine-only"></script>
+    <script src="chromaticity-diagram.js?v=20260804-dining-cuisine-only"></script>
+    <script src="colour-quality-data.js?v=20260804-dining-cuisine-only"></script>
+    <script src="colour-quality.js?v=20260804-dining-cuisine-only"></script>
+    <script src="material-reflectance-data.js?v=20260804-dining-cuisine-only"></script>
+    <script src="dining-light-data.js?v=20260804-dining-cuisine-only"></script>
+    <script src="material-color.js?v=20260804-dining-cuisine-only"></script>
+    <script src="material-preview-color.js?v=20260804-dining-cuisine-only"></script>
+    <script src="material-upload.js?v=20260804-dining-cuisine-only"></script>
+    <script src="material-preference-profiles.js?v=20260804-dining-cuisine-only"></script>
+    <script src="material-optimizer.js?v=20260804-dining-cuisine-only"></script>
+    <script src="optimization-comparison.js?v=20260804-dining-cuisine-only"></script>
+    <script src="material-panel.js?v=20260804-dining-cuisine-only"></script>
+    <script src="dining-panel.js?v=20260804-dining-cuisine-only"></script>
+    <script src="pastel-palette.js?v=20260804-dining-cuisine-only"></script>
+    <script src="candidate-shortlist.js?v=20260804-dining-cuisine-only"></script>
+    <script src="metamer-optimizer.js?v=20260804-dining-cuisine-only"></script>
+    <script src="metamer-worker-client.js?v=20260804-dining-cuisine-only"></script>
+    <script src="scene-optimizer-core.js?v=20260804-dining-cuisine-only"></script>
+    <script src="scene-optimizer-worker-client.js?v=20260804-dining-cuisine-only"></script>
+    <script src="circadian-data.js?v=20260804-dining-cuisine-only"></script>
+    <script src="circadian-math.js?v=20260804-dining-cuisine-only"></script>
+    <script src="cct-journey.js?v=20260804-dining-cuisine-only"></script>
+    <script src="circadian-schedule.js?v=20260804-dining-cuisine-only"></script>
+    <script src="default-rgbw-data.js?v=20260804-dining-cuisine-only"></script>
+    <script src="default-rgbcla-data.js?v=20260804-dining-cuisine-only"></script>
+    <script src="professional-data-loader.js?v=20260804-dining-cuisine-only"></script>
+    <script src="professional-analysis.js?v=20260804-dining-cuisine-only"></script>
+    <script src="chromaticity-panel.js?v=20260804-dining-cuisine-only"></script>
+    <script src="build-info.js?v=20260804-dining-cuisine-only"></script>
+    <script src="recipe-export.js?v=20260804-dining-cuisine-only"></script>
+    <script src="xlsx-workbook.js?v=20260804-dining-cuisine-only"></script>
+    <script src="batch-recipe-export.js?v=20260804-dining-cuisine-only"></script>
+    <script src="recipe-batch-export.js?v=20260804-dining-cuisine-only"></script>
+    <script src="render-pipeline.js?v=20260804-dining-cuisine-only"></script>
+    <script src="app.js?v=20260804-dining-cuisine-only"></script>
 </body>
 </html>

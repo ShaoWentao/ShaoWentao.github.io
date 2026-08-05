@@ -157,7 +157,7 @@
 
 .dining-light-bar {
     display: grid;
-    grid-template-columns: minmax(180px, auto) minmax(260px, 1fr) auto;
+    grid-template-columns: repeat(5, minmax(150px, 1fr));
     align-items: center;
     gap: 10px;
     margin: -4px 0 10px;
@@ -192,6 +192,7 @@
 }
 
 .dining-light-copy {
+    grid-column: 1 / -1;
     display: flex;
     min-width: 0;
     flex-direction: column;
@@ -1148,6 +1149,15 @@
 
 .dining-food-selector-item { position: relative; min-width: 0; }
 .dining-food-selector-item > button:first-child { width: 100%; height: 100%; }
+.dining-food-selector-item > button.is-inactive {
+    opacity: .48;
+    filter: saturate(.65);
+}
+.dining-food-selector-item > button.is-inactive:hover,
+.dining-food-selector-item > button.is-inactive.is-selected {
+    opacity: .82;
+}
+.dining-food-selector-item > button.is-inactive .material-selector-copy small { color: #8a6b35; }
 .dining-material-selector .dining-food-delete {
     position: absolute;
     top: 4px;
@@ -1420,10 +1430,17 @@
 .dining-technical-details .optimization-comparison,
 .dining-technical-details .material-reflectance { margin: 10px; }
 
-@media (min-width: 681px) {
+@media (min-width: 1181px) {
     .dining-workflow-step { padding: 11px 12px; }
     .dining-step-heading { margin-bottom: 8px; }
-    .dining-material-selector { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+    .dining-material-selector { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (min-width: 681px) and (max-width: 1180px) {
+    .dining-workflow-step { padding: 11px 12px; }
+    .dining-step-heading { margin-bottom: 8px; }
+    .dining-light-bar { grid-template-columns: repeat(3, minmax(150px, 1fr)); }
+    .dining-material-selector { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 #dining-target-summary {

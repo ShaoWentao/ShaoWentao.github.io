@@ -5,79 +5,113 @@ const fs = require('node:fs');
 const path = require('node:path');
 const DINING = require('./dining-light-data.js');
 
-const materials = DINING.listMaterials();
-const profiles = DINING.listProfiles();
-
-assert.equal(materials.length, 7, 'dining library must expose seven focused food materials');
-assert.deepEqual(materials.map(item => item.id), [
-    'food_grilled_beef', 'food_tomato_red', 'food_salmon', 'food_leafy_green',
-    'food_white_rice', 'food_golden_bread', 'food_coffee_dark'
+const expectedDishIds = [
+    'dish_red_braised_meat',
+    'dish_red_chili_oil',
+    'dish_golden_fried',
+    'dish_dark_roasted_meat',
+    'dish_orange_pink_seafood',
+    'dish_silver_steamed_seafood',
+    'dish_pale_poultry',
+    'dish_green_vegetable',
+    'dish_pale_tofu_mushroom',
+    'dish_dark_sauce_mushroom',
+    'dish_multicolor_plating',
+    'dish_soup_hotpot'
+];
+const paleControlIds = new Set([
+    'dish_silver_steamed_seafood',
+    'dish_pale_poultry',
+    'dish_pale_tofu_mushroom'
 ]);
-assert.equal(profiles.length, 7, 'dining library must expose seven scene profiles');
-assert.equal(new Set(materials.map(item => item.id)).size, materials.length, 'material IDs must be unique');
-assert.equal(new Set(profiles.map(item => item.id)).size, profiles.length, 'profile IDs must be unique');
+const expectedCuisineIds = [
+    'comprehensive', 'sichuan_hunan', 'cantonese', 'jiangzhe_huaiyang',
+    'shandong', 'fujian', 'anhui', 'beijing', 'northeast', 'northwest',
+    'yunnan_guizhou', 'japanese', 'korean', 'southeast_asian', 'western',
+    'barbecue', 'hotpot'
+];
 
-const appearanceFiles = materials.map(material => material.appearanceSource.file);
-assert.equal(new Set(appearanceFiles).size, 7, 'each food category must use its own photograph');
+const materials = DINING.listMaterials();
+const cuisines = DINING.listCuisineProfiles();
+
+assert.equal(materials.length, 12, 'dining library must expose twelve dish visual types');
+assert.deepEqual(materials.map(item => item.id), expectedDishIds);
+assert.equal(cuisines.length, 17, 'dining library must expose seventeen cuisine or dining-type profiles');
+assert.deepEqual(cuisines.map(item => item.id), expectedCuisineIds);
+assert.equal(typeof DINING.listProfiles, 'undefined', 'application-scene API must no longer be public');
+assert.equal(typeof DINING.getProfile, 'undefined', 'application-scene lookup must no longer be public');
+assert.equal(new Set(materials.map(item => item.id)).size, materials.length);
+assert.equal(new Set(cuisines.map(item => item.id)).size, cuisines.length);
+
+const materialIds = new Set(expectedDishIds);
+const remoteFiles = new Set();
 materials.forEach(material => {
     assert.equal(material.category, 'food');
     assert.equal(material.reflectance.length, 81, material.id + ' must have 81 reflectance samples');
-    assert.ok(material.reflectance.every(value => Number.isFinite(value) && value >= 0 && value <= 1),
-        material.id + ' reflectance must remain within 0–1');
+    assert.ok(material.reflectance.every(value => Number.isFinite(value) && value >= 0 && value <= 1));
     assert.equal(material.spectralSource.type, 'engineering');
     assert.match(material.spectralSource.dataQualification, /工程/);
-    assert.equal(material.appearanceSource.type, 'photo-reference');
-    assert.match(material.appearanceSource.file, /^assets\/appearance\/foods\/[a-z-]+\.webp$/);
-    assert.equal(Object.hasOwn(material.appearanceSource, 'atlasGrid'), false);
-    assert.equal(Object.hasOwn(material.appearanceSource, 'atlasPosition'), false);
-    assert.equal(fs.existsSync(path.join(__dirname, material.appearanceSource.file)), true,
-        material.id + ' photograph must exist');
-});
+    assert.ok(material.representativeDishesCN, material.id + ' must identify representative finished dishes');
+    assert.doesNotMatch(material.nameCN + material.intendedUseCN, /主食|咖啡豆|单片|原材料/);
 
-const materialIds = new Set(materials.map(item => item.id));
-const standardCctByProfile = {
-    balanced_dining: 3500,
-    hotpot_barbecue: 3000,
-    japanese_seafood: 4000,
-    bakery_coffee: 3000,
-    fine_dining: 2700,
-    bar_atmosphere: 2700,
-    camera_friendly: 4000
-};
+    const appearance = material.appearanceSource;
+    assert.equal(appearance.type, 'photo-reference');
+    assert.match(appearance.file, /^https:\/\/images\.weserv\.nl\/\?url=/);
+    assert.match(appearance.file, /&precrop(?:&|$)/);
+    assert.match(appearance.file, /&cw=\d+%25&ch=\d+%25/);
+    assert.match(appearance.sourcePage, /^https:\/\//);
+    assert.match(appearance.label, /局部特写/);
+    assert.match(appearance.fallbackFile, /^assets\/appearance\/foods\/[a-z-]+\.webp$/);
+    assert.equal(fs.existsSync(path.join(__dirname, appearance.fallbackFile)), true,
+        material.id + ' local fallback photograph must exist');
+    remoteFiles.add(appearance.file);
+});
+assert.equal(remoteFiles.size, 12, 'each dish type must use a distinct concrete dish photograph');
+
 const standardCctSet = new Set([2700, 3000, 3500, 4000]);
-
-profiles.forEach(profile => {
-    assert.ok(profile.materialIds.length >= 4, profile.id + ' must include a useful material set');
-    assert.ok(profile.materialIds.every(id => materialIds.has(id)), profile.id + ' references unknown materials');
-    assert.equal(profile.recommendedCct, standardCctByProfile[profile.id]);
-    assert.ok(standardCctSet.has(profile.recommendedCct), profile.id + ' must use a common fixed-CCT luminaire value');
-    assert.equal(profile.cctRange.length, 2);
-    assert.ok(profile.recommendedCct >= profile.cctRange[0] && profile.recommendedCct <= profile.cctRange[1]);
-    assert.ok(Number.isFinite(profile.recommendedDuv));
-    assert.ok(profile.materialIds.every(id => Number.isFinite(profile.importanceByMaterialId[id])));
+cuisines.forEach(cuisine => {
+    assert.ok(cuisine.dishTypeIds.length >= 5, cuisine.id + ' must include a useful dish set');
+    assert.ok(cuisine.dishTypeIds.every(id => materialIds.has(id)), cuisine.id + ' references an unknown dish');
+    assert.ok(cuisine.dishTypeIds.some(id => paleControlIds.has(id)), cuisine.id + ' must include a pale control dish');
+    assert.ok(cuisine.dishTypeIds.every(id => Number.isFinite(cuisine.importanceByDishTypeId[id])));
+    assert.ok(standardCctSet.has(cuisine.recommendedCct));
+    assert.equal(cuisine.cctRange.length, 2);
+    assert.ok(cuisine.recommendedCct >= cuisine.cctRange[0] && cuisine.recommendedCct <= cuisine.cctRange[1]);
+    assert.ok(Number.isFinite(cuisine.recommendedDuv));
 });
 
-const camera = DINING.getProfile('camera_friendly');
-assert.equal(camera.cameraProxy, true);
-assert.ok(camera.materialIds.includes('food_white_rice'));
-assert.ok(camera.materialIds.includes('food_leafy_green'));
-assert.ok(camera.materialIds.every(id => materialIds.has(id)));
-assert.match(camera.noteCN, /相机|手机|代理模型/);
+assert.deepEqual(DINING.resolveMaterialIds('japanese'), [
+    'dish_orange_pink_seafood', 'dish_silver_steamed_seafood', 'dish_green_vegetable',
+    'dish_pale_tofu_mushroom', 'dish_multicolor_plating'
+]);
+assert.deepEqual(DINING.resolveMaterialIds('comprehensive'), expectedDishIds);
+assert.deepEqual(DINING.resolveMaterialIds('missing'), []);
 
-const hotpotOverrides = DINING.profileOverrides('hotpot_barbecue', 'recommended');
-assert.ok(hotpotOverrides.food_tomato_red.importance > hotpotOverrides.food_white_rice.importance);
-assert.ok(hotpotOverrides.food_tomato_red.levels.recommended.targetDeltaC > 5);
-assert.ok(hotpotOverrides.food_white_rice.levels.recommended.maxDeltaE00 <= 4);
+const sichuanOverrides = DINING.profileOverrides('sichuan_hunan', 'recommended');
+assert.deepEqual(Object.keys(sichuanOverrides), DINING.resolveMaterialIds('sichuan_hunan'));
+assert.ok(sichuanOverrides.dish_red_chili_oil.importance > sichuanOverrides.dish_pale_tofu_mushroom.importance);
+assert.ok(sichuanOverrides.dish_red_chili_oil.levels.recommended.targetDeltaC > 5);
+assert.ok(sichuanOverrides.dish_pale_tofu_mushroom.levels.recommended.maxDeltaE00 <= 4.5);
 
-const soft = DINING.profileOverrides('balanced_dining', 'soft');
-const vivid = DINING.profileOverrides('balanced_dining', 'vivid');
-assert.ok(soft.food_grilled_beef.levels.soft.targetDeltaC < vivid.food_grilled_beef.levels.vivid.targetDeltaC);
+const soft = DINING.profileOverrides('comprehensive', 'soft');
+const vivid = DINING.profileOverrides('comprehensive', 'vivid');
+assert.ok(soft.dish_red_braised_meat.levels.soft.targetDeltaC < vivid.dish_red_braised_meat.levels.vivid.targetDeltaC);
 
+assert.equal(DINING.getCuisineProfile('sichuan_hunan').recommendedCct, 3000);
+assert.equal(DINING.getCuisineProfile('sichuan_hunan').recommendedDuv, -0.0005);
+assert.equal(DINING.getCuisineProfile('japanese').recommendedCct, 4000);
+assert.equal(DINING.getCuisineProfile('western').recommendedCct, 2700);
+
+assert.equal(DINING.migrateTemplateId('food_grilled_beef'), 'dish_red_braised_meat');
+assert.equal(DINING.migrateTemplateId('food_white_rice'), 'dish_pale_tofu_mushroom');
+assert.equal(DINING.migrateTemplateId('dish_green_vegetable'), 'dish_green_vegetable');
+assert.equal(DINING.getMaterial('food_salmon').id, 'dish_orange_pink_seafood');
 assert.equal(DINING.getMaterial('missing'), null);
-assert.equal(DINING.getProfile('missing'), null);
+assert.equal(DINING.getCuisineProfile('missing'), null);
 assert.deepEqual(DINING.profileOverrides('missing', 'recommended'), {});
 
 console.log('dining light data tests passed', {
     materials: materials.length,
-    profiles: profiles.map(profile => profile.id)
+    cuisines: cuisines.length,
+    applicationSceneApiRemoved: true
 });

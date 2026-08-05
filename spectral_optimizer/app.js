@@ -130,12 +130,12 @@ const materialOptimizationBaselines = new Map();
 const diningOptimizationBaselines = new Map();
 const metamerWorkerClient = typeof METAMER_WORKER_CLIENT.createMetamerWorkerClient === 'function'
     ? METAMER_WORKER_CLIENT.createMetamerWorkerClient({
-        workerUrl: 'metamer-worker.js?v=20260804-dining-condition-baseline'
+        workerUrl: 'metamer-worker.js?v=20260804-dining-cuisine-only'
     })
     : null;
 const sceneOptimizerWorkerClient = typeof SCENE_OPTIMIZER_WORKER_CLIENT.createSceneOptimizerWorkerClient === 'function'
     ? SCENE_OPTIMIZER_WORKER_CLIENT.createSceneOptimizerWorkerClient({
-        workerUrl: 'scene-optimizer-worker.js?v=20260804-dining-condition-baseline'
+        workerUrl: 'scene-optimizer-worker.js?v=20260804-dining-cuisine-only'
     })
     : null;
 const cctAnimation = {
@@ -2037,14 +2037,14 @@ function materialOptimizationKey(request, channels, materials) {
 }
 
 function diningOptimizationKey(request, channels, materials) {
-    const targetMode = request.targetMode === 'scene' ? 'scene' : 'current';
+    const targetMode = request.targetMode === 'recommended' ? 'recommended' : 'current';
     return JSON.stringify({
-        profile: request.diningProfileId || '',
+        cuisine: request.cuisineProfileId || 'comprehensive',
         goal: request.goal || request.mode || 'preference',
         level: request.level || 'recommended',
         targetMode,
-        targetCct: targetMode === 'scene' ? Number(request.targetCct) || 0 : null,
-        targetDuv: targetMode === 'scene' ? Number(request.targetDuv) || 0 : null,
+        targetCct: targetMode === 'recommended' ? Number(request.targetCct) || 0 : null,
+        targetDuv: targetMode === 'recommended' ? Number(request.targetDuv) || 0 : null,
         channels: channels.map(channel => channel.id),
         materials: materials.map(material => material.id).sort()
     });
@@ -2168,7 +2168,7 @@ function applyTransientProfileOverride(profile, override, level) {
     ];
     const merged = {
         ...profile,
-        source: 'scene',
+        source: 'cuisine',
         importance: Number.isFinite(Number(override.importance)) ? Number(override.importance) : profile.importance,
         weights: Object.freeze(Object.assign({}, profile.weights, override.weights || {}))
     };
@@ -2194,21 +2194,47 @@ function resolvedProfilesForMaterials(materials, level, sessionOverrides, transi
     }));
 }
 
+function scheduleMaterialOptimizationTask(task, fallbackDelayMs = 250) {
+    let scheduled = false;
+    let fallbackTimer = 0;
+    const scheduleOnce = () => {
+        if (scheduled) return;
+        scheduled = true;
+        if (fallbackTimer) clearTimeout(fallbackTimer);
+        setTimeout(task, 0);
+    };
+
+    fallbackTimer = setTimeout(scheduleOnce, fallbackDelayMs);
+    if (typeof requestAnimationFrame !== 'function') {
+        scheduleOnce();
+        return;
+    }
+    try {
+        requestAnimationFrame(scheduleOnce);
+    } catch (error) {
+        scheduleOnce();
+    }
+}
+
 function handleMaterialOptimizationRequest(event) {
     const request = event.detail || {};
     const goal = request.goal === 'fidelity' || request.mode === 'fidelity' ? 'fidelity' : 'preference';
     const level = ['soft', 'recommended', 'vivid'].includes(request.level) ? request.level : 'recommended';
-    const diningProfileId = typeof request.diningProfileId === 'string' ? request.diningProfileId : '';
-    const diningProfileName = typeof request.diningProfileName === 'string' ? request.diningProfileName : '';
-    const isDiningOptimization = Boolean(diningProfileId);
-    const targetMode = isDiningOptimization && request.targetMode === 'scene' ? 'scene' : 'current';
+    const cuisineProfileId = typeof request.cuisineProfileId === 'string' ? request.cuisineProfileId : '';
+    const cuisineProfileName = typeof request.cuisineProfileName === 'string' ? request.cuisineProfileName : '';
+    const isDiningOptimization = Boolean(cuisineProfileId);
+    const targetMode = isDiningOptimization && request.targetMode === 'recommended' ? 'recommended' : 'current';
     const requestedCct = Number(request.targetCct);
     const requestedDuv = Number(request.targetDuv);
     const cctRange = Array.isArray(request.cctRange) && request.cctRange.length === 2
         ? request.cctRange.map(Number) : null;
-    const sceneCct = Number.isFinite(requestedCct) && (!cctRange ||
+    const recommendedCct = Number.isFinite(requestedCct) && (!cctRange ||
         (requestedCct >= cctRange[0] && requestedCct <= cctRange[1])) ? requestedCct : null;
-    const resultContext = { diningProfileId, diningProfileName, targetMode };
+    const resultContext = {
+        cuisineProfileId,
+        cuisineProfileName,
+        targetMode
+    };
     if (isMaterialOptimizing) {
         dispatchMaterialOptimizationResult({ goal, mode: goal, level, ...resultContext, error: '材质光色优化正在运行。' });
         return;
@@ -2232,8 +2258,7 @@ function handleMaterialOptimizationRequest(event) {
     const generation = ++materialOptimizationGeneration;
     isMaterialOptimizing = true;
 
-    requestAnimationFrame(() => {
-        setTimeout(async () => {
+    scheduleMaterialOptimizationTask(async () => {
             try {
                 const preparedChannels = channels.map(channel => ({
                     id: channel.id,
@@ -2278,14 +2303,14 @@ function handleMaterialOptimizationRequest(event) {
                     ? activeBaseline.referenceCct : null;
                 const cachedReferenceDuv = activeBaseline && Number.isFinite(activeBaseline.referenceDuv)
                     ? activeBaseline.referenceDuv : null;
-                const referenceCct = targetMode === 'scene' && sceneCct
-                    ? sceneCct
+                const referenceCct = targetMode === 'recommended' && recommendedCct
+                    ? recommendedCct
                     : (cachedReferenceCct || Number(initialEstimate?.cct) ||
                         (Number.isFinite(Number(request.cct)) && Number(request.cct) > 0
                             ? Number(request.cct) : targetCCT));
-                const referenceDuv = targetMode === 'scene' && Number.isFinite(requestedDuv)
+                const referenceDuv = targetMode === 'recommended' && Number.isFinite(requestedDuv)
                     ? requestedDuv : (cachedReferenceDuv ?? (Number(initialEstimate?.duv) || 0));
-                const targetXy = targetMode === 'scene'
+                const targetXy = targetMode === 'recommended'
                     ? getTargetXY(referenceCct, referenceDuv)
                     : initialXy;
                 const optimizationTarget = { cct: referenceCct, duv: referenceDuv, xy: targetXy };
@@ -2299,7 +2324,7 @@ function handleMaterialOptimizationRequest(event) {
                 const targetUpVp = CHROMATICITY_DIAGRAM.xyTo1976UpVp(targetXy.x, targetXy.y);
                 const beforeSnapshot = buildMaterialOptimizationSnapshot(channels, initialValues, optimizationTarget);
                 let optimizationInitialValues = initialValues.slice();
-                if (targetMode === 'scene') {
+                if (targetMode === 'recommended') {
                     const fittedValues = fitDiningValuesToTarget(
                         channels,
                         preparedChannels,
@@ -2315,11 +2340,11 @@ function handleMaterialOptimizationRequest(event) {
                             ...resultContext,
                             improved: false,
                             applied: false,
-                            sceneTargetApplied: false,
+                            recommendedTargetApplied: false,
                             materialCount: materials.length,
                             beforeSnapshot,
                             afterSnapshot: beforeSnapshot,
-                            message: '当前通道无法生成场景推荐色点的基础配方。'
+                            message: '当前通道无法生成菜系推荐色点的基础配方。'
                         });
                         return;
                     }
@@ -2338,12 +2363,12 @@ function handleMaterialOptimizationRequest(event) {
                             ...resultContext,
                             improved: false,
                             applied: false,
-                            sceneTargetApplied: false,
+                            recommendedTargetApplied: false,
                             materialCount: materials.length,
                             beforeSnapshot,
                             optimizationBaselineSnapshot: unavailableSnapshot,
                             afterSnapshot: beforeSnapshot,
-                            message: '当前通道无法在允许色差内达到场景推荐色点。'
+                            message: '当前通道无法在允许色差内达到菜系推荐色点。'
                         });
                         return;
                     }
@@ -2406,11 +2431,11 @@ function handleMaterialOptimizationRequest(event) {
                     Array.isArray(result.values) &&
                     result.values.length === channels.length
                 );
-                const sceneTargetApplied = Boolean(result.feasible && targetMode === 'scene');
-                const applied = spectralImproved || sceneTargetApplied;
+                const recommendedTargetApplied = Boolean(result.feasible && targetMode === 'recommended');
+                const applied = spectralImproved || recommendedTargetApplied;
                 const finalValues = spectralImproved
                     ? result.values.slice()
-                    : sceneTargetApplied
+                    : recommendedTargetApplied
                         ? optimizationInitialValues.slice()
                         : initialValues.slice();
                 const afterSnapshot = buildMaterialOptimizationSnapshot(
@@ -2427,7 +2452,7 @@ function handleMaterialOptimizationRequest(event) {
                         ...resultContext,
                         improved: false,
                         applied: false,
-                        sceneTargetApplied: false,
+                        recommendedTargetApplied: false,
                         materialCount: materials.length,
                         before: result.before,
                         after: result.after,
@@ -2441,7 +2466,7 @@ function handleMaterialOptimizationRequest(event) {
                     return;
                 }
 
-                if (sceneTargetApplied) synchronizeRequestedTarget(referenceCct, referenceDuv);
+                if (recommendedTargetApplied) synchronizeRequestedTarget(referenceCct, referenceDuv);
                 if (applied && !sameChannelValues(liveValues, finalValues)) {
                     const valuesById = {};
                     channels.forEach((channel, index) => {
@@ -2462,8 +2487,8 @@ function handleMaterialOptimizationRequest(event) {
                 const relativeOutputChangePercent = beforePhotopicY > 0 && Number.isFinite(afterPhotopicY)
                     ? (afterPhotopicY / beforePhotopicY - 1) * 100
                     : 0;
-                const noImprovementMessage = sceneTargetApplied
-                    ? '已采用场景推荐色点；当前目标色点下未找到额外的光谱优化收益。'
+                const noImprovementMessage = recommendedTargetApplied
+                    ? '已采用菜系推荐色点；当前目标色点下未找到额外的光谱优化收益。'
                     : goal === 'fidelity'
                         ? '当前色点和通道范围内未找到更低的综合色差。'
                         : '当前色点和通道范围内未找到更接近各材质偏好目标的配方。';
@@ -2474,7 +2499,7 @@ function handleMaterialOptimizationRequest(event) {
                     ...resultContext,
                     improved: spectralImproved,
                     applied,
-                    sceneTargetApplied,
+                    recommendedTargetApplied,
                     before: result.before,
                     after: result.after,
                     beforeSnapshot,
@@ -2498,7 +2523,6 @@ function handleMaterialOptimizationRequest(event) {
             } finally {
                 if (generation === materialOptimizationGeneration) isMaterialOptimizing = false;
             }
-        }, 0);
     });
 }
 
