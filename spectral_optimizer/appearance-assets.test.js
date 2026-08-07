@@ -44,22 +44,17 @@ const expectedSourcePages = {
 dishes.forEach(dish => {
     const source = dish.appearanceSource;
     assert.equal(source.type, 'photo-reference');
-    assert.match(source.file, /^https:\/\/images\.weserv\.nl\/\?url=/,
-        dish.id + ' must use the CORS-safe macro-image endpoint');
-    assert.match(source.file, /&precrop(?:&|$)/,
-        dish.id + ' must crop before resize');
-    assert.match(source.file, /&cw=\d+%25&ch=\d+%25/,
-        dish.id + ' must use a close-up crop smaller than the full dish');
+    assert.equal(source.file, 'assets/appearance/dining/' + dish.id + '.jpg',
+        dish.id + ' must use its own local photograph');
+    assert.equal(source.fallbackFile, '');
+    const imagePath = path.join(__dirname, source.file);
+    assert.ok(fs.existsSync(imagePath), dish.id + ' local photograph must be stored in the project');
+    assert.ok(fs.statSync(imagePath).size > 100000, dish.id + ' photograph must retain useful image detail');
     assert.match(source.sourcePage, expectedSourcePages[dish.id]);
     assert.match(source.label, /局部特写/);
-    assert.match(source.fallbackFile, /^assets\/appearance\/foods\/[a-z-]+\.webp$/);
-    const fallbackPath = path.join(__dirname, source.fallbackFile);
-    assert.ok(fs.existsSync(fallbackPath), dish.id + ' local fallback must be stored in the project');
-    assert.ok(fs.statSync(fallbackPath).size > 40000, dish.id + ' fallback must retain useful image detail');
 });
-assert.match(DINING.getMaterial('dish_silver_steamed_seafood').appearanceSource.file,
-    /p8\.itc\.cn.*051814e508e146cdacfb81f05af2acaa\.jpeg/,
-    'silver steamed seafood must use the exact third image confirmed by the user');
+assert.match(DINING.getMaterial('dish_silver_steamed_seafood').appearanceSource.sourcePage,
+    /sohu.*613719948/i, 'silver steamed seafood must retain the confirmed source attribution');
 assert.match(DINING.getMaterial('dish_multicolor_plating').representativeDishesCN, /水果/,
     'the multicolour category must recommend a multicolour fruit platter');
 
@@ -70,12 +65,11 @@ const manifest = fs.readFileSync(path.join(__dirname, 'assets', 'appearance', 'S
     '白切鸡浅色熟肉局部特写', '炒青菜翠绿叶片局部特写', '豆腐菌菇浅色表面局部特写',
     '熟黑椒牛肉酱汁局部特写', '多色水果拼盘局部特写', '沸腾红油火锅局部特写'
 ].forEach(label => assert.match(manifest, new RegExp(label)));
-assert.match(manifest, /images\.weserv\.nl/);
-assert.match(manifest, /本地备用图/);
+assert.match(manifest, /本地图片/);
 
 console.log('appearance asset tests passed', {
     materials: materials.length,
     dishes: dishes.length,
     concreteDishPhotos: dishes.length,
-    localFallbacks: dishes.length
+    localDishPhotos: dishes.length
 });

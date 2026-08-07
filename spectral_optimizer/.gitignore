@@ -29,16 +29,6 @@ cloudflare-membership/public/
 assets/textures/
 assets/textures-png/
 
-# Local cleanup quarantine and GitHub synchronization helpers
-cleanup-quarantine-manifest.json
-cleanup-quarantine-plan.md
-quarantine-unused-files.ps1
-restore-quarantined-files.ps1
-run-cleanup-quarantine.bat
-run-restore-quarantine.bat
-sync-spectral-optimizer-to-github.ps1
-run-sync-spectral-optimizer-to-github.bat
-
 # Operating-system files
 .DS_Store
 Thumbs.db

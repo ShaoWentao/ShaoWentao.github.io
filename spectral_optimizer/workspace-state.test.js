@@ -25,10 +25,12 @@ store.setAnalysisTab('material');
 assert.equal(store.getSnapshot().analysisTab, 'material');
 store.setAnalysisTab('dining');
 assert.equal(store.getSnapshot().analysisTab, 'dining');
+store.setAnalysisTab('museum');
+assert.equal(store.getSnapshot().analysisTab, 'museum');
 store.setAnalysisTab('health');
-assert.equal(store.getSnapshot().analysisTab, 'dining');
+assert.equal(store.getSnapshot().analysisTab, 'museum');
 store.setAnalysisTab('invalid');
-assert.equal(store.getSnapshot().analysisTab, 'dining');
+assert.equal(store.getSnapshot().analysisTab, 'museum');
 
 store.setDetails({ health: true, contribution: true });
 assert.deepEqual(store.getSnapshot().details, {

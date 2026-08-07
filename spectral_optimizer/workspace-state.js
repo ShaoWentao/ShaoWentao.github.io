@@ -2,7 +2,7 @@
 
 (function initWorkspaceState(globalScope) {
     const VALID_CHROMATICITY_VIEWS = new Set(['cie1976', 'cie1931']);
-    const VALID_ANALYSIS_TABS = new Set(['colour', 'material', 'dining']);
+    const VALID_ANALYSIS_TABS = new Set(['colour', 'material', 'dining', 'museum']);
     const DETAIL_KEYS = Object.freeze(['chromaticity', 'health', 'contribution']);
 
     function cloneValue(value) {

@@ -37,6 +37,9 @@ const MATERIAL_OPTIMIZER = window.MaterialOptimizer || {};
 const MATERIAL_COLOR = window.MaterialColor || {};
 const MATERIAL_DATA = window.MATERIAL_REFLECTANCE_DATA || {};
 const DINING_LIGHT_DATA = window.DiningLightData || {};
+const MUSEUM_LIGHT_DATA = window.MuseumLightData || {};
+const MUSEUM_DAMAGE_MODEL = window.MuseumDamageModel || {};
+const MUSEUM_OPTIMIZER = window.MuseumOptimizer || {};
 const MATERIAL_UPLOAD = window.MaterialUpload || {};
 const MATERIAL_PREFERENCE_PROFILES = window.MaterialPreferenceProfiles || {};
 const SPD_IMPORT = window.SpdImport || {};
@@ -57,6 +60,8 @@ if (typeof SPECTRAL_MATH.blackbodyXy !== 'function' ||
     typeof RECIPE_EXPORT.downloadJsonFile !== 'function' ||
     typeof MATERIAL_OPTIMIZER.optimizeMaterialFidelity !== 'function' ||
     typeof MATERIAL_COLOR.calculateMaterialDelta !== 'function' ||
+    typeof MUSEUM_OPTIMIZER.evaluateExhibit !== 'function' ||
+    typeof MUSEUM_DAMAGE_MODEL.calculateExposure !== 'function' ||
     !Array.isArray(CCT_JOURNEY.HUMAN_CENTRED_SCENES)) {
     throw new Error('CCT journey modules failed to load.');
 }
@@ -126,8 +131,12 @@ let isMetamerOptimizing = false;
 let materialOptimizationGeneration = 0;
 let isMaterialOptimizing = false;
 let diningOptimizationSession = null;
+let museumOptimizationSession = null;
+let museumOptimizationGeneration = 0;
+let isMuseumOptimizing = false;
 const materialOptimizationBaselines = new Map();
 const diningOptimizationBaselines = new Map();
+const museumOptimizationBaselines = new Map();
 const metamerWorkerClient = typeof METAMER_WORKER_CLIENT.createMetamerWorkerClient === 'function'
     ? METAMER_WORKER_CLIENT.createMetamerWorkerClient({
         workerUrl: 'metamer-worker.js?v=20260804-dining-cuisine-only'
@@ -1997,6 +2006,7 @@ function updateDeferredAnalysis(payload, version, isCurrent) {
     if (!isCurrent(version)) return;
     if (window.MaterialPanel) window.MaterialPanel.update(combined, metrics, { version, isCurrent });
     if (window.DiningPanel) window.DiningPanel.update(combined, metrics, { version, isCurrent });
+    if (window.MuseumPanel) window.MuseumPanel.update(combined, metrics, { version, isCurrent });
     if (!isCurrent(version)) return;
     if (window.SpectralProfessional?.updateDeferred) {
         window.SpectralProfessional.updateDeferred(professionalPayload);
@@ -2527,6 +2537,402 @@ function handleMaterialOptimizationRequest(event) {
 }
 
 document.addEventListener('spectral-material-optimization-request', handleMaterialOptimizationRequest);
+
+function dispatchMuseumOptimizationResult(detail) {
+    document.dispatchEvent(new CustomEvent('spectral-museum-optimization-result', { detail }));
+}
+
+function defaultMuseumExhibitId() {
+    const exhibit = typeof MUSEUM_LIGHT_DATA.getDefaultExhibit === 'function'
+        ? MUSEUM_LIGHT_DATA.getDefaultExhibit() : MUSEUM_LIGHT_DATA.exhibit;
+    return exhibit && exhibit.id ? exhibit.id : '';
+}
+
+function museumOptimizationKey(request, channels) {
+    return JSON.stringify({
+        exhibitId: request.exhibitId || defaultMuseumExhibitId(),
+        mode: request.mode || 'low-light-recognition',
+        strength: request.strength || 'recommended',
+        targetCct: Number(request.targetCct) || 3500,
+        duvRange: Array.isArray(request.duvRange) ? request.duvRange.map(Number) : [-0.001, 0.001],
+        currentIlluminance: Number(request.currentIlluminance) || 0,
+        targetIlluminance: Number(request.targetIlluminance) || 0,
+        dailyHours: Number(request.dailyHours) || 0,
+        annualDays: Number(request.annualDays) || 0,
+        channels: channels.map(channel => channel.id),
+        samples: Array.isArray(request.sampleIds) ? request.sampleIds.slice().sort() : []
+    });
+}
+
+function resolveMuseumOptimizationSession(channels, liveValues) {
+    const channelSignature = activeChannelSignature(channels);
+    const canReuse = museumOptimizationSession &&
+        museumOptimizationSession.channelSignature === channelSignature &&
+        (sameChannelValues(liveValues, museumOptimizationSession.resultValues) ||
+            sameChannelValues(liveValues, museumOptimizationSession.sourceValues));
+    if (!canReuse) {
+        museumOptimizationBaselines.clear();
+        museumOptimizationSession = {
+            channelSignature,
+            sourceValues: liveValues.slice(),
+            resultValues: liveValues.slice()
+        };
+    }
+    return museumOptimizationSession;
+}
+
+function museumQualityForSpd(spd) {
+    return typeof COLOUR_QUALITY.calculateColourQualityFromSpectrum === 'function'
+        ? COLOUR_QUALITY.calculateColourQualityFromSpectrum({ wavelengths, values: spd })
+        : { ra: 0, r9: 0, rf: 0, rg: 0 };
+}
+
+function evaluateMuseumCandidate(spd, values, preparedChannels, context) {
+    const xy = xyFromSPD(spd);
+    const estimate = SPECTRAL_MATH.estimateCctAndDuvFromXy
+        ? SPECTRAL_MATH.estimateCctAndDuvFromXy(xy.x, xy.y)
+        : { cct: context.targetCct, duv: context.targetDuv };
+    const quality = museumQualityForSpd(spd);
+    const concentration = MUSEUM_OPTIMIZER.channelConcentration(
+        preparedChannels,
+        values,
+        candidateSpd => xyzFromSPD(candidateSpd).Y
+    );
+    const roughness = MUSEUM_OPTIMIZER.spectralRoughness(spd);
+    const evaluation = MUSEUM_OPTIMIZER.evaluateExhibit(spd, {
+        exhibitId: context.exhibitId,
+        cct: context.targetCct,
+        duv: Number(estimate?.duv) || 0,
+        quality,
+        channelConcentration: concentration,
+        spectralRoughness: roughness
+    });
+    evaluation.cct = Number(estimate?.cct) || context.targetCct;
+    evaluation.duv = Number(estimate?.duv) || 0;
+    evaluation.quality = quality;
+    evaluation.channelConcentration = concentration;
+    evaluation.spectralRoughness = roughness;
+    return evaluation;
+}
+
+function museumSummaryForCandidate(spd, values, preparedChannels, context, baselineEvaluation) {
+    const evaluation = evaluateMuseumCandidate(spd, values, preparedChannels, context);
+    const summary = MUSEUM_OPTIMIZER.summarizeForMode(evaluation, context.modeSettings, baselineEvaluation);
+    const withinDuv = evaluation.duv >= context.duvRange[0] - 1e-12 &&
+        evaluation.duv <= context.duvRange[1] + 1e-12;
+    const withinCct = evaluation.cct >= context.cctRange[0] && evaluation.cct <= context.cctRange[1];
+    const recipeStable = evaluation.channelConcentration <= 0.90 && evaluation.spectralRoughness <= 0.40;
+    if (!withinDuv || !withinCct || !recipeStable) {
+        summary.weightedMeanPreferenceError = Infinity;
+        summary.meanPreferenceError = Infinity;
+        summary.maxPreferenceError = Infinity;
+    }
+    summary.museumEvaluation = evaluation;
+    return summary;
+}
+
+function handleMuseumOptimizationRequest(event) {
+    const request = event.detail || {};
+    const exhibitId = typeof request.exhibitId === 'string' && request.exhibitId
+        ? request.exhibitId : defaultMuseumExhibitId();
+    const mode = typeof request.mode === 'string' ? request.mode : 'low-light-recognition';
+    const strength = ['soft', 'recommended', 'strong'].includes(request.strength)
+        ? request.strength : 'recommended';
+    const resultContext = { optimizationDomain: 'museum', exhibitId, mode, strength };
+    const exhibit = MUSEUM_LIGHT_DATA.getExhibit(exhibitId);
+    if (!exhibit) {
+        dispatchMuseumOptimizationResult({ ...resultContext, error: '未找到对应的博物馆展品配置。' });
+        return;
+    }
+    if (isMuseumOptimizing) {
+        dispatchMuseumOptimizationResult({ ...resultContext, error: '博物馆展品优化正在运行。' });
+        return;
+    }
+    if (isMaterialOptimizing) {
+        dispatchMuseumOptimizationResult({ ...resultContext, error: '当前有其他材质光色优化正在运行。' });
+        return;
+    }
+
+    let modeSettings;
+    let exposure;
+    try {
+        modeSettings = MUSEUM_LIGHT_DATA.resolveModeSettings(mode, strength, exhibitId);
+        exposure = MUSEUM_DAMAGE_MODEL.calculateExposure({
+            currentIlluminance: request.currentIlluminance,
+            targetIlluminance: request.targetIlluminance,
+            dailyHours: request.dailyHours,
+            annualDays: request.annualDays
+        });
+    } catch (error) {
+        dispatchMuseumOptimizationResult({
+            ...resultContext,
+            error: '博物馆展品参数无效：' + (error && error.message ? error.message : '未知错误')
+        });
+        return;
+    }
+
+    const duvRange = Array.isArray(request.duvRange) && request.duvRange.length === 2
+        ? request.duvRange.map(Number) : [-0.001, 0.001];
+    if (!duvRange.every(Number.isFinite) || duvRange[0] > duvRange[1]) {
+        dispatchMuseumOptimizationResult({ ...resultContext, error: 'Duv 范围无效。' });
+        return;
+    }
+    const targetCct = Number.isFinite(Number(request.targetCct))
+        ? Math.max(1800, Math.min(10000, Number(request.targetCct))) : 3500;
+
+    if (Number(modeSettings.minRg) >= 110 && !importedChannels && currentMode !== 6) {
+        currentMode = 6;
+        if (modeCheckbox) modeCheckbox.checked = true;
+        const sixChannelSeed = optimizerSeedForTarget(CHANNELS_6CH, 0.25, targetCct);
+        channelValues = Object.fromEntries(CHANNELS_6CH.map((channel, index) => [
+            channel.id,
+            sixChannelSeed[index]
+        ]));
+        updateModeLabels();
+        buildChannelSliders();
+        scheduleUpdate();
+    }
+
+    const channels = getActiveChannels();
+    if (channels.length < 2) {
+        dispatchMuseumOptimizationResult({ ...resultContext, error: '至少需要两个可调通道才能优化展品光色。' });
+        return;
+    }
+    if (Number(modeSettings.minRg) >= 110 && channels.length < 6) {
+        dispatchMuseumOptimizationResult({
+            ...resultContext,
+            error: '低照度颜色辨识需要六通道光谱系统，以满足 Rg 110 以上的目标。'
+        });
+        return;
+    }
+
+    const targetDuv = duvRange[0] <= 0 && duvRange[1] >= 0 ? 0 : (duvRange[0] + duvRange[1]) / 2;
+    const targetXy = getTargetXY(targetCct, targetDuv);
+    const cctTolerance = Math.max(150, targetCct * 0.04);
+    const context = {
+        exhibitId,
+        modeSettings,
+        targetCct,
+        targetDuv,
+        targetXy,
+        duvRange,
+        cctRange: [targetCct - cctTolerance, targetCct + cctTolerance]
+    };
+
+    stopCctJourney();
+    stopSchedule();
+    returnToRegularMode('博物馆展品光色优化模式');
+    const generation = ++museumOptimizationGeneration;
+    isMuseumOptimizing = true;
+
+    scheduleMaterialOptimizationTask(async () => {
+        try {
+            const preparedChannels = channels.map(channel => ({
+                id: channel.id,
+                peak: Number(channel.peak) || 560,
+                spd: Array.from(wavelengths, wavelength => getChannelSPDValue(channel, wavelength))
+            }));
+            const liveValues = channels.map(channel => channelValues[channel.id] || 0);
+            const session = resolveMuseumOptimizationSession(channels, liveValues);
+            const key = museumOptimizationKey(request, channels);
+            let baseline = museumOptimizationBaselines.get(key);
+            if (!baseline || !sameChannelValues(baseline.sourceValues, session.sourceValues)) {
+                baseline = { sourceValues: session.sourceValues.slice(), resultValues: session.sourceValues.slice() };
+                museumOptimizationBaselines.set(key, baseline);
+            }
+            const sourceValues = baseline.sourceValues.slice();
+            const sourceSpd = combinedSPDFromValues(channels, sourceValues);
+            const sourceY = xyzFromSPD(sourceSpd).Y;
+            const currentIlluminance = Number(request.currentIlluminance);
+            const targetIlluminance = Number(request.targetIlluminance);
+            const targetY = sourceY > 0 && currentIlluminance > 0 && Number.isFinite(targetIlluminance)
+                ? sourceY * Math.max(0, targetIlluminance) / currentIlluminance
+                : sourceY;
+            let targetValues = null;
+            if (sceneOptimizerWorkerClient && sceneOptimizerWorkerClient.isSupported()) {
+                try {
+                    const workerPayload = {
+                        channels: preparedChannels,
+                        targetXy,
+                        targetCct,
+                        targetDuv,
+                        initialValues: sourceValues,
+                        skipColourQuality: true
+                    };
+                    if (Math.abs(targetDuv) < 1e-9 && typeof SPECTRAL_MATH.blackbodySpd === 'function') {
+                        workerPayload.referenceSpd = Array.from(SPECTRAL_MATH.blackbodySpd(targetCct, wavelengths));
+                    }
+                    const workerResult = await sceneOptimizerWorkerClient.optimize(workerPayload);
+                    if (Array.isArray(workerResult?.values) && workerResult.values.length === channels.length) {
+                        targetValues = workerResult.values.slice();
+                    }
+                } catch (error) {
+                    if (error && error.name !== 'AbortError') {
+                        console.warn('Museum target fitting worker fallback:', error);
+                    }
+                }
+            }
+            if (!targetValues) {
+                targetValues = fitDiningValuesToTarget(
+                    channels,
+                    preparedChannels,
+                    sourceValues,
+                    targetCct,
+                    targetXy
+                );
+            }
+            if (!Array.isArray(targetValues) || targetValues.length !== channels.length) {
+                dispatchMuseumOptimizationResult({
+                    ...resultContext,
+                    exposure,
+                    error: '当前通道无法生成目标 CCT 与 Duv 范围内的基础配方。'
+                });
+                return;
+            }
+            if (targetY > 0) targetValues = scaleChannelValuesToPhotopicY(channels, targetValues, targetY);
+
+            if (Number(modeSettings.minRg) >= 110 && typeof METAMER_OPTIMIZER.optimizeMetamer === 'function') {
+                try {
+                    const saturationSeed = await calculateMetamerOptimization({
+                        channels: preparedChannels,
+                        baselineValues: targetValues.slice(),
+                        targetXy,
+                        targetRg: Number(modeSettings.targetRg) || Number(modeSettings.minRg),
+                        objective: 'saturation'
+                    });
+                    if (saturationSeed && saturationSeed.feasible && Array.isArray(saturationSeed.values) &&
+                        saturationSeed.values.length === channels.length) {
+                        targetValues = saturationSeed.values.slice();
+                        if (targetY > 0) targetValues = scaleChannelValuesToPhotopicY(channels, targetValues, targetY);
+                    }
+                } catch (error) {
+                    console.warn('Museum Rg seed fallback:', error);
+                }
+            }
+
+            const optimizationTarget = { cct: targetCct, duv: targetDuv, xy: targetXy };
+            const beforeSnapshot = buildMaterialOptimizationSnapshot(channels, sourceValues, optimizationTarget);
+            const optimizationBaselineSnapshot = buildMaterialOptimizationSnapshot(channels, targetValues, optimizationTarget);
+            const beforeEvaluation = evaluateMuseumCandidate(
+                sourceSpd,
+                sourceValues,
+                preparedChannels,
+                context
+            );
+            const baselineEvaluation = evaluateMuseumCandidate(
+                combinedSPDFromValues(channels, targetValues),
+                targetValues,
+                preparedChannels,
+                context
+            );
+
+            const result = MATERIAL_OPTIMIZER.optimizeMaterialPreference({
+                channels: preparedChannels,
+                initialValues: targetValues,
+                targetXy,
+                maxDeltaUpVp: 0.001,
+                valueQuantum: 0.1,
+                stepSizes: [30, 15, 8, 4, 1],
+                maxPasses: 3,
+                worstWeight: 0.35,
+                quantityFromSpd(spd) { return xyzFromSPD(spd).Y; },
+                maxRelativeQuantityError: 0.01,
+                xyFromSpd: xyFromSPD,
+                xyToUpVp: CHROMATICITY_DIAGRAM.xyTo1976UpVp,
+                evaluateSpd(spd, values) {
+                    return museumSummaryForCandidate(spd, values, preparedChannels, context, baselineEvaluation);
+                }
+            });
+
+            if (generation !== museumOptimizationGeneration) return;
+            const optimizerFeasible = Boolean(result.feasible && Array.isArray(result.values) && result.values.length === channels.length);
+            const candidateValues = optimizerFeasible ? result.values.slice() : sourceValues.slice();
+            const candidateSnapshot = buildMaterialOptimizationSnapshot(channels, candidateValues, optimizationTarget);
+            const candidateEvaluation = evaluateMuseumCandidate(
+                candidateSnapshot.spd,
+                candidateValues,
+                preparedChannels,
+                context
+            );
+            const minimumRf = Number(modeSettings.minRf) || 0;
+            const minimumRg = Number(modeSettings.minRg) || 0;
+            const maximumRg = Number(modeSettings.maxRg) || Infinity;
+            const rfQualified = candidateEvaluation.quality.rf >= minimumRf - 1e-9;
+            const rgQualified = candidateEvaluation.quality.rg >= minimumRg - 1e-9 &&
+                candidateEvaluation.quality.rg <= maximumRg + 1e-9;
+            const feasible = optimizerFeasible && rfQualified && rgQualified;
+            const spectralImproved = Boolean(feasible && result.improved);
+            const finalValues = feasible ? candidateValues : sourceValues.slice();
+            const targetApplied = feasible && !sameChannelValues(sourceValues, finalValues);
+            const applied = targetApplied;
+            const afterSnapshot = feasible
+                ? candidateSnapshot
+                : buildMaterialOptimizationSnapshot(channels, finalValues, optimizationTarget);
+            const afterEvaluation = feasible
+                ? candidateEvaluation
+                : evaluateMuseumCandidate(afterSnapshot.spd, finalValues, preparedChannels, context);
+
+            if (feasible) synchronizeRequestedTarget(targetCct, targetDuv);
+            if (applied && !sameChannelValues(liveValues, finalValues)) {
+                const valuesById = {};
+                channels.forEach((channel, index) => { valuesById[channel.id] = finalValues[index]; });
+                const renderVersion = applyValuesImmediate(valuesById);
+                await waitForBaseRender(renderVersion, 5000);
+                await waitForDeferredRender(renderVersion, 7000);
+                if (generation !== museumOptimizationGeneration) return;
+            }
+            baseline.resultValues = finalValues.slice();
+            session.resultValues = finalValues.slice();
+
+            const beforeY = Number(beforeSnapshot.metrics.photopicY);
+            const afterY = Number(afterSnapshot.metrics.photopicY);
+            const relativeOutputChangePercent = beforeY > 0 && Number.isFinite(afterY)
+                ? (afterY / beforeY - 1) * 100 : 0;
+            const distinctionGroups = exhibit.evaluationProfile && exhibit.evaluationProfile.distinctionGroups || {};
+            const primaryDistinctionKey = Object.keys(distinctionGroups)[0];
+            const primaryDistinction = primaryDistinctionKey && afterEvaluation.distinction[primaryDistinctionKey];
+            const primaryDistinctionLabel = primaryDistinctionKey && distinctionGroups[primaryDistinctionKey]
+                ? distinctionGroups[primaryDistinctionKey].labelCN : '关键区域辨识度';
+            const message = feasible
+                ? (applied ? exhibit.nameCN + '配方已应用' : '当前配方已满足目标') +
+                    '：Rg ' + afterEvaluation.quality.rg.toFixed(1) +
+                    '，平均 ΔE00 ' + afterEvaluation.weightedMeanDeltaE00.toFixed(2) +
+                    '，' + primaryDistinctionLabel + ' ' + (primaryDistinction ? primaryDistinction.candidate.toFixed(2) : '—') + '。'
+                : '当前通道在目标 CCT、Duv、Rg、Rf 与展品色样约束下没有可用配方。';
+            dispatchMuseumOptimizationResult({
+                ...resultContext,
+                targetCct,
+                targetDuv,
+                duvRange: duvRange.slice(),
+                exposure,
+                feasible,
+                improved: spectralImproved,
+                applied,
+                targetApplied,
+                evaluations: result.evaluations,
+                relativeOutputChangePercent,
+                beforeSnapshot,
+                optimizationBaselineSnapshot,
+                afterSnapshot,
+                beforeEvaluation,
+                baselineEvaluation,
+                afterEvaluation,
+                message
+            });
+        } catch (error) {
+            console.error('Museum exhibit optimization failed:', error);
+            dispatchMuseumOptimizationResult({
+                ...resultContext,
+                exposure,
+                error: '博物馆展品优化失败：' + (error && error.message ? error.message : '未知错误')
+            });
+        } finally {
+            if (generation === museumOptimizationGeneration) isMuseumOptimizing = false;
+        }
+    });
+}
+
+document.addEventListener('spectral-museum-optimization-request', handleMuseumOptimizationRequest);
 
 function updateMetricCard(id, valueEl, barEl, newVal, oldVal, opts) {
     if (!valueEl || !barEl) return;

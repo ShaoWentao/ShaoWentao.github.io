@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="styles.css?v=20260804-dining-cuisine-only">
     <link rel="stylesheet" href="layout-final.css?v=20260804-dining-cuisine-only">
     <link rel="stylesheet" href="material-panel.css?v=20260804-dining-cuisine-only">
+    <link rel="stylesheet" href="museum-panel.css?v=20260804-dining-cuisine-only">
 </head>
 <body>
     <aside class="local-file-warning" id="local-file-warning" hidden>
@@ -255,6 +256,7 @@
                     <button type="button" id="analysis-tab-colour" data-analysis-tab="colour" aria-selected="true">显色与色样</button>
                     <button type="button" id="analysis-tab-material" data-analysis-tab="material" aria-selected="false" tabindex="-1">材质验证</button>
                     <button type="button" id="analysis-tab-dining" data-analysis-tab="dining" aria-selected="false" tabindex="-1">食材与餐饮</button>
+                    <button type="button" id="analysis-tab-museum" data-analysis-tab="museum" aria-selected="false" tabindex="-1">博物馆展品</button>
                 </div>
                 <section class="metric-group metric-group-quality" aria-labelledby="quality-metrics-title">
                     <div class="section-heading">
@@ -511,6 +513,112 @@
                     </section>
                 </section>
 
+                <section class="museum-panel glass-card" id="museum-panel" aria-labelledby="museum-panel-title">
+                    <div class="museum-panel-header">
+                        <div>
+                            <span class="section-eyebrow">单展品原型</span>
+                            <h2 id="museum-panel-title">博物馆展品展示效果对比</h2>
+                            <p>直接比较当前光谱与优化后光谱下的展品表现。</p>
+                        </div>
+                        <span class="museum-reference" id="museum-reference">等待有效光谱</span>
+                    </div>
+
+                    <section class="museum-showcase" data-museum-section="showcase" aria-label="博物馆展品展示对比">
+                        <div class="museum-showcase-layout">
+                            <div class="museum-exhibit-stage">
+                                <div class="museum-result-strip">
+                                    <strong id="museum-result-conclusion">等待优化</strong>
+                                    <span id="museum-result-summary">当前光谱已用于初始展品分析</span>
+                                </div>
+                                <div class="museum-primary-preview-grid" id="museum-primary-preview-grid">
+                                    <figure>
+                                        <canvas id="museum-current-preview" width="600" height="720"></canvas>
+                                        <figcaption><strong>当前光谱</strong><span id="museum-current-preview-caption">等待光谱</span></figcaption>
+                                    </figure>
+                                    <figure>
+                                        <canvas id="museum-optimized-preview" width="600" height="720"></canvas>
+                                        <figcaption><strong>优化后光谱</strong><span id="museum-optimized-preview-caption">运行优化后显示</span></figcaption>
+                                    </figure>
+                                </div>
+                                <p class="museum-preview-note" id="museum-preview-note">颜色保真模式保持接近原图；低照度模式重点增强钴蓝纹样、浅深蓝和蓝白过渡区域的辨识度；色彩增强模式适度提高整体饱和度。照度继续用于配方输出和累计曝光计算。</p>
+                                <div class="museum-visual-findings" id="museum-visual-findings" aria-label="展品视觉变化"></div>
+                                <div class="museum-exposure-summary">
+                                    <span>目标年度累计曝光量</span>
+                                    <strong id="museum-exposure-summary">-- lx·h/年</strong>
+                                </div>
+                            </div>
+
+                            <aside class="museum-control-panel" aria-label="展品优化控制">
+                                <div class="museum-control-heading">
+                                    <strong>优化展示效果</strong>
+                                    <span>先选择目标，再观察展品变化</span>
+                                </div>
+                                <div class="museum-control-grid">
+                                    <label><span>展品</span><select id="museum-exhibit"></select></label>
+                                    <label><span>优化模式</span><select id="museum-mode"><option value="fidelity">颜色保真</option><option value="low-light-recognition" selected>低照度颜色辨识</option><option value="colour-enhancement">色彩表现增强</option></select></label>
+                                    <label><span>优化强度</span><select id="museum-strength"><option value="soft">轻度</option><option value="recommended" selected>标准</option><option value="strong">加强</option></select></label>
+                                    <label><span>目标照度</span><span class="museum-control-input"><input type="number" id="museum-target-illuminance" min="0" max="10000" step="1" value="50"><small>lx</small></span></label>
+                                    <label><span>目标 CCT</span><span class="museum-control-input"><input type="number" id="museum-target-cct" min="1800" max="10000" step="50" value="3500"><small>K</small></span></label>
+                                </div>
+                                <div class="museum-mode-copy"><strong id="museum-mode-title">低照度颜色辨识</strong><span id="museum-mode-description">以 Rg 110 以上为基础，提高蓝白、浅深蓝和钴蓝纹样的分辨力。</span></div>
+                                <button type="button" id="museum-optimize-button">开始展品优化</button>
+                                <span class="museum-status" id="museum-optimization-status" role="status" aria-live="polite">设置条件后开始优化</span>
+                            </aside>
+                        </div>
+                    </section>
+
+                    <details class="museum-technical-details" id="museum-technical-details" data-museum-section="technical">
+                        <summary>照明设置与技术依据</summary>
+                        <div class="museum-technical-body">
+                            <section class="museum-technical-block" aria-labelledby="museum-lighting-title">
+                                <div class="museum-technical-heading"><h3 id="museum-lighting-title">照明与曝光设置</h3><p>当前条件、Duv范围与累计曝光量。</p></div>
+                                <div class="museum-input-grid">
+                                    <label><span>当前照度</span><input type="number" id="museum-current-illuminance" min="0" max="10000" step="1" value="50"><small>lx</small></label>
+                                    <label><span>当前 CCT</span><input type="number" id="museum-current-cct" min="1800" max="10000" step="50" value="4000"><small>K</small></label>
+                                    <label><span>Duv 下限</span><input type="number" id="museum-duv-min" min="-0.02" max="0.02" step="0.0001" value="-0.001"></label>
+                                    <label><span>Duv 上限</span><input type="number" id="museum-duv-max" min="-0.02" max="0.02" step="0.0001" value="0.001"></label>
+                                    <label><span>每日照明时长</span><input type="number" id="museum-daily-hours" min="0" max="24" step="0.5" value="8"><small>h</small></label>
+                                    <label><span>年展览天数</span><input type="number" id="museum-annual-days" min="0" max="366" step="1" value="300"><small>天</small></label>
+                                </div>
+                                <div class="museum-exposure-grid">
+                                    <div><small>当前每日曝光量</small><strong id="museum-current-daily-exposure">--</strong><span>lx·h/日</span></div>
+                                    <div><small>当前年度曝光量</small><strong id="museum-current-annual-exposure">--</strong><span>lx·h/年</span></div>
+                                    <div><small>目标每日曝光量</small><strong id="museum-target-daily-exposure">--</strong><span>lx·h/日</span></div>
+                                    <div><small>目标年度曝光量</small><strong id="museum-target-annual-exposure">--</strong><span>lx·h/年</span></div>
+                                </div>
+                                <p class="museum-note" id="museum-exposure-note"></p>
+                            </section>
+
+                            <section class="museum-technical-block" aria-labelledby="museum-exhibit-title">
+                                <div class="museum-technical-heading"><h3 id="museum-exhibit-title">工程色样与反射率</h3><p id="museum-exhibit-sample-count">展品色样用于算法计算，可按需查看。</p></div>
+                                <div class="museum-exhibit-summary">
+                                    <div><strong id="museum-exhibit-name">展品</strong><span id="museum-exhibit-description"></span></div>
+                                    <span class="museum-data-level">工程模型</span>
+                                </div>
+                                <div class="museum-sample-selector" id="museum-sample-selector" role="group" aria-label="展品工程色样"></div>
+                                <div class="museum-sample-detail">
+                                    <div><span class="material-category" id="museum-sample-role">颜色作用</span><h3 id="museum-sample-name">釉面白</h3><p id="museum-sample-description"></p></div>
+                                    <div class="museum-sample-limits" id="museum-sample-limits"></div>
+                                </div>
+                                <canvas id="museum-reflectance-canvas" width="960" height="180" aria-label="展品色样工程反射率曲线"></canvas>
+                                <p class="museum-note" id="museum-data-note">工程反射率模型，用于算法验证，不代表真实文物实测数据。</p>
+                            </section>
+
+                            <section class="museum-technical-block" aria-labelledby="museum-result-technical-title">
+                                <div class="museum-technical-heading"><h3 id="museum-result-technical-title">计算结果</h3><p id="museum-result-description">质量指标与当前展品工程色样的计算值。</p></div>
+                                <div class="museum-result-metrics" id="museum-result-metrics"></div>
+                                <div class="museum-sample-results" id="museum-sample-results"></div>
+                            </section>
+
+                            <section class="museum-technical-block" aria-labelledby="museum-spectrum-title">
+                                <div class="museum-technical-heading"><h3 id="museum-spectrum-title">光谱与通道</h3><p>优化前后SPD及各通道输出比例。</p></div>
+                                <canvas id="museum-optimization-spd" width="960" height="240" aria-label="博物馆优化前后光谱"></canvas>
+                                <div class="museum-optimization-channels" id="museum-optimization-channels"></div>
+                            </section>
+                        </div>
+                    </details>
+                </section>
+
                 <div class="material-preference-overlay" id="material-preference-dialog" hidden>
                     <div class="material-preference-dialog" role="dialog" aria-modal="true" aria-labelledby="material-preference-dialog-title">
                         <div class="material-preference-dialog__header">
@@ -641,7 +749,10 @@
     <script src="colour-quality.js?v=20260804-dining-cuisine-only"></script>
     <script src="material-reflectance-data.js?v=20260804-dining-cuisine-only"></script>
     <script src="dining-light-data.js?v=20260804-dining-cuisine-only"></script>
+    <script src="museum-light-data.js?v=20260804-dining-cuisine-only"></script>
+    <script src="museum-damage-model.js?v=20260804-dining-cuisine-only"></script>
     <script src="material-color.js?v=20260804-dining-cuisine-only"></script>
+    <script src="museum-optimizer.js?v=20260804-dining-cuisine-only"></script>
     <script src="material-preview-color.js?v=20260804-dining-cuisine-only"></script>
     <script src="material-upload.js?v=20260804-dining-cuisine-only"></script>
     <script src="material-preference-profiles.js?v=20260804-dining-cuisine-only"></script>
@@ -649,6 +760,7 @@
     <script src="optimization-comparison.js?v=20260804-dining-cuisine-only"></script>
     <script src="material-panel.js?v=20260804-dining-cuisine-only"></script>
     <script src="dining-panel.js?v=20260804-dining-cuisine-only"></script>
+    <script src="museum-panel.js?v=20260804-dining-cuisine-only"></script>
     <script src="pastel-palette.js?v=20260804-dining-cuisine-only"></script>
     <script src="candidate-shortlist.js?v=20260804-dining-cuisine-only"></script>
     <script src="metamer-optimizer.js?v=20260804-dining-cuisine-only"></script>

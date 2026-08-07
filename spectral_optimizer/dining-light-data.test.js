@@ -44,7 +44,7 @@ assert.equal(new Set(materials.map(item => item.id)).size, materials.length);
 assert.equal(new Set(cuisines.map(item => item.id)).size, cuisines.length);
 
 const materialIds = new Set(expectedDishIds);
-const remoteFiles = new Set();
+const localFiles = new Set();
 materials.forEach(material => {
     assert.equal(material.category, 'food');
     assert.equal(material.reflectance.length, 81, material.id + ' must have 81 reflectance samples');
@@ -56,17 +56,16 @@ materials.forEach(material => {
 
     const appearance = material.appearanceSource;
     assert.equal(appearance.type, 'photo-reference');
-    assert.match(appearance.file, /^https:\/\/images\.weserv\.nl\/\?url=/);
-    assert.match(appearance.file, /&precrop(?:&|$)/);
-    assert.match(appearance.file, /&cw=\d+%25&ch=\d+%25/);
+    assert.equal(appearance.file, 'assets/appearance/dining/' + material.id + '.jpg');
+    assert.doesNotMatch(appearance.file, /^https?:\/\//);
     assert.match(appearance.sourcePage, /^https:\/\//);
     assert.match(appearance.label, /局部特写/);
-    assert.match(appearance.fallbackFile, /^assets\/appearance\/foods\/[a-z-]+\.webp$/);
-    assert.equal(fs.existsSync(path.join(__dirname, appearance.fallbackFile)), true,
-        material.id + ' local fallback photograph must exist');
-    remoteFiles.add(appearance.file);
+    assert.equal(appearance.fallbackFile, '');
+    assert.equal(fs.existsSync(path.join(__dirname, appearance.file)), true,
+        material.id + ' local photograph must exist');
+    localFiles.add(appearance.file);
 });
-assert.equal(remoteFiles.size, 12, 'each dish type must use a distinct concrete dish photograph');
+assert.equal(localFiles.size, 12, 'each dish type must use a distinct local dish photograph');
 
 const standardCctSet = new Set([2700, 3000, 3500, 4000]);
 cuisines.forEach(cuisine => {

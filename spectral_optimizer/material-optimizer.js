@@ -435,7 +435,9 @@
             const upvp = settings.xyToUpVp(xy.x, xy.y);
             const deltaUpVp = Math.hypot(upvp.up - targetUpVp.up, upvp.vp - targetUpVp.vp);
             const raw = settings.evaluateSpd(spd, normalizedValues);
-            const summary = raw && Number.isFinite(raw.weightedMeanPreferenceError)
+            const hasExplicitSummary = raw && typeof raw.weightedMeanPreferenceError === 'number' &&
+                !Number.isNaN(raw.weightedMeanPreferenceError);
+            const summary = hasExplicitSummary
                 ? raw
                 : summarizeMaterialPreference(raw && raw.results ? raw.results : raw,
                     profilesByMaterialId || {

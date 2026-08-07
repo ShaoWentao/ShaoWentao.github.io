@@ -24,82 +24,76 @@
         food_golden_bread: 'dish_golden_fried',
         food_coffee_dark: 'dish_dark_sauce_mushroom'
     });
-    function macroPhoto(url, crop) {
-        return 'https://images.weserv.nl/?url=' + encodeURIComponent(String(url).replace(/^https?:\/\//, '')) +
-            '&precrop&cx=' + crop[0] + '%25&cy=' + crop[1] + '%25&cw=' + crop[2] + '%25&ch=' + crop[3] +
-            '%25&w=1200&h=900&fit=cover&output=jpg&q=88';
-    }
-
     const DINING_APPEARANCE = Object.freeze({
         dish_red_braised_meat: {
-            file: macroPhoto('https://images.pexels.com/photos/8256988/pexels-photo-8256988.jpeg', [31,27,43,43]),
-            fallbackFile: 'assets/appearance/foods/red-brown-cooked-meat.webp',
+            file: 'assets/appearance/dining/dish_red_braised_meat.jpg',
+            fallbackFile: '',
             sourcePage: 'https://www.pexels.com/photo/close-up-shot-of-delicious-braised-pork-on-white-ceramic-plate-8256988/',
             label: '红烧肉局部特写'
         },
         dish_red_chili_oil: {
-            file: macroPhoto('https://x0.ifengimg.com/ucms/2022_11/C68B7B980D9A51EA5FD268C58A41A000F3670732_size940_w1080_h658.png', [33,33,38,38]),
-            fallbackFile: 'assets/appearance/foods/vivid-red-produce.webp',
+            file: 'assets/appearance/dining/dish_red_chili_oil.jpg',
+            fallbackFile: '',
             sourcePage: 'https://ishare.ifeng.com/c/s/v002viQCQp1l9xEwP6nNNyP4hm7kxG7lA5WDzgCUASWpn8g__',
             label: '水煮肉片鲜红辣油局部特写'
         },
         dish_golden_fried: {
-            file: macroPhoto('https://images.pexels.com/photos/11502306/pexels-photo-11502306.jpeg', [29,27,39,39]),
-            fallbackFile: 'assets/appearance/foods/golden-baked-crust.webp',
+            file: 'assets/appearance/dining/dish_golden_fried.jpg',
+            fallbackFile: '',
             sourcePage: 'https://www.pexels.com/photo/fried-chicken-on-white-plate-11502306/',
             label: '炸鸡脆皮局部特写'
         },
         dish_dark_roasted_meat: {
-            file: macroPhoto('https://commons.wikimedia.org/wiki/Special:Redirect/file/Roasted%20goose%20made%20in%20north%20China(JiaoXiangMei)%20on%20dish.jpg?width=1800', [33,31,37,37]),
-            fallbackFile: 'assets/appearance/foods/dark-brown-roasted.webp',
+            file: 'assets/appearance/dining/dish_dark_roasted_meat.jpg',
+            fallbackFile: '',
             sourcePage: 'https://commons.wikimedia.org/wiki/File:Roasted_goose_made_in_north_China(JiaoXiangMei)_on_dish.jpg',
             label: '烧鹅烤制表皮局部特写'
         },
         dish_orange_pink_seafood: {
-            file: macroPhoto('https://images.pexels.com/photos/17584591/pexels-photo-17584591.jpeg', [28,30,41,41]),
-            fallbackFile: 'assets/appearance/foods/orange-pink-fish.webp',
+            file: 'assets/appearance/dining/dish_orange_pink_seafood.jpg',
+            fallbackFile: '',
             sourcePage: 'https://www.pexels.com/photo/salmon-on-plate-17584591/',
             label: '三文鱼橙粉鱼肉局部特写'
         },
         dish_silver_steamed_seafood: {
-            file: macroPhoto('https://p8.itc.cn/q_70/images03/20221205/051814e508e146cdacfb81f05af2acaa.jpeg', [12,5,76,90]),
-            fallbackFile: 'assets/appearance/foods/neutral-light-staple.webp',
+            file: 'assets/appearance/dining/dish_silver_steamed_seafood.jpg',
+            fallbackFile: '',
             sourcePage: 'https://www.sohu.com/a/613719948_121608686',
             label: '清蒸鱼银灰鱼皮与白色鱼肉局部特写'
         },
         dish_pale_poultry: {
-            file: macroPhoto('https://images.pexels.com/photos/30120279/pexels-photo-30120279.jpeg', [31,31,37,37]),
-            fallbackFile: 'assets/appearance/foods/neutral-light-staple.webp',
+            file: 'assets/appearance/dining/dish_pale_poultry.jpg',
+            fallbackFile: '',
             sourcePage: 'https://www.pexels.com/photo/hainanese-chicken-rice-with-fresh-vegetables-30120279/',
             label: '白切鸡浅色熟肉局部特写'
         },
         dish_green_vegetable: {
-            file: macroPhoto('https://images.pexels.com/photos/36108993/pexels-photo-36108993.jpeg', [30,30,39,39]),
-            fallbackFile: 'assets/appearance/foods/deep-green-leaves.webp',
+            file: 'assets/appearance/dining/dish_green_vegetable.jpg',
+            fallbackFile: '',
             sourcePage: 'https://www.pexels.com/photo/delicious-stir-fried-chinese-vegetables-on-plate-36108993/',
             label: '炒青菜翠绿叶片局部特写'
         },
         dish_pale_tofu_mushroom: {
-            file: macroPhoto('https://images.pexels.com/photos/5182122/pexels-photo-5182122.jpeg', [31,30,37,37]),
-            fallbackFile: 'assets/appearance/foods/neutral-light-staple.webp',
+            file: 'assets/appearance/dining/dish_pale_tofu_mushroom.jpg',
+            fallbackFile: '',
             sourcePage: 'https://www.pexels.com/photo/food-on-a-plate-5182122/',
             label: '豆腐菌菇浅色表面局部特写'
         },
         dish_dark_sauce_mushroom: {
-            file: macroPhoto('https://www.wokandkin.com/wp-content/uploads/2021/12/Black-Pepper-Beef-Close-Up-saved-for-web-1200px.png', [33,32,35,35]),
-            fallbackFile: 'assets/appearance/foods/dark-brown-roasted.webp',
+            file: 'assets/appearance/dining/dish_dark_sauce_mushroom.jpg',
+            fallbackFile: '',
             sourcePage: 'https://www.wokandkin.com/black-pepper-beef-stir-fry/',
             label: '熟黑椒牛肉酱汁局部特写'
         },
         dish_multicolor_plating: {
-            file: macroPhoto('https://images.pexels.com/photos/34664681/pexels-photo-34664681.png', [29,26,43,43]),
-            fallbackFile: 'assets/appearance/foods/vivid-red-produce.webp',
+            file: 'assets/appearance/dining/dish_multicolor_plating.jpg',
+            fallbackFile: '',
             sourcePage: 'https://www.pexels.com/photo/colorful-fruit-platter-with-berries-and-kiwis-34664681/',
             label: '多色水果拼盘局部特写'
         },
         dish_soup_hotpot: {
-            file: macroPhoto('https://ximg.retty.me/crop/s1440x1440/-/retty/img_ebisu/restaurant/100001734020/archive/3261891-65e6d1fb2111b.jpg', [29,29,43,43]),
-            fallbackFile: 'assets/appearance/foods/red-brown-cooked-meat.webp',
+            file: 'assets/appearance/dining/dish_soup_hotpot.jpg',
+            fallbackFile: '',
             sourcePage: 'https://rotei-shinsaibashi.foodre.jp/',
             label: '沸腾红油火锅局部特写'
         }
@@ -137,13 +131,13 @@
         return deepFreeze({
             type: visual ? 'photo-reference' : 'placeholder',
             label: visual ? visual.label : '完整菜式照片待补齐',
-            origin: visual ? 'externally sourced macro food photograph with local fallback' : 'awaiting macro food photograph',
+            origin: visual ? 'locally stored macro food photograph with source attribution' : 'awaiting macro food photograph',
             file: visual ? visual.file : '',
             fallbackFile: visual ? visual.fallbackFile : '',
             sourcePage: visual ? visual.sourcePage : '',
             baseFilter: 'none',
             notes: visual
-                ? '参考、优化前和优化后使用同一张食物局部特写；远程图片通过裁切端点统一为近景构图，网络不可用时显示本地参考图。'
+                ? '参考、优化前和优化后使用同一张本地食物局部特写，不依赖运行时网络图片。'
                 : '当前没有符合局部特写标准的照片；工程反射率模型仍可参与计算。'
         });
     }

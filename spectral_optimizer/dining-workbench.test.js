@@ -26,7 +26,7 @@ const { createLocalServer } = require('./local-server.js');
             materialHasFoodCategory: Boolean(document.querySelector('#analysis-pane-material [data-category="food"]')),
             diningParent: document.getElementById('dining-panel')?.parentElement?.id || ''
         }));
-        assert.deepEqual(structure.tabs, ['colour', 'material', 'dining']);
+        assert.deepEqual(structure.tabs, ['colour', 'material', 'dining', 'museum']);
         assert.equal(structure.materialHasDining, false);
         assert.equal(structure.materialHasFoodCategory, false);
         assert.equal(structure.diningParent, 'analysis-pane-dining');
@@ -88,19 +88,19 @@ const { createLocalServer } = require('./local-server.js');
         assert.equal(initial.thumbnailImages.length, 12);
         assert.equal(new Set(initial.thumbnailImages).size, 12,
             'one concrete dish photograph must not represent multiple dish visual types');
-        assert.ok(initial.thumbnailImages.every(value => /images\.weserv\.nl/.test(value)),
-            'all dish cards must use the close-up image endpoint');
-        assert.ok(initial.thumbnailImages.every(value => /assets\/appearance\/foods\/[a-z-]+\.webp/.test(value)),
-            'all dish cards must also include a local fallback photograph');
+        assert.ok(initial.thumbnailImages.every(value => /assets\/appearance\/dining\/dish_[a-z_]+\.jpg/.test(value)),
+            'all dish cards must use their own local close-up photograph');
+        assert.ok(initial.thumbnailImages.every(value => !/https?:\/\/(?!127\.0\.0\.1)/.test(value)),
+            'dish cards must not request third-party network photographs');
         assert.equal(initial.thumbnailPlaceholders.filter(Boolean).length, 0,
             'all twelve dish types must display a photograph');
         assert.ok(initial.thumbnailImages.every(value => !/linear-gradient/i.test(value)),
             'dish photographs must not be covered by a full-card colour gradient');
         assert.ok(initial.thumbnailBlends.every(value => value.split(',').every(item => item.trim() === 'normal')),
-            'dish photographs and local fallbacks must use normal image rendering');
+            'dish photographs must use normal image rendering');
         assert.ok(initial.thumbnailChips.every(value => value === 'none'),
             'dish thumbnails must not show pending-image placeholder chips');
-        assert.match(initial.identityImage, /8256988|red-brown-cooked-meat/);
+        assert.match(initial.identityImage, /assets\/appearance\/dining\/dish_red_braised_meat\.jpg/);
         assert.doesNotMatch(initial.identityImage, /linear-gradient/i);
         assert.equal(initial.identityBlend, 'normal');
         assert.equal(initial.identityFilter, 'none');
@@ -146,7 +146,7 @@ const { createLocalServer } = require('./local-server.js');
         await page.waitForFunction(() => ['dining-before-preview', 'dining-after-preview']
             .every(id => {
                 const canvas = document.getElementById(id);
-                return /8256988|red-brown-cooked-meat/.test(canvas?.dataset.imageSource || '') &&
+                return /assets\/appearance\/dining\/dish_red_braised_meat\.jpg/.test(canvas?.dataset.imageSource || '') &&
                     Boolean(canvas?.dataset.rendered);
             }), { timeout: 15000 });
 
@@ -247,7 +247,7 @@ const { createLocalServer } = require('./local-server.js');
         await page.waitForFunction(() => ['dining-before-preview', 'dining-after-preview']
             .every(id => {
                 const canvas = document.getElementById(id);
-                return /8256988|red-brown-cooked-meat/.test(canvas?.dataset.imageSource || '') &&
+                return /assets\/appearance\/dining\/dish_red_braised_meat\.jpg/.test(canvas?.dataset.imageSource || '') &&
                     Boolean(canvas?.dataset.rendered);
             }), { timeout: 15000 });
 

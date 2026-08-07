@@ -12,6 +12,7 @@
     "test:rgbw": "node rgbw-regression.test.js",
     "test:material": "node material-workbench.test.js",
     "test:dining": "node dining-light-data.test.js && node dining-image-loading.test.js && node dining-scheduling-regression.test.js && node dining-condition-switch.test.js && node dining-scene-mode.test.js && node dining-workbench.test.js",
+    "test:museum": "node museum-light-data.test.js && node museum-damage-model.test.js && node museum-optimizer.test.js && node museum-workbench.test.js",
     "test:export": "node recipe-export.test.js && node recipe-export-browser.test.js && node xlsx-workbook.test.js",
     "audit:page": "node page-audit.js",
     "validation:report": "node validation-report.js"

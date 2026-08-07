@@ -1,7 +1,7 @@
 (function (root) {
     'use strict';
 
-    const TAB_ORDER = ['colour', 'material', 'dining'];
+    const TAB_ORDER = ['colour', 'material', 'dining', 'museum'];
     let activeTab = 'colour';
 
     function byId(id) { return document.getElementById(id); }
@@ -41,6 +41,7 @@
         const samples = byId('color-samples-panel');
         const material = byId('material-panel');
         const dining = byId('dining-panel');
+        const museum = byId('museum-panel');
         if (quality) {
             quality.hidden = true;
             quality.classList.add('analysis-support-metrics');
@@ -49,6 +50,7 @@
         if (samples) panes.colour.appendChild(samples);
         if (material) panes.material.appendChild(material);
         if (dining) panes.dining.appendChild(dining);
+        if (museum) panes.museum.appendChild(museum);
 
         restoreProfessionalDetails();
     }

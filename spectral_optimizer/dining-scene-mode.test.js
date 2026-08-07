@@ -49,7 +49,7 @@ function sampleCanvas(page, id) {
             };
             document.addEventListener('spectral-material-optimization-result', listener);
         });
-        await page.click('#dining-light-apply');
+        await page.evaluate(() => document.getElementById('dining-light-apply')?.click());
         await page.waitForFunction(() => Boolean(window.__recommendedModeResult), { timeout: 90000 });
         await page.waitForFunction(() => document.getElementById('dining-light-apply')?.disabled === false, { timeout: 90000 });
         await page.waitForFunction(() => ['dining-before-preview', 'dining-after-preview'].every(id =>
