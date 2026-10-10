@@ -11,12 +11,11 @@ window.RoadReportTemplate = (() => {
   const table = (headers, rows, cls='') => `<table class="${cls}"><thead><tr>${headers.map(v=>`<th>${escape(v)}</th>`).join('')}</tr></thead><tbody>${rows.map(row=>`<tr>${row.map(v=>`<td>${escape(v)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
   const cv = (id,title='') => `<div class="figure figure-${id}">${title?`<h3>${title}</h3>`:''}<canvas id="${id}" width="1000" height="700"></canvas></div>`;
   function metadata(d,total) {
-    const test = d.keywords.TEST || '';
-    return `<table class="metadata"><tbody><tr><td colspan="3">Test: P:${f(d.power)}W &nbsp; Lamp Flux:${f(total)} lm</td></tr><tr><td>NAME: ${value('name')}</td><td>TYPE: ${escape(d.keywords.LUMCAT||'')}</td><td>WEIGHT:</td></tr><tr><td>SPEC.: ${value('spec')}</td><td>DIM.: ${[d.width,d.length,d.height].map(f).join(' × ')} ${d.units===1?'ft':'m'}</td><td>SERIAL No.: ${escape(test)}</td></tr><tr><td>MFR.: ${value('manufacturer')}</td><td>SUR.: ${escape(d.keywords.APERTURE||'')}</td><td>Shielding Angle:</td></tr></tbody></table>`;
+    return `<table class="metadata"><tbody><tr><td colspan="3">Test: ${value('testConditions')} P:${value('measuredPower')}W &nbsp; Lamp Flux:${f(total)} lm</td></tr><tr><td>NAME: ${value('name')}</td><td>TYPE: ${value('type')}</td><td>WEIGHT: ${value('weight')}</td></tr><tr><td>SPEC.: ${value('spec')}</td><td>DIM.: ${value('dimensions')}</td><td>SERIAL No.: ${value('testNo')}</td></tr><tr><td>MFR.: ${value('manufacturer')}</td><td>SUR.: ${value('aperture')}</td><td>Shielding Angle: ${value('shieldAngle')}</td></tr></tbody></table>`;
   }
   function footer(d) {
     const step = a => a.length>1?f(a[1]-a[0]):'0';
-    return `<footer><div>C Range: ${f(d.horizontal[0])} - ${f(d.horizontal.at(-1))}DEG<br>C Interval: ${step(d.horizontal)}DEG<br>Test Speed: ${escape(d.keywords.TESTSPEED||'')}<br>Temperature: ${escape(d.keywords.TEMPERATURE||'')}<br>Operators: ${escape(d.keywords.OPERATOR||'')}<br>Test Date: ${value('date')}</div><div>γ Range: ${f(d.vertical[0])} - ${f(d.vertical.at(-1))}DEG<br>γ Interval: ${step(d.vertical)}DEG<br>Test System: ${escape(d.keywords.TESTLAB||'')}<br>Humidity: ${escape(d.keywords.HUMIDITY||'')}<br>Test Distance: ${escape(d.keywords.TESTDISTANCE||'')}<br>Remarks: ${value('remarks')}</div></footer>`;
+    return `<footer><div>C Range: ${f(d.horizontal[0])} - ${f(d.horizontal.at(-1))}DEG<br>C Interval: ${step(d.horizontal)}DEG<br>Test Speed: ${value('testSpeed')}<br>Temperature: ${value('temperature')}<br>Operators: ${value('operator')}<br>Test Date: ${value('date')}</div><div>γ Range: ${f(d.vertical[0])} - ${f(d.vertical.at(-1))}DEG<br>γ Interval: ${step(d.vertical)}DEG<br>Test System: ${value('testSystem')}<br>Humidity: ${value('humidity')}<br>Test Distance: ${value('testDistance')}<br>Remarks: ${value('remarks')}</div></footer>`;
   }
   function peak(d) {
     let best={c:0,g:0,i:0};d.matrix.forEach((row,i)=>row.forEach((v,j)=>{if(v>best.i)best={c:d.horizontal[i],g:d.vertical[j],i:v};}));return best;
@@ -29,11 +28,11 @@ window.RoadReportTemplate = (() => {
     const rated = d.lumens>0?d.lumens*d.lamps:null;
     const lamp = `<table class="lamp"><colgroup><col class="lamp-label"><col class="lamp-value"><col class="lamp-label"><col class="lamp-value"><col class="lamp-label"><col class="lamp-value"></colgroup><thead><tr><th colspan="2">DATA OF LAMP</th><th colspan="4">PHOTOMETRIC DATA &nbsp; Eff: ${d.power>0?f(total/d.power):''} lm/W</th></tr></thead><tbody>${[
       ['MODEL',value('model'),'Imax(cd)',f(max.i),'η street_up(%)',percent(band(z,'front',90,180))],
-      ['NOMINAL POWER(W)',escape(d.keywords.NOMINALPOWER||''),'LOR(%)',rated?f(total/rated*100):'','η street_down(%)',percent(band(z,'front',0,90))],
-      ['RATED VOLTAGE(V)',escape(d.keywords.VOLTAGE||''),'TOTAL FLUX(lm)',f(total),'η house_up(%)',percent(band(z,'back',90,180))],
+      ['NOMINAL POWER(W)',value('ratedPower'),'LOR(%)',rated?f(total/rated*100):'','η street_down(%)',percent(band(z,'front',0,90))],
+      ['RATED VOLTAGE(V)',value('ratedVoltage'),'TOTAL FLUX(lm)',f(total),'η house_up(%)',percent(band(z,'back',90,180))],
       ['NOMINAL FLUX(lm)',rated?f(rated):'','MAXIMUM @(C,γ)',`${f(max.c)},${f(max.g)}`,'η house_down(%)',percent(band(z,'back',0,90))],
-      ['LAMPS INSIDE',f(d.lamps),'η up(%)',percent(up),'76 FLASHAREA(m²)',''],
-      ['TEST VOLTAGE(V)','','η down(%)',percent(total-up),'SLI','']
+      ['LAMPS INSIDE',f(d.lamps),'η up(%)',percent(up),'76 FLASHAREA(m²)',value('flashArea')],
+      ['TEST VOLTAGE(V)',value('testVoltage'),'η down(%)',percent(total-up),'SLI',value('sli')]
     ].map(row=>`<tr><td colspan="2"><span class="lamp-field-label">${row[0]}</span> ${row[1]}</td>${row.slice(2).map(v=>`<td>${v}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
     const legend=`<table class="level-table"><thead><tr><th>ISOCANDELA DIAGRAM</th><th>cd</th></tr></thead><tbody><tr><td>Imax=100%</td><td>${f(max.i)}</td></tr>${levels.map((l,i)=>`<tr><td><span class="color-line" style="border-color:${colors[i]}"></span>${l*100}%</td><td>${f(l*max.i)}</td></tr>`).join('')}</tbody></table>`;
     const normalizedAt = g => Math.max(...Array.from({length:360},(_,c)=>P.intensity(d,c,g)))/(rated||total)*1000;

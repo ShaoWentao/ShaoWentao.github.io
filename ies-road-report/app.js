@@ -10,6 +10,12 @@
     $('totalFlux').value=Number(sourceFlux.toPrecision(12)).toString();
     $('totalFlux').disabled=false;
   }
+  function initializeParameters() {
+    const k=data.keywords;
+    const fields={type:k.LUMTYPE||k.TYPE||'',dimensions:[data.width,data.length,data.height].join(' × ')+(data.units===1?' ft':' m'),aperture:k.APERTURE||'',weight:k.WEIGHT||'',testNo:k.TEST||'',shieldAngle:k.SHIELDINGANGLE||'',testConditions:k.TESTCONDITIONS||'',measuredPower:data.power,ratedPower:k.NOMINALPOWER||'',ratedVoltage:k.VOLTAGE||'',nominalFlux:data.lumens>0?data.lumens*data.lamps:'',lampCount:data.lamps,testVoltage:k.TESTVOLTAGE||'',flashArea:k.FLASHAREA||'',sli:k.SLI||'',testSpeed:k.TESTSPEED||'',testSystem:k.TESTSYSTEM||k.SYSTEM||'',temperature:k.TEMPERATURE||'',humidity:k.HUMIDITY||'',testDistance:k.TESTDISTANCE||'',operator:k.OPERATOR||'',date:/^\d{4}-\d{2}-\d{2}$/.test(k.TESTDATE||'')?k.TESTDATE:''};
+    Object.entries(fields).forEach(([id,v])=>$(id).value=v);
+    if(k.TESTLAB)$('lab').value=k.TESTLAB;
+  }
   function render() {
     if (!data) return;
     const h = Number($('height').value), tilt = Number($('tilt').value);
@@ -19,7 +25,12 @@
       return;
     }
     try {
+      if(!$('controls').checkValidity())throw Error('请检查参数数值：功率和面积不得为负，光源数量须为正整数');
       const adjusted=P.withFlux(data,Number($('totalFlux').value),sourceFlux);
+      adjusted.power=Number($('measuredPower').value);
+      adjusted.lamps=Number($('lampCount').value);
+      if(!Number.isInteger(adjusted.lamps)||adjusted.lamps<1)throw Error('光源数量须为正整数');
+      adjusted.lumens=$('nominalFlux').value===''?-1:Number($('nominalFlux').value)/adjusted.lamps;
       const zones = P.zones(adjusted, Number($('orientation').value));
       const total = zones.reduce((s, z) => s + z.front + z.back, 0);
       $('pages').innerHTML = RoadReportTemplate.build(adjusted, zones, total);
@@ -48,6 +59,7 @@
       if (parsed.peak <= 0) throw Error('文件中没有有效光强');
       data = parsed;
       initializeFlux();
+      initializeParameters();
       $('zeroUplight').checked = false;
       const k = data.keywords;
       $('model').value = k.LUMCAT || file.name;
@@ -73,6 +85,7 @@
     const values = horizontal.flatMap(c => vertical.map(g => 1275*Math.exp(-Math.pow(g/11,2))*(1+.08*Math.sin(c*P.rad))));
     data = P.parse(`IESNA:LM-63-2002\n[MANUFAC] Demo\n[LUMCAT] SAMPLE-19D\nTILT=NONE\n1 -1 1 91 9 1 2 .038 .038 .1\n1 1 5.8256\n${vertical.join(' ')}\n${horizontal.join(' ')}\n${values.join(' ')}`);
     initializeFlux();
+    initializeParameters();
     $('model').value = 'SAMPLE-19D (synthetic)';
     $('manufacturer').value = 'Demo';
     $('name').value = 'Underground Light';

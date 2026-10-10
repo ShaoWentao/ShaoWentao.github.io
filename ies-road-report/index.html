@@ -14,14 +14,40 @@
 <button id="sample" type="button">载入演示数据</button>
 <p id="status" role="status">请选择 IES 文件</p>
 <label>实验室<input id="lab" value="Huizhou CDN Industrial Development Co.,Ltd"></label>
-<label>灯具名称<input id="name" value="Streetlight"></label>
-<label>型号<input id="model"></label>
-<label>厂家<input id="manufacturer"></label>
-<label>规格<input id="spec"></label>
+<label>灯具名称（NAME）<input id="name" value="Streetlight"></label>
+<label>型号（MODEL）<input id="model"></label>
+<label>类型（TYPE）<input id="type"></label>
+<label>厂家（MFR.）<input id="manufacturer"></label>
+<label>规格（SPEC.）<input id="spec"></label>
 <label>整灯光通量（lm）<input id="totalFlux" type="number" min="0.000001" step="any" inputmode="decimal" disabled></label>
+<details><summary>灯具与电气参数</summary><div class="parameter-fields">
+<label>尺寸（DIM.）<input id="dimensions"></label>
+<label>发光口尺寸（SUR.）<input id="aperture"></label>
+<label>重量（WEIGHT）<input id="weight"></label>
+<label>测试编号（SERIAL No.）<input id="testNo"></label>
+<label>遮光角（Shielding Angle）<input id="shieldAngle"></label>
+<label>测试电气条件（Test）<input id="testConditions"></label>
+<label>实测功率（P / W）<input id="measuredPower" type="number" min="0" step="any"></label>
+<label>额定功率（NOMINAL POWER / W）<input id="ratedPower" type="number" min="0" step="any"></label>
+<label>额定电压（RATED VOLTAGE / V）<input id="ratedVoltage"></label>
+<label>额定光通量（NOMINAL FLUX / lm）<input id="nominalFlux" type="number" min="0.000001" step="any"></label>
+<label>光源数量（LAMPS INSIDE）<input id="lampCount" type="number" min="1" step="1" value="1"></label>
+<label>测试电压（TEST VOLTAGE / V）<input id="testVoltage"></label>
+<label>76° 投影面积（FLASHAREA / m²）<input id="flashArea" type="number" min="0" step="any"></label>
+<label>核定 SLI<input id="sli" type="number" step="any"></label>
+</div></details>
 <div class="pair"><label>安装高度 (m)<input id="height" type="number" min="0.1" max="100" step="0.1" value="10"></label><label>倾角 (°)<input id="tilt" type="number" min="-60" max="60" value="0"></label></div>
 <label>道路侧中心 C 角 (°)<select id="orientation"><option value="0">C0</option><option value="90">C90</option><option value="180">C180</option><option value="270">C270</option></select></label>
-<label>测试日期<input id="date" type="date"></label><label>备注<textarea id="remarks"></textarea></label>
+<details><summary>测试信息与页脚</summary><div class="parameter-fields">
+<label>测试速度（Test Speed）<input id="testSpeed"></label>
+<label>测试系统（Test System）<input id="testSystem"></label>
+<label>温度（Temperature）<input id="temperature"></label>
+<label>湿度（Humidity）<input id="humidity"></label>
+<label>测试距离（Test Distance）<input id="testDistance"></label>
+<label>操作员（Operators）<input id="operator"></label>
+<label>测试日期（Test Date）<input id="date" type="date"></label>
+<label>备注（Remarks）<textarea id="remarks"></textarea></label>
+</div></details>
 <label class="check-field"><input id="zeroUplight" type="checkbox">确认未测上半球无上射光</label>
 <label>CIE 配光宽度（核定值）<select id="cieSpread"><option value="Not supplied">未提供</option><option>Narrow</option><option>Average</option><option>Broad</option></select></label>
 <label>CIE 投射长度（核定值）<select id="cieThrow"><option value="Not supplied">未提供</option><option>Short</option><option>Intermediate</option><option>Long</option></select></label>
