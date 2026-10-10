@@ -1,35 +1,133 @@
-.paper{height:297mm;min-height:297mm;padding:19mm 13mm 23mm;position:relative;font-family:"Courier New",monospace;display:block;overflow:hidden;font-size:9px}
-.paper header{font-size:12px;line-height:1.2;padding:0 10mm 0 10mm;border-color:#aaa;height:6mm;white-space:nowrap;display:flex;justify-content:space-between}
-.paper header span:first-child{overflow:hidden;text-overflow:ellipsis;max-width:78%}
-.paper h2{font-family:inherit;font-weight:bold;font-size:12px;margin:18mm 0 2mm;line-height:1.4}
-.paper h3{font-family:inherit;font-weight:normal;font-size:9px;margin:0 0 4mm;text-align:center;line-height:1.4}
-.paper table{font-family:inherit;font-size:8px;margin:0;border-collapse:collapse;table-layout:fixed;width:100%;line-height:1.3}
-.paper td,.paper th{background:white;border:.5px solid #aaa;padding:1.4mm 1mm;overflow-wrap:anywhere;vertical-align:middle;font-weight:normal}
-.paper .metadata{font-weight:bold;margin-bottom:4mm}
-.paper .metadata td{font-weight:bold;text-align:left;padding:1.3mm 3mm}
-.paper .metadata td:first-child{width:47%}
-.paper .lamp{margin-bottom:4mm}.paper .lamp td{text-align:left;font-weight:bold;padding:1.6mm 2mm}.paper .lamp th{font-size:9px;font-weight:bold}
-.report-body{height:164mm;position:relative}
-.page-1 .report-body{height:168mm}
-.paper footer{position:absolute;left:13mm;right:13mm;bottom:25mm;height:25mm;border-top:.5px solid #aaa;padding:2mm 8mm 0;display:grid;grid-template-columns:42% 58%;font-size:8px;line-height:1.3;margin:0;overflow-wrap:anywhere}
-.twin{display:grid;grid-template-columns:1fr 1fr;gap:3.5mm;height:111mm}
-.twin .figure{border:.5px solid #aaa;padding:4mm 1mm 1mm}
-.paper canvas{display:block;max-width:100%;width:100%;height:auto;margin:0 auto}
-.paper .twin canvas{height:94mm;width:auto;max-width:100%;object-fit:contain}
-.paper .twin h3{font-size:8px;margin-bottom:0}
-.sphere-layout{display:grid;grid-template-columns:74% 26%;gap:0;align-items:center;margin-top:21mm}
-.sphere-layout .figure canvas{height:130mm;width:auto;object-fit:contain}
-.classification{font-size:8px;font-weight:bold;line-height:1.4;margin:0 0 4mm}.classification span{display:inline-block;min-width:12mm;border-bottom:.5px solid #ccc}
-.paper .level-table{font-size:8px}.level-table td,.level-table th{padding:1.3mm 1mm}
-.page-3 h2{margin-bottom:21mm}.page-3 .report-body{height:168mm}
-.figure-cu{height:89mm;border:.5px solid #aaa;padding:3mm 2mm}.figure-cu h3{position:absolute;top:2mm;left:25%;right:0;margin:0;font-size:8px;font-weight:bold}.figure-cu canvas{height:81mm;width:100%;object-fit:fill}
-.isolux-box{border:.5px solid #aaa;margin-top:4mm;height:78mm;padding:3mm}.isolux-box h3{font-size:8px;margin:0}
-.isolux-layout{display:grid;grid-template-columns:78% 22%;align-items:start;margin-top:1mm}.isolux-layout canvas{height:59mm;width:100%;object-fit:fill}.paper .isolux-layout table{font-size:7px}.isolux-layout td,.isolux-layout th{padding:1.05mm 0}
-.paper .zonal{font-size:7px}.zonal td,.zonal th{padding:1.2mm .4mm}.zonal th:nth-last-child(-n+3),.zonal td:nth-last-child(-n+3){color:#6d6917}
-.page-5 .figure{margin-top:18mm}.page-5 canvas{height:142mm;width:auto;object-fit:contain}
-.page-6 h2{margin-bottom:35mm}.page-6 .figure{border:.5px solid #aaa;padding:4mm}.page-6 canvas{height:140mm;width:auto;object-fit:contain}.page-6 .figure h3{font-weight:bold}
-.page-7 .figure{margin-top:6mm}.page-7 .figure h3{font-weight:bold;font-size:10px}.page-7 canvas{height:153mm;width:auto;object-fit:contain}
-.bug-table{margin-top:24mm}.bug-table p{margin:0 0 1mm}.bug-table td:first-child{text-align:left;font-weight:bold;width:60%}.bug-table td,.bug-table th{padding:1.3mm 2mm}.bug-table h3{font-weight:bold;text-align:left;margin:4mm 0}.blank-rating{display:inline-block;width:35mm;border-bottom:1px solid #aaa;margin-left:10mm}
-.page-9 .figure{margin-top:15mm}.page-9 canvas{height:147mm;width:auto;object-fit:contain}
-.candela-caption{font-size:8px;margin:2mm 0}.paper .candela{font-size:7px}.candela td,.candela th{padding:1.1mm .7mm}.page-10 .report-body{height:164mm}
-@media print{.paper{height:297mm;min-height:297mm;padding:19mm 13mm 23mm;break-inside:avoid}.paper canvas{image-rendering:auto}}
+/* Typography and paper dimensions match the English indoor report. */
+.paper {
+  --report-font: "Courier New", Courier, monospace;
+  width: 960px;
+  height: 1358px;
+  min-height: 1358px;
+  padding: 58px 72px 68px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: #111;
+  font-family: var(--report-font);
+  font-size: 13px;
+}
+.paper header {
+  flex: 0 0 auto;
+  height: auto;
+  padding: 0 0 8px;
+  border-bottom: 1.5px solid #1f1f1f;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+  gap: 14px;
+  align-items: end;
+}
+.paper header span:first-child { min-width: 0; flex: 1; overflow-wrap: anywhere; }
+.paper .page-number { flex: 0 0 auto; font-size: 15px; white-space: nowrap; }
+.paper h2 { flex: 0 0 auto; font-family: var(--report-font); font-weight: 700; font-size: 25px; margin: 54px 0 22px; line-height: 1.2; }
+.paper.page-1 h2 { font-size: 27px; }
+.paper h3 { font-family: var(--report-font); font-weight: 700; font-size: 17px; margin: 0 0 10px; text-align: center; line-height: 1.25; }
+.paper table { font-family: var(--report-font); font-size: 13px; margin: 0; border-collapse: collapse; table-layout: fixed; width: 100%; line-height: 1.25; border: 1.5px solid #1f1f1f; }
+.paper td, .paper th { background: #fff; border: 1px solid #1f1f1f; padding: 6px 8px; overflow-wrap: anywhere; vertical-align: middle; font-weight: normal; }
+.paper th { font-weight: 700; }
+.paper .metadata { flex: 0 0 auto; font-size: 15px; font-weight: 700; margin-bottom: 20px; }
+.paper .metadata td { font-weight: 700; text-align: left; padding: 7px 10px; }
+.paper .lamp { font-size: 15px; margin-bottom: 20px; }
+.paper .lamp td { text-align: left; font-weight: 700; padding: 7px 10px; }
+.paper .lamp th { font-size: 15px; }
+.lamp-label { width: 22%; }
+.lamp-value { width: 11.333%; }
+.lamp-field-label { display: inline; margin-right: 8px; }
+.report-body { position: relative; flex: 0 0 auto; min-height: 0; }
+.paper footer { position: static; margin-top: auto; border-top: 1.5px solid #1f1f1f; padding: 12px 36px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; font-family: var(--report-font); font-size: 15px; font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; flex: 0 0 auto; }
+.twin { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.twin .figure { border: 1.5px solid #1f1f1f; padding: 14px 14px 10px; }
+.paper canvas { display: block; max-width: 100%; width: 100%; height: auto; margin: 0 auto; }
+.paper .twin canvas { height: 310px; width: auto; max-width: 100%; object-fit: contain; }
+.paper .twin h3 { font-size: 17px; min-height: 44px; }
+.sphere-layout { display: grid; grid-template-columns: 73% 27%; align-items: center; margin-top: 45px; gap: 0; }
+.sphere-layout .figure canvas { height: 590px; width: auto; object-fit: contain; }
+.classification { font-size: 13px; font-weight: 700; line-height: 1.4; margin: 0 0 16px; overflow-wrap: anywhere; }
+.classification span { display: inline-block; min-width: 40px; border-bottom: 1px solid #777; }
+.paper .level-table { font-size: 13px; }
+.level-table td, .level-table th { padding: 6px 4px; }
+.page-3 h2 { margin-bottom: 54px; }
+.figure-cu { height: 395px; border: 1.5px solid #1f1f1f; padding: 14px 8px; }
+.figure-cu h3 { margin: 0; font-size: 17px; }
+.figure-cu canvas { height: 345px; width: 100%; object-fit: fill; }
+.isolux-box { border: 1.5px solid #1f1f1f; margin-top: 16px; padding: 12px; }
+.isolux-box h3 { font-size: 13px; margin: 0 0 8px; }
+.isolux-layout { display: grid; grid-template-columns: 78% 22%; align-items: start; }
+.isolux-layout canvas { height: 280px; width: 100%; object-fit: fill; }
+.paper .isolux-layout table { font-size: 11px; }
+.isolux-layout td, .isolux-layout th { padding: 4px 2px; }
+.paper .zonal { font-size: 11px; }
+.zonal td, .zonal th { padding: 5px 2px; }
+.zonal th:nth-last-child(-n+3), .zonal td:nth-last-child(-n+3) { color: #6d6917; }
+.page-5 .figure { margin-top: 45px; }
+.page-5 canvas { height: 620px; width: auto; object-fit: contain; }
+.page-6 h2 { margin-bottom: 122px; }
+.page-6 .figure { border: 1.5px solid #1f1f1f; padding: 14px; }
+.page-6 canvas { height: 640px; width: auto; object-fit: contain; }
+.page-7 .figure { margin-top: 20px; }
+.page-7 canvas { height: 660px; width: auto; object-fit: contain; }
+.bug-table { margin-top: 54px; }
+.bug-table p { margin: 0 0 8px; }
+.bug-table td:first-child { text-align: left; font-weight: 700; }
+.bug-table h3 { text-align: left; margin: 20px 0 12px; }
+.blank-rating { display: inline-block; width: 100px; border-bottom: 1px solid #777; margin-left: 20px; }
+.page-9 .figure { margin-top: 40px; }
+.page-9 canvas { height: 680px; width: auto; object-fit: contain; }
+.candela-caption { font-size: 13px; margin: 8px 0; }
+.paper .candela { font-size: 13px; }
+.candela td, .candela th { padding: 5px 3px; }
+@media print {
+  .paper { width: 210mm; height: 297mm; min-height: 297mm; max-height: 297mm; padding: 12mm 14mm 10mm; break-inside: avoid; font-size: 10px; }
+  .paper header { font-size: 14.5px; padding-bottom: 6px; gap: 8px; }
+  .paper .page-number { font-size: 11.5px; }
+  .paper h2 { font-size: 19px; margin: 30px 0 14px; }
+  .paper.page-1 h2 { font-size: 21px; }
+  .paper h3 { font-size: 13px; margin-bottom: 8px; }
+  .paper table { font-size: 10px; }
+  .paper td, .paper th { padding: 4px 6px; }
+  .paper .metadata, .paper .lamp, .paper .lamp th { font-size: 11px; }
+  .paper .metadata { margin-bottom: 12px; }
+  .paper .metadata td, .paper .lamp td { padding: 4px 6px; }
+  .paper .lamp { margin-bottom: 12px; }
+  .paper footer { font-size: 10.5px; line-height: 1.25; padding: 8px 20px 0; gap: 18px; }
+  .twin { gap: 5px; }
+  .twin .figure { padding: 8px 8px 6px; }
+  .paper .twin h3 { font-size: 13px; min-height: 32px; }
+  .paper .twin canvas { height: 290px; }
+  .sphere-layout { margin-top: 30px; }
+  .sphere-layout .figure canvas { height: 495px; }
+  .classification, .paper .level-table { font-size: 10px; }
+  .level-table td, .level-table th { padding: 4px 3px; }
+  .page-3 h2 { margin-bottom: 34px; }
+  .figure-cu { height: 315px; padding: 8px; }
+  .figure-cu h3 { font-size: 13px; }
+  .figure-cu canvas { height: 275px; }
+  .isolux-box { margin-top: 12px; padding: 8px; }
+  .isolux-box h3 { font-size: 10px; }
+  .isolux-layout canvas { height: 240px; }
+  .paper .isolux-layout table { font-size: 9px; }
+  .isolux-layout td, .isolux-layout th { padding: 3px 1px; }
+  .paper .zonal { font-size: 8px; }
+  .zonal td, .zonal th { padding: 4px 1px; }
+  .page-5 .figure { margin-top: 30px; }
+  .page-5 canvas { height: 530px; }
+  .page-6 h2 { margin-bottom: 80px; }
+  .page-6 .figure { padding: 8px; }
+  .page-6 canvas { height: 530px; }
+  .page-7 .figure { margin-top: 14px; }
+  .page-7 canvas { height: 560px; }
+  .bug-table { margin-top: 35px; }
+  .bug-table h3 { margin: 16px 0 10px; }
+  .page-9 .figure { margin-top: 24px; }
+  .page-9 canvas { height: 575px; }
+  .candela-caption { font-size: 10px; }
+  .paper .candela { font-size: 9.5px; }
+  .candela td, .candela th { padding: 3px 2px; }
+}

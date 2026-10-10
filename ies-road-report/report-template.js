@@ -26,14 +26,14 @@ window.RoadReportTemplate = (() => {
     const max=peak(d),up=band(z,'front',90,180)+band(z,'back',90,180);
     const percent = n => f(n/total*100);
     const rated = d.lumens>0?d.lumens*d.lamps:null;
-    const lamp = `<table class="lamp"><thead><tr><th colspan="2">DATA OF LAMP</th><th colspan="4">PHOTOMETRIC DATA &nbsp; Eff: ${d.power>0?f(total/d.power):''} lm/W</th></tr></thead><tbody>${[
+    const lamp = `<table class="lamp"><colgroup><col class="lamp-label"><col class="lamp-value"><col class="lamp-label"><col class="lamp-value"><col class="lamp-label"><col class="lamp-value"></colgroup><thead><tr><th colspan="2">DATA OF LAMP</th><th colspan="4">PHOTOMETRIC DATA &nbsp; Eff: ${d.power>0?f(total/d.power):''} lm/W</th></tr></thead><tbody>${[
       ['MODEL',value('model'),'Imax(cd)',f(max.i),'η street_up(%)',percent(band(z,'front',90,180))],
       ['NOMINAL POWER(W)',escape(d.keywords.NOMINALPOWER||''),'LOR(%)',rated?f(total/rated*100):'','η street_down(%)',percent(band(z,'front',0,90))],
       ['RATED VOLTAGE(V)',escape(d.keywords.VOLTAGE||''),'TOTAL FLUX(lm)',f(total),'η house_up(%)',percent(band(z,'back',90,180))],
       ['NOMINAL FLUX(lm)',rated?f(rated):'','MAXIMUM @(C,γ)',`${f(max.c)},${f(max.g)}`,'η house_down(%)',percent(band(z,'back',0,90))],
       ['LAMPS INSIDE',f(d.lamps),'η up(%)',percent(up),'76 FLASHAREA(m²)',''],
       ['TEST VOLTAGE(V)','','η down(%)',percent(total-up),'SLI','']
-    ].map(row=>`<tr>${row.map(v=>`<td>${v}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+    ].map(row=>`<tr><td colspan="2"><span class="lamp-field-label">${row[0]}</span> ${row[1]}</td>${row.slice(2).map(v=>`<td>${v}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
     const legend=table(['ISOCANDELA DIAGRAM','cd'],[['Imax=100%',f(max.i)],...levels.map((l,i)=>[`${l*100}%`,f(l*max.i)])],'level-table');
     const normalizedAt = g => Math.max(...Array.from({length:360},(_,c)=>P.intensity(d,c,g)))/total*1000;
     const classification=`<div class="classification">Classification:<br><br>IES: <span></span><br>CIE: <span></span><br>CIE cut-off: <span></span><br>IES cut-off: <span></span><br>Max.At80: ${f(normalizedAt(80))}cd/klm<br>Max.At90: ${f(normalizedAt(90))}cd/klm<br>Max.80-90: ${f(Math.max(...Array.from({length:11},(_,i)=>normalizedAt(80+i))))}cd/klm</div>`;
@@ -55,7 +55,7 @@ window.RoadReportTemplate = (() => {
     for(let col=0;col<planes.length;col+=12){for(let row=0;row<vertical.length;row+=37){const angles=planes.slice(col,col+12),gs=vertical.slice(row,row+37);contents.push(`<div class="candela-caption">γ(DEG) / C(DEG) &nbsp; UNIT: cd &nbsp; Table--${contents.length-8}</div>`+table(['γ',...angles.map(f)],gs.map(g=>[f(g),...angles.map(c=>f(P.intensity(d,c,g)))]),'candela'));}}
     return contents.map((content,i)=>`<article class="paper page-${Math.min(i+1,10)}"><header><span>${value('lab')}</span><span class="page-number">Page ${i+1} Of ${contents.length}</span></header><h2>${titles[Math.min(i,9)]}</h2>${[2,5].includes(i)?'':metadata(d,total)}<div class="report-body">${content}</div>${footer(d)}</article>`).join('');
   }
-  function context(id,width=1000,height=700){const canvas=$(id);canvas.width=width;canvas.height=height;const ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,width,height);ctx.font='18px Courier New';ctx.fillStyle='#111';ctx.lineWidth=1;return ctx;}
+  function context(id,width=1000,height=700){const canvas=$(id);canvas.width=width;canvas.height=height;const ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,width,height);const displayedWidth=canvas.getBoundingClientRect().width||width;const labelSize=window.matchMedia('print').matches?10:13;ctx.font=`${Math.round(labelSize*width/displayedWidth)}px "Courier New", Courier, monospace`;ctx.fillStyle='#111';ctx.lineWidth=1;return ctx;}
   function line(ctx,points,color='#aaa',width=1){ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke();}
   function circle(ctx,x,y,r){ctx.strokeStyle='#aaa';ctx.lineWidth=1;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.stroke();}
   function polar(d,id,cone=false){const ctx=context(id,700,800),x=350,y=360,r=270,max=peak(d),scale=d3.tickStep(0,max.i,5)*Math.ceil(max.i/d3.tickStep(0,max.i,5));
