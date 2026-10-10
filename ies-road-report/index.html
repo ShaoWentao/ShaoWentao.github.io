@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IES Road Report | Shao Wentao</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar"><a href="../">Shao Wentao</a><strong>IES Road Report</strong><nav><a href="../ies-editor/">IES Editor</a><a href="../ies-report/">室内报告</a><button id="print" disabled>打印 / PDF</button></nav></header>
+<main>
+<aside><h1>道路光度报告</h1><form id="controls">
+<label>IES 文件<input id="file" type="file" accept=".ies,.txt"></label>
+<button id="sample" type="button">载入演示数据</button>
+<p id="status" role="status">请选择 IES 文件</p>
+<label>实验室<input id="lab" value="Huizhou CDN Industrial Development Co.,Ltd"></label>
+<label>灯具名称<input id="name" value="Streetlight"></label>
+<label>型号<input id="model"></label>
+<label>厂家<input id="manufacturer"></label>
+<label>规格<input id="spec"></label>
+<div class="pair"><label>安装高度 (m)<input id="height" type="number" min="0.1" max="100" step="0.1" value="10"></label><label>倾角 (°)<input id="tilt" type="number" min="-60" max="60" value="0"></label></div>
+<label>道路侧中心 C 角 (°)<select id="orientation"><option value="0">C0</option><option value="90">C90</option><option value="180">C180</option><option value="270">C270</option></select></label>
+<label>测试日期<input id="date" type="date"></label><label>备注<textarea id="remarks"></textarea></label>
+</form></aside>
+<section class="preview"><div class="previewbar"><strong>报告预览</strong><span id="count">0 页</span></div><div id="empty"><h2>IES Road Report</h2><p>道路照明光度数据</p></div><div id="pages"></div></section>
+</main><script src="photometry.js"></script><script src="app.js"></script>
+</body></html>
