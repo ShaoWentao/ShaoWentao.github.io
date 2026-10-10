@@ -4,6 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>IES Road Report | Shao Wentao</title>
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="report.css">
 </head>
 <body>
 <header class="topbar"><a href="../">Shao Wentao</a><strong>IES Road Report</strong><nav><a href="../ies-editor/">IES Editor</a><a href="../ies-report/">室内报告</a><button id="print" disabled>打印 / PDF</button></nav></header>
@@ -22,5 +23,5 @@
 <label>测试日期<input id="date" type="date"></label><label>备注<textarea id="remarks"></textarea></label>
 </form></aside>
 <section class="preview"><div class="previewbar"><strong>报告预览</strong><span id="count">0 页</span></div><div id="empty"><h2>IES Road Report</h2><p>道路照明光度数据</p></div><div id="pages"></div></section>
-</main><script src="photometry.js"></script><script src="app.js"></script>
+</main><script src="d3.min.js"></script><script src="photometry.js"></script><script src="report-template.js"></script><script src="app.js"></script>
 </body></html>

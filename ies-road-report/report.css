@@ -1,0 +1,35 @@
+.paper{height:297mm;min-height:297mm;padding:19mm 13mm 23mm;position:relative;font-family:"Courier New",monospace;display:block;overflow:hidden;font-size:9px}
+.paper header{font-size:12px;line-height:1.2;padding:0 10mm 0 10mm;border-color:#aaa;height:6mm;white-space:nowrap;display:flex;justify-content:space-between}
+.paper header span:first-child{overflow:hidden;text-overflow:ellipsis;max-width:78%}
+.paper h2{font-family:inherit;font-weight:bold;font-size:12px;margin:18mm 0 2mm;line-height:1.4}
+.paper h3{font-family:inherit;font-weight:normal;font-size:9px;margin:0 0 4mm;text-align:center;line-height:1.4}
+.paper table{font-family:inherit;font-size:8px;margin:0;border-collapse:collapse;table-layout:fixed;width:100%;line-height:1.3}
+.paper td,.paper th{background:white;border:.5px solid #aaa;padding:1.4mm 1mm;overflow-wrap:anywhere;vertical-align:middle;font-weight:normal}
+.paper .metadata{font-weight:bold;margin-bottom:4mm}
+.paper .metadata td{font-weight:bold;text-align:left;padding:1.3mm 3mm}
+.paper .metadata td:first-child{width:47%}
+.paper .lamp{margin-bottom:4mm}.paper .lamp td{text-align:left;font-weight:bold;padding:1.6mm 2mm}.paper .lamp th{font-size:9px;font-weight:bold}
+.report-body{height:164mm;position:relative}
+.page-1 .report-body{height:168mm}
+.paper footer{position:absolute;left:13mm;right:13mm;bottom:25mm;height:25mm;border-top:.5px solid #aaa;padding:2mm 8mm 0;display:grid;grid-template-columns:42% 58%;font-size:8px;line-height:1.3;margin:0;overflow-wrap:anywhere}
+.twin{display:grid;grid-template-columns:1fr 1fr;gap:3.5mm;height:111mm}
+.twin .figure{border:.5px solid #aaa;padding:4mm 1mm 1mm}
+.paper canvas{display:block;max-width:100%;width:100%;height:auto;margin:0 auto}
+.paper .twin canvas{height:94mm;width:auto;max-width:100%;object-fit:contain}
+.paper .twin h3{font-size:8px;margin-bottom:0}
+.sphere-layout{display:grid;grid-template-columns:74% 26%;gap:0;align-items:center;margin-top:21mm}
+.sphere-layout .figure canvas{height:130mm;width:auto;object-fit:contain}
+.classification{font-size:8px;font-weight:bold;line-height:1.4;margin:0 0 4mm}.classification span{display:inline-block;min-width:12mm;border-bottom:.5px solid #ccc}
+.paper .level-table{font-size:8px}.level-table td,.level-table th{padding:1.3mm 1mm}
+.page-3 h2{margin-bottom:21mm}.page-3 .report-body{height:168mm}
+.figure-cu{height:89mm;border:.5px solid #aaa;padding:3mm 2mm}.figure-cu h3{position:absolute;top:2mm;left:25%;right:0;margin:0;font-size:8px;font-weight:bold}.figure-cu canvas{height:81mm;width:100%;object-fit:fill}
+.isolux-box{border:.5px solid #aaa;margin-top:4mm;height:78mm;padding:3mm}.isolux-box h3{font-size:8px;margin:0}
+.isolux-layout{display:grid;grid-template-columns:78% 22%;align-items:start;margin-top:1mm}.isolux-layout canvas{height:59mm;width:100%;object-fit:fill}.paper .isolux-layout table{font-size:7px}.isolux-layout td,.isolux-layout th{padding:1.05mm 0}
+.paper .zonal{font-size:7px}.zonal td,.zonal th{padding:1.2mm .4mm}.zonal th:nth-last-child(-n+3),.zonal td:nth-last-child(-n+3){color:#6d6917}
+.page-5 .figure{margin-top:18mm}.page-5 canvas{height:142mm;width:auto;object-fit:contain}
+.page-6 h2{margin-bottom:35mm}.page-6 .figure{border:.5px solid #aaa;padding:4mm}.page-6 canvas{height:140mm;width:auto;object-fit:contain}.page-6 .figure h3{font-weight:bold}
+.page-7 .figure{margin-top:6mm}.page-7 .figure h3{font-weight:bold;font-size:10px}.page-7 canvas{height:153mm;width:auto;object-fit:contain}
+.bug-table{margin-top:24mm}.bug-table p{margin:0 0 1mm}.bug-table td:first-child{text-align:left;font-weight:bold;width:60%}.bug-table td,.bug-table th{padding:1.3mm 2mm}.bug-table h3{font-weight:bold;text-align:left;margin:4mm 0}.blank-rating{display:inline-block;width:35mm;border-bottom:1px solid #aaa;margin-left:10mm}
+.page-9 .figure{margin-top:15mm}.page-9 canvas{height:147mm;width:auto;object-fit:contain}
+.candela-caption{font-size:8px;margin:2mm 0}.paper .candela{font-size:7px}.candela td,.candela th{padding:1.1mm .7mm}.page-10 .report-body{height:164mm}
+@media print{.paper{height:297mm;min-height:297mm;padding:19mm 13mm 23mm;break-inside:avoid}.paper canvas{image-rendering:auto}}
