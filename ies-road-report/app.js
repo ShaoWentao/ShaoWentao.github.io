@@ -14,7 +14,6 @@
     const k=data.keywords;
     const fields={type:k.LUMTYPE||k.TYPE||'',dimensions:[data.width,data.length,data.height].join(' × ')+(data.units===1?' ft':' m'),aperture:k.APERTURE||'',weight:k.WEIGHT||'',testNo:k.TEST||'',shieldAngle:k.SHIELDINGANGLE||'',testConditions:k.TESTCONDITIONS||'',measuredPower:data.power,ratedPower:k.NOMINALPOWER||'',ratedVoltage:k.VOLTAGE||'',nominalFlux:data.lumens>0?data.lumens*data.lamps:'',lampCount:data.lamps,testVoltage:k.TESTVOLTAGE||'',flashArea:k.FLASHAREA||'',sli:k.SLI||'',testSpeed:k.TESTSPEED||'',testSystem:k.TESTSYSTEM||k.SYSTEM||'',temperature:k.TEMPERATURE||'',humidity:k.HUMIDITY||'',testDistance:k.TESTDISTANCE||'',operator:k.OPERATOR||'',date:/^\d{4}-\d{2}-\d{2}$/.test(k.TESTDATE||'')?k.TESTDATE:''};
     Object.entries(fields).forEach(([id,v])=>$(id).value=v);
-    if(k.TESTLAB)$('lab').value=k.TESTLAB;
   }
   function render() {
     if (!data) return;
