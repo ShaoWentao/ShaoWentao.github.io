@@ -48,5 +48,10 @@ window.RoadPhotometry = (() => {
     const c=Math.atan2(side,localForward)/rad+orientation;
     return {i:intensity(d,c,g),e:intensity(d,c,g)*h/(r*r*r)};
   }
-  return {parse,intensity,zones,ground,rad};
+  function withFlux(d,target,sourceFlux) {
+    if(!Number.isFinite(target)||target<=0||!Number.isFinite(sourceFlux)||sourceFlux<=0)throw Error('整灯光通量必须为大于 0 的有效数值');
+    const scale=target/sourceFlux;
+    return {...d,peak:d.peak*scale,matrix:d.matrix.map(row=>row.map(value=>value*scale))};
+  }
+  return {parse,intensity,zones,ground,withFlux,rad};
 })();

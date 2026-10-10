@@ -2,8 +2,14 @@
   const $ = id => document.getElementById(id);
   const P = window.RoadPhotometry;
   let data = null;
+  let sourceFlux = 0;
   let timer;
   let fileRevision = 0;
+  function initializeFlux() {
+    sourceFlux=P.zones(data).reduce((sum,zone)=>sum+zone.front+zone.back,0);
+    $('totalFlux').value=Number(sourceFlux.toPrecision(12)).toString();
+    $('totalFlux').disabled=false;
+  }
   function render() {
     if (!data) return;
     const h = Number($('height').value), tilt = Number($('tilt').value);
@@ -13,14 +19,15 @@
       return;
     }
     try {
-      const zones = P.zones(data, Number($('orientation').value));
+      const adjusted=P.withFlux(data,Number($('totalFlux').value),sourceFlux);
+      const zones = P.zones(adjusted, Number($('orientation').value));
       const total = zones.reduce((s, z) => s + z.front + z.back, 0);
-      $('pages').innerHTML = RoadReportTemplate.build(data, zones, total);
-      RoadReportTemplate.draw(data, zones, total);
+      $('pages').innerHTML = RoadReportTemplate.build(adjusted, zones, total);
+      RoadReportTemplate.draw(adjusted, zones, total);
       const count = document.querySelectorAll('.paper').length;
       $('count').textContent = count + ' 页';
       $('empty').hidden = true;
-      const metrics=RoadMetrics.evaluate(data,zones,total,Number($('orientation').value),$('zeroUplight').checked);
+      const metrics=RoadMetrics.evaluate(adjusted,zones,total,Number($('orientation').value),$('zeroUplight').checked);
       $('status').textContent = `已生成 ${count} 页 · ${total.toFixed(2)} lm · ${metrics.bug.text}${metrics.upperKnown?'':' · U评级需上半球数据或无上射光确认'}`;
       $('print').disabled = false;
     } catch (error) {
@@ -40,6 +47,7 @@
       const parsed = P.parse(text);
       if (parsed.peak <= 0) throw Error('文件中没有有效光强');
       data = parsed;
+      initializeFlux();
       $('zeroUplight').checked = false;
       const k = data.keywords;
       $('model').value = k.LUMCAT || file.name;
@@ -50,6 +58,8 @@
       render();
     } catch (error) {
       data = null;
+      $('totalFlux').value='';
+      $('totalFlux').disabled=true;
       $('pages').innerHTML = '';
       $('count').textContent = '0 页';
       $('empty').hidden = false;
@@ -62,6 +72,7 @@
     const vertical = Array.from({length:91}, (_,i) => i), horizontal = [0,45,90,135,180,225,270,315,360];
     const values = horizontal.flatMap(c => vertical.map(g => 1275*Math.exp(-Math.pow(g/11,2))*(1+.08*Math.sin(c*P.rad))));
     data = P.parse(`IESNA:LM-63-2002\n[MANUFAC] Demo\n[LUMCAT] SAMPLE-19D\nTILT=NONE\n1 -1 1 91 9 1 2 .038 .038 .1\n1 1 5.8256\n${vertical.join(' ')}\n${horizontal.join(' ')}\n${values.join(' ')}`);
+    initializeFlux();
     $('model').value = 'SAMPLE-19D (synthetic)';
     $('manufacturer').value = 'Demo';
     $('name').value = 'Underground Light';
@@ -72,6 +83,7 @@
   });
   $('controls').addEventListener('input', event => {
     if (event.target.id === 'file') return;
+    $('print').disabled=true;
     clearTimeout(timer);
     timer = setTimeout(render, 250);
   });
