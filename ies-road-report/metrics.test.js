@@ -1,0 +1,26 @@
+const assert = require('node:assert/strict');
+global.window = {};
+require('./photometry.js');
+global.RoadPhotometry = window.RoadPhotometry;
+require('./metrics.js');
+const M = window.RoadMetrics;
+// Official TM-15-11 Addendum A worked example: Type IV, B2-U0-G2.
+const example = {FL:1618,FM:6093,FH:3748,FVH:27,BL:985,BM:930,BH:136,BVH:16,UL:0,UH:0};
+assert.equal(M.bugFromFlux(example,false).text,'B2-U0-G2');
+assert.equal(M.bugFromFlux(example,false,false).text,'B2-U?-G2');
+const empty = Object.fromEntries(Object.keys(example).map(key=>[key,0]));
+assert.equal(M.bugFromFlux(empty,false).text,'B0-U0-G0');
+assert.equal(M.bugFromFlux({...empty,BL:110},false).b,0);
+assert.equal(M.bugFromFlux({...empty,BL:110.01},false).b,1);
+assert.equal(M.bugFromFlux({...empty,UH:10},false).u,1);
+assert.equal(M.bugFromFlux({...empty,UH:10.01},false).u,2);
+assert.equal(M.bugFromFlux({...empty,BH:500},false).g,1);
+assert.equal(M.bugFromFlux({...empty,BH:500},true).g,0);
+assert.equal(M.bugFromFlux({...empty,FH:12001},false).g,5);
+const d={vertical:[0,10,20,90],horizontal:[0],matrix:[[100,50,0,0]],peak:100,lumens:-1,lamps:1};
+assert.equal(M.beam(d,0).angle,20);
+const z=RoadPhotometry.zones(d),total=z.reduce((s,v)=>s+v.front+v.back,0);
+assert.equal(M.evaluate(d,z,total).bug.u,null);
+assert.equal(M.evaluate(d,z,total,0,true).bug.u,0);
+assert.equal(M.evaluate(d,z,total).type,'Type V');
+console.log('BUG official example, threshold boundaries, missing data and beam angle passed.');

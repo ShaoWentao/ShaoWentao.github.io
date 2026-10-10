@@ -20,7 +20,8 @@
       const count = document.querySelectorAll('.paper').length;
       $('count').textContent = count + ' 页';
       $('empty').hidden = true;
-      $('status').textContent = `已生成 ${count} 页 · ${total.toFixed(2)} lm · BUG / 配光分类待核定`;
+      const metrics=RoadMetrics.evaluate(data,zones,total,Number($('orientation').value),$('zeroUplight').checked);
+      $('status').textContent = `已生成 ${count} 页 · ${total.toFixed(2)} lm · ${metrics.bug.text}${metrics.upperKnown?'':' · U评级需上半球数据或无上射光确认'}`;
       $('print').disabled = false;
     } catch (error) {
       $('status').textContent = error.message;
@@ -39,6 +40,7 @@
       const parsed = P.parse(text);
       if (parsed.peak <= 0) throw Error('文件中没有有效光强');
       data = parsed;
+      $('zeroUplight').checked = false;
       const k = data.keywords;
       $('model').value = k.LUMCAT || file.name;
       $('manufacturer').value = k.MANUFAC || '';
@@ -65,6 +67,7 @@
     $('name').value = 'Underground Light';
     $('spec').value = '2700K 19D';
     $('remarks').value = 'Synthetic demonstration data';
+    $('zeroUplight').checked = true;
     render();
   });
   $('controls').addEventListener('input', event => {

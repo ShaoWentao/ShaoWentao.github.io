@@ -21,7 +21,11 @@
 <div class="pair"><label>安装高度 (m)<input id="height" type="number" min="0.1" max="100" step="0.1" value="10"></label><label>倾角 (°)<input id="tilt" type="number" min="-60" max="60" value="0"></label></div>
 <label>道路侧中心 C 角 (°)<select id="orientation"><option value="0">C0</option><option value="90">C90</option><option value="180">C180</option><option value="270">C270</option></select></label>
 <label>测试日期<input id="date" type="date"></label><label>备注<textarea id="remarks"></textarea></label>
+<label class="check-field"><input id="zeroUplight" type="checkbox">确认未测上半球无上射光</label>
+<label>CIE 配光宽度（核定值）<select id="cieSpread"><option value="Not supplied">未提供</option><option>Narrow</option><option>Average</option><option>Broad</option></select></label>
+<label>CIE 投射长度（核定值）<select id="cieThrow"><option value="Not supplied">未提供</option><option>Short</option><option>Intermediate</option><option>Long</option></select></label>
+<label>CIE 截光分类（核定值）<select id="cieCutoff"><option value="Not supplied">未提供</option><option>Full cut-off</option><option>Cut-off</option><option>Semi cut-off</option><option>Non cut-off</option></select></label>
 </form></aside>
 <section class="preview"><div class="previewbar"><strong>报告预览</strong><span id="count">0 页</span></div><div id="empty"><h2>IES Road Report</h2><p>道路照明光度数据</p></div><div id="pages"></div></section>
-</main><script src="d3.min.js"></script><script src="photometry.js"></script><script src="report-template.js"></script><script src="app.js"></script>
+</main><script src="d3.min.js"></script><script src="photometry.js"></script><script src="metrics.js"></script><script src="report-template.js"></script><script src="app.js"></script>
 </body></html>
