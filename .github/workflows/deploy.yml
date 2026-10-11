@@ -9,19 +9,14 @@ jobs:
       contents: write
     steps:
     - uses: actions/checkout@v3
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: '8.0.x'
-    - name: Publish
-      run: dotnet publish src/Web/Web.csproj -c Release -o release --nologo
-    - name: Fix Pages
+    - name: Prepare static site
       run: |
-        sed -i 's/<base href="\/" \/>/<base href="\/" \/>/g' release/wwwroot/index.html
-        cp release/wwwroot/index.html release/wwwroot/404.html
-        touch release/wwwroot/.nojekyll
+        mkdir -p release
+        rsync -a --exclude='.git' --exclude='.github' --exclude='release' ./ release/
+        cp release/index.html release/404.html
+        touch release/.nojekyll
     - name: Deploy
       uses: JamesIves/github-pages-deploy-action@v4
       with:
         branch: gh-pages
-        folder: release/wwwroot
+        folder: release
