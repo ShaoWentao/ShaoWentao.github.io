@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Digital Lighting Workspace | Shao Wentao</title>
-<meta name="description" content="A unified workspace for lighting brand pages, newsletter archives, and browser-based IES tools.">
+<meta name="description" content="A unified workspace for lighting brand pages, newsletter archives, and browser-based lighting tools.">
 <style>
   :root {
     --bg: #050505;
@@ -511,7 +511,7 @@
 
   .tool-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 16px;
   }
 
@@ -686,6 +686,10 @@
     }
 
     .project-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .tool-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
@@ -985,13 +989,12 @@
       <span class="brand-mark">DL</span>
       <span class="brand-name">
         <strong>Digital Lighting Workspace</strong>
-        <span>Pages, newsletters and IES tools</span>
+        <span>Pages, newsletters and lighting tools</span>
       </span>
     </a>
     <nav class="nav-links" aria-label="Primary navigation">
       <a href="#projects">Pages</a>
       <a href="#tools">Tools</a>
-      <a href="#wechat">WeChat</a>
       <a href="#newsletter">Newsletter</a>
       <a href="cdn-newsletter/Mayalit/202607/">Latest</a>
       <a href="https://shaowt.com/">shaowt.com</a>
@@ -1009,11 +1012,12 @@
           <h1>Lighting pages,<br>IES tools,<br>and newsletters.</h1>
           <p>
             A unified entry for CDN Lighting and Mayalit materials, product storytelling,
-            partner newsletters, and browser tools for photometric file work.
+            partner newsletters, and browser tools for photometric and spectrum work.
           </p>
           <div class="cta-row">
             <a class="btn primary" href="ies-editor/">Open IES Editor</a>
             <a class="btn" href="ies-report/">Generate IES Report</a>
+            <a class="btn" href="ies-road-report/">Road Photometric Report</a>
             <a class="btn" href="#newsletter">Browse newsletters</a>
           </div>
         </div>
@@ -1113,26 +1117,6 @@
       </div>
     </section>
 
-    <section class="section" id="wechat">
-      <div class="section-head">
-        <div>
-          <div class="section-label">WeChat Articles</div>
-          <h2>瓶子先森Light</h2>
-        </div>
-      </div>
-
-      <div class="wechat-grid" id="wechatPosts" aria-live="polite">
-        <article class="wechat-empty">
-          <div>
-            <small>WeChat account</small>
-            <h3>文章栏目已就位</h3>
-            <p>后续会在这里展示公众号文章，方便从主页直接进入阅读。</p>
-          </div>
-          <img src="assets/wechat-light-qrcode.jpg" alt="瓶子先森Light 微信二维码">
-        </article>
-      </div>
-    </section>
-
     <section class="section" id="newsletter">
       <div class="section-head">
         <div>
@@ -1187,41 +1171,6 @@
     videos.forEach((video) => observer.observe(video));
   }
 
-  const wechatContainer = document.querySelector("#wechatPosts");
-  const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    "\"": "&quot;",
-    "'": "&#39;"
-  }[char]));
-  const renderWechatPosts = (posts = []) => {
-    if (!wechatContainer || !Array.isArray(posts) || posts.length === 0) return;
-    wechatContainer.innerHTML = posts.slice(0, 6).map((post) => {
-      const title = escapeHtml(post.title || "Untitled WeChat Article");
-      const date = escapeHtml(post.date || "WeChat");
-      const summary = escapeHtml(post.summary || "");
-      const url = escapeHtml(post.url || "#wechat");
-      const cover = escapeHtml(post.cover || "assets/wechat-light-qrcode.jpg");
-      return `
-        <a class="wechat-card" href="${url}" target="_blank" rel="noopener">
-          <img src="${cover}" alt="${title}">
-          <div>
-            <small>${date}</small>
-            <h3>${title}</h3>
-            <p>${summary}</p>
-          </div>
-          <span class="open-link">Read on WeChat</span>
-        </a>
-      `;
-    }).join("");
-  };
-  if (wechatContainer) {
-    fetch("assets/data/wechat-posts.json", { cache: "no-store" })
-      .then((response) => response.ok ? response.json() : Promise.reject(new Error(String(response.status))))
-      .then((data) => renderWechatPosts(data.posts))
-      .catch(() => {});
-  }
 </script>
 <script defer src="./assets/visitor-counter.js"></script>
 </body>
