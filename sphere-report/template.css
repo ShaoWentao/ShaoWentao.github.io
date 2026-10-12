@@ -1,0 +1,26 @@
+/* Positions and type sizes measured from the supplied 595 x 842 pt PDF. */
+.paper{position:relative;width:595pt;height:842pt;min-height:0;padding:0;font:10.737934pt Arial,sans-serif;overflow:hidden}
+.report-head{position:static;height:auto}
+.report-head h2{position:absolute;top:77.1pt;left:0;width:100%;margin:0;font-size:13.637315pt;line-height:1;font-weight:700}
+.brand{position:absolute;left:35.8pt;top:51.5pt;width:80pt;height:17pt;overflow:hidden}
+.brand img{width:111pt;height:50.4pt;max-width:none;max-height:none;left:-12.04pt;top:-17.9pt}
+.meta{position:absolute;left:47.5pt;right:27.5pt;display:grid;grid-template-columns:297.5pt 222.5pt;grid-auto-rows:15pt;gap:0}
+.sample-meta{top:136.9pt}.condition-meta{top:226.9pt}
+.row{display:grid;grid-template-columns:83.2pt minmax(0,1fr);gap:0;line-height:1;min-width:0}
+.row span{white-space:nowrap;overflow-wrap:normal;overflow:visible;min-width:0}
+.paper h3{position:absolute;left:47.5pt;margin:0;font-size:13.637315pt;line-height:1;font-weight:700}
+.condition-title{top:212.1pt}.spectrum-title{top:302.1pt}.color-title{top:522.5pt}.photometric-title{top:657.5pt}.electrical-title{top:702.5pt}
+.graphs{position:absolute;left:47.5pt;top:318.5pt;width:500pt;height:180pt;display:grid;grid-template-columns:308.5pt 191.5pt;border:0;margin:0}
+.graphs canvas{width:100%;height:180pt;border:0;outline:.5pt solid #999;outline-offset:-.5pt}
+.graphs canvas+canvas{border:0}
+.results{position:absolute;left:47.5pt;right:27.5pt;line-height:1;overflow-wrap:normal}
+.color-results{top:537.3pt}.report-line{white-space:nowrap;height:15pt;min-width:0;line-height:1}
+.render-index{margin-top:15pt}
+.cri{height:15pt;display:grid;grid-template-columns:repeat(8,54.7pt);gap:0;margin:0;font:inherit;line-height:1}
+.cri span{white-space:nowrap;min-width:0}
+.photometric-results{top:672.3pt}.electrical-results{top:721.7pt}
+.paper footer{position:absolute;top:752pt;left:0;width:100%;margin:0;font-size:13.637315pt;line-height:1;font-weight:700}
+.paper footer small{font-size:8.805176pt;line-height:1;margin-top:1pt}
+.note{position:absolute;left:47.5pt;top:789pt;font-size:6pt;margin:0;color:#666}
+@page{size:595pt 842pt;margin:0}
+@media print{.paper{width:595pt;height:842pt;padding:0;font-size:10.737934pt;zoom:1!important;transform:none!important}}
