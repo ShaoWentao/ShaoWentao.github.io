@@ -1,0 +1,16 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const S = require('./spectrum.js');
+const table = fs.readFileSync(__dirname + '/CIE_xyz_1931_2deg.csv', 'utf8').trim().split(/\r?\n/).map(row => row.split(',').map(Number));
+assert.deepEqual(S.parse('380\t0,5\n385\t1,0\n390\t0,2'), [[380,.5],[385,1],[390,.2]]);
+assert.deepEqual(S.parse('wavelength,power\n380,0.5\n385,1.0'), [[380,.5],[385,1]]);
+for (const text of ['380 0\n385 0','380 -1\n385 1','380 1\n380 2','385 1\n380 2','garbage','380 1\n385 nope']) assert.throws(() => S.parse(text));
+const flat = Array.from({length:81}, (_,i) => [380+i*5,1]);
+const result = S.analyze(flat, table);
+assert.ok(Math.abs(result.x-1/3)<.001);
+assert.ok(Math.abs(result.y-1/3)<.001);
+const scaled = S.analyze(flat.map(([w,p])=>[w,p*7]), table);
+assert.ok(Math.abs(result.x-scaled.x)<1e-12);
+assert.ok(Math.abs(result.y-scaled.y)<1e-12);
+assert.equal(S.analyze([[380,1],[450,5],[780,1]],table).peak,450);
+console.log('PASS: decimal comma, CSV, invalid spectra, equal-energy chromaticity and scale invariance');

@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>积分球光谱报告</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<header class="topbar"><a href="../">Shao Wentao</a><strong>Spectrum Report</strong><button id="print" disabled title="打印或导出 PDF">打印 / PDF</button></header>
+<main>
+<aside><h1>积分球光谱报告</h1><form id="controls">
+<label>SPD 文件<input id="file" type="file" accept=".txt,.spd,.csv"></label>
+<p id="status" role="status">请选择光谱数据</p>
+<div id="fields"></div>
+</form></aside>
+<section class="preview"><div id="empty">Spectrum Test Report</div><div id="paper" class="paper" hidden></div></section>
+</main>
+<script src="spectrum.js"></script><script src="app.js"></script>
+</body></html>
