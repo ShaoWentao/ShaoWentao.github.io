@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="zh-CN">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>积分球光谱报告</title><link rel="stylesheet" href="style.css"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>积分球光谱报告</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="template.css"></head>
 <body>
 <header class="topbar"><a href="../">Shao Wentao</a><strong>Spectrum Report</strong><button id="print" disabled title="打印或导出 PDF">打印 / PDF</button></header>
 <main>
@@ -8,6 +8,7 @@
 <label>SPD 文件<input id="file" type="file" accept=".txt,.spd,.csv"></label>
 <p id="status" role="status">请选择光谱数据</p>
 <div id="fields"></div>
+<details><summary>仪器色容差图</summary><label>色容差图（PNG / JPG）<input id="colorChart" type="file" accept="image/png,image/jpeg"></label><button id="clearChart" type="button">清除图表</button></details>
 </form></aside>
 <section class="preview"><div id="empty">Spectrum Test Report</div><div id="paper" class="paper" hidden></div></section>
 </main>

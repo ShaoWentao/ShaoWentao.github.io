@@ -16,8 +16,12 @@ u'=4X/(X+15Y+3Z), v'=9Y/(X+15Y+3Z). Peak wavelength is the largest input sample.
 
 CCT, Duv, SDCM, CRI, TM-30, purity, dominant wavelength and FWHM are entered
 instrument results, not calculated in this version. No unverified ellipse is
-drawn. Relative SPD cannot determine absolute lumens or radiant flux; those
+drawn. The right panel uses the reference's local xy chart layout. An instrument
+PNG/JPG chart can be imported to supply the actual tolerance ellipse. Relative
+SPD cannot determine absolute lumens or radiant flux; those
 are entered measured values. Efficacy is entered flux divided by measured watts.
 The DIALux LED_3000K reference must not be represented as a measured test.
-Logo is extracted from the user-supplied reference PDF; laboratory, instrument,
-tester and footer are not automatically claimed to be the reference's values.
+Logo is extracted from the user-supplied reference PDF. Footer defaults reproduce
+the original EVERFINE software footer; laboratory, instrument and tester remain
+user-entered. Template positions, fonts and page dimensions are measured from
+the supplied 595 x 842 pt report, not approximate section-flow styling.
