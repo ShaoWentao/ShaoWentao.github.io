@@ -32,9 +32,11 @@ We welcome lighting designers, architects, consultants and project partners to v
 
 Please contact your CDN LIGHT representative to arrange a visit.
 
-Arrange a showroom visit: marketing-intl@cdn-lighting.com
+Arrange a showroom visit: alex.xu@cdnlight.com
 
 Light Designed by Designed Light
 
 Best regards,
 Team CDN LIGHT
+
+General enquiries: sales@cdnlight.com
