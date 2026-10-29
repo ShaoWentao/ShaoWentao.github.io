@@ -30,7 +30,7 @@ Bollards and landscape luminaires are presented among planting, gravel and textu
 
 We welcome lighting designers, architects, consultants and project partners to visit the showroom, explore our range and discuss their upcoming projects with us.
 
-Please contact your CDN LIGHT representative to arrange a visit.
+To arrange a showroom visit, please contact Alex Xu at alex.xu@cdnlight.com.
 
 Arrange a showroom visit: alex.xu@cdnlight.com
 
