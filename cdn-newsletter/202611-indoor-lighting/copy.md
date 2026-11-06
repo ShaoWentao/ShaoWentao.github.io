@@ -20,8 +20,6 @@ Selected indoor lighting ranges have been upgraded for substantially higher lumi
 
 Selected models achieve luminous efficacy of up to 150 lm/W. Please refer to the specification sheet for each model and configuration, or contact your sales representative for technical information.
 
-Copenhagen G2
-
 Model-specific performance. Please check the relevant specification sheet.
 
 Expanded options
