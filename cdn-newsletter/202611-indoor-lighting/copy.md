@@ -16,10 +16,6 @@ Our updated indoor lighting price list is now available, together with new addit
 
 Explore higher-efficacy luminaires, expanded waterproof downlight options and the latest models for your projects.
 
-Copenhagen G2 · Track lighting
-
-Aruba · Waterproof downlighting
-
 Performance update
 
 Higher efficacy. More from every watt.
@@ -42,7 +38,7 @@ Product range update
 
 New additions. An updated portfolio.
 
-New additions include BEIDOU BHD9150P models, ML3.0J and ML4.0 magnetic lighting products, and Flash wallwashers , alongside additional options across our indoor lighting range.
+New additions include BEIDOU BHD9150P models and Flash wallwashers , alongside additional options across our indoor lighting range.
 
 Selected previous models and ranges have also been removed from the overseas portfolio. For ongoing projects and new quotations, please confirm the current model and configuration with your sales representative.
 
@@ -53,6 +49,8 @@ Get the updated price list.
 Contact your sales representative to obtain the latest price list and review the changes relevant to your market and projects.
 
 Our team can help with product selection, technical information and questions about existing quotations or orders.
+
+Our new product catalogue is being updated alongside the range and will be released soon. Stay tuned for our latest news.
 
 Request the updated price list
 
