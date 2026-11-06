@@ -1,9 +1,5 @@
 # Indoor Lighting: New Possibilities
 
-Subject: Indoor Lighting: New Possibilities
-
-Preheader: Higher efficacy. More downlight options. An updated range for your next project.
-
 Global newsletter · November 2026
 
 Indoor lighting update
@@ -23,6 +19,8 @@ Higher efficacy. More from every watt.
 Selected indoor lighting ranges have been upgraded for substantially higher luminous efficacy, including Comoros, Copenhagen G2, Kuwait-pro, Mizar and Palau .
 
 Selected models achieve luminous efficacy of up to 150 lm/W. Please refer to the specification sheet for each model and configuration, or contact your sales representative for technical information.
+
+Copenhagen G2
 
 Model-specific performance. Please check the relevant specification sheet.
 
