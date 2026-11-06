@@ -1,0 +1,1 @@
+Import email.html as HTML code in your mailing platform. It uses inline styles, table layout and absolute image URLs. Do not copy the browser page as plain text. Send a test email before a full campaign.
